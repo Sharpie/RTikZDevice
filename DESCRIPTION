@@ -1,0 +1,10 @@
+Package: pgfDevice
+Type: Package
+Title: A Device for R Graphics Output in PGF/TikZ Format
+Version: 0.1
+Date: 2009-05-15
+Author: Charlie Sharpsteen
+Maintainer: Charlie Sharpsteen <source@sharpsteen.net>
+Description: This package sucks today. Hopefully it will rock hard someday.
+License: GPL (>= 2.0)
+LazyLoad: yes
