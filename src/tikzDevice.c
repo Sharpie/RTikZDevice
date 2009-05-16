@@ -3,7 +3,7 @@
 #include "R_ext/GraphicsEngine.h"
 
 
-SEXP pgfDevice ( SEXP args ){
+SEXP tikzDevice ( SEXP args ){
 
 	/*
 	 * Make sure the version number of the R running this

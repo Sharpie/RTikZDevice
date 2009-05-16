@@ -1,6 +1,6 @@
-\name{pgfDevice}
+\name{tikz}
 \Rdversion{1.1}
-\alias{pgfDevice}
+\alias{tikz}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 %%  ~~function to do ... ~~
@@ -9,7 +9,7 @@
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-pgfDevice(file = "foo.tex")
+tikz(file = "foo.tex")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -48,10 +48,10 @@ pgfDevice(file = "foo.tex")
 ##--	or do  help(data=index)  for the standard data sets.
 
 ## The function is currently defined as
-pgfDevice <-
+tikz <-
 function (file = "foo.tex")
 	{
-      .External('pgfDevice', file) 
+      .External('tikzDevice', file) 
 	}
 
 }

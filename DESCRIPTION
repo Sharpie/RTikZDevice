@@ -1,4 +1,4 @@
-Package: pgfDevice
+Package: RTikZDevice
 Type: Package
 Title: A Device for R Graphics Output in PGF/TikZ Format
 Version: 0.1

@@ -1,4 +1,4 @@
 .First.lib <-
 function(libname, pkgname) {
-  library.dynam("pgfDevice", pkgname, libname)
+  library.dynam(pkgname, pkgname, libname)
 }
