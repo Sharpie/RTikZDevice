@@ -1,0 +1,23 @@
+Version 0.2: Alpha
+
+STATUS:
+	The tikzDevice implements the tikz() graphics driver in R. This driver
+	is currently complete to the extent that all skeleton routines have been
+	implemented. The device *almost* passes the plot(1,1) test.
+
+FIX:
+ * when using plot(1,1), all calls to text result in proper output with one
+   exception: the coordinates of the text nodes are nan.
+
+ * when using plot(1,1), the bounding box of the plot is almost drawn correctly.
+   The line travels through the correct points, then returns to (0,0) which results
+   in the right hand side of the plot having a funky edge.
+
+TODO:
+	* Currently the device ignores all parameters passed into plotting functions 
+		via the pGEcontext variable. These commands contain important information 
+		such as color, line type and width and font size/shape.
+
+	* The setup of the text functions is extremely janky. No attempt is made to
+		determine string width or font metrics. This could be a possible cause
+		of the nan values that show up in the positions of text strings.
