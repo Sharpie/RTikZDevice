@@ -17,6 +17,7 @@
  * provided by the R language.
 */
 #include "tikzDevice.h"
+#define DEBUG TRUE
 
 SEXP tikzDevice ( SEXP args ){
 
@@ -149,6 +150,7 @@ static Rboolean TikZ_Setup(
 	/* Copy TikZ-specific information to the tikzInfo variable. */
 	strcpy( tikzInfo->outFileName, fileName);
 	tikzInfo->firstPage = TRUE;
+    tikzInfo->debug = DEBUG;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -326,7 +328,14 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 	if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
 		return FALSE;
 
+    /*Show only for debugging*/
+    if(tikzInfo->debug == TRUE) 
+            fprintf(tikzInfo->outputFile,
+                "%% Beginning tikzpicture, this file is %s\n",
+                R_ExpandFileName(tikzInfo->outFileName));
+
 	/* Start the tikz environment. */
+            fprintf(tikzInfo->outputFile,"%% Created by tikzDevice x.x.x, on DATE, at TIME\n");
 	fprintf(tikzInfo->outputFile, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
 
 	return TRUE;
@@ -360,6 +369,11 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
 		/* End the current TikZ environment. */
 		fprintf(tikzInfo->outputFile, "\\end{tikzpicture}\n");
+
+        /*Show only for debugging*/
+        if(tikzInfo->debug == TRUE) 
+                fprintf(tikzInfo->outputFile,
+                    "%% Beginning new tikzpicture 'page'");
 
 		/* Start a new TikZ envioronment. */
 		fprintf(tikzInfo->outputFile, "\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
@@ -435,6 +449,12 @@ static void TikZ_Text( double x, double y, const char *str,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
+    /*Show only for debugging*/
+    if(tikzInfo->debug == TRUE) 
+           fprintf(tikzInfo->outputFile,
+                "\n%% Drawing node at x = %f, y = %f",
+                x,y);
+
 	/* Start a node for the text, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\node[");
 
@@ -450,12 +470,51 @@ static void TikZ_Text( double x, double y, const char *str,
 
 }
 
+/* TeX Text Translations from the PixTeX Device, I thought we might be able to 
+ * use these possibly for an option to sanitize TeX strings
+ */
+static void textext(const char *str,  tikzDevDesc *td){
+    fputc('{', td->outputFile);
+    for( ; *str ; str++)
+	switch(*str) {
+	case '$':
+	    fprintf(td->outputFile, "\\$");
+	    break;
+
+	case '%':
+	    fprintf(td->outputFile, "\\%%");
+	    break;
+
+	case '{':
+	    fprintf(td->outputFile, "\\{");
+	    break;
+
+	case '}':
+	    fprintf(td->outputFile, "\\}");
+	    break;
+
+	case '^':
+	    fprintf(td->outputFile, "\\^{}");
+	    break;
+
+	default:
+	    fputc(*str, td->outputFile);
+	    break;
+	}
+    fprintf(td->outputFile,"} ");
+}
 
 static void TikZ_Line( double x1, double y1,
 		double x2, double y2, const pGEcontext plotParams, pDevDesc deviceInfo){
 
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+    /*Show only for debugging*/
+    if(tikzInfo->debug == TRUE) 
+           fprintf(tikzInfo->outputFile,
+                "\n%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f",
+                x1,y1,x2,y2);
 
 	/* Start drawing a line, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
@@ -474,6 +533,12 @@ static void TikZ_Circle( double x, double y, double r,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
+    /*Show only for debugging*/
+    if(tikzInfo->debug == TRUE) 
+           fprintf(tikzInfo->outputFile,
+                "\n%% Drawing Circle at x = %10.4f, y = %10.4f, r = ",
+                x,y,r);
+           
 	/* Start drawing, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
 
@@ -494,6 +559,12 @@ static void TikZ_Rectangle( double x0, double y0,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
+    /*Show only for debugging*/
+    if(tikzInfo->debug == TRUE) 
+            fprintf(tikzInfo->outputFile,
+                "\n%% Drawing Rectangle from x0 = %10.4f, y0 = %10.4f to x1 = %10.4f, y1 = %10.4f",
+                x0,y0,x1,y1);
+
 	/* Start drawing, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
 
@@ -513,6 +584,11 @@ static void TikZ_Polyline( int n, double *x, double *y,
 
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+    /*Show only for debugging*/
+    if(tikzInfo->debug == TRUE) 
+            fprintf(tikzInfo->outputFile,
+                "\n%% Starting Polyline");
 
 	/* Start drawing, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
@@ -535,6 +611,11 @@ static void TikZ_Polyline( int n, double *x, double *y,
 	/* Print last set of coordinates. End path. */
 	fprintf( tikzInfo->outputFile, "\t(%6.2f,%6.2f);\n",
 		x[n],y[n]);
+		
+	/*Show only for debugging*/
+    if(tikzInfo->debug == TRUE) 
+            fprintf(tikzInfo->outputFile,
+                "%% End Polyline\n");
 
 }
 
@@ -543,6 +624,11 @@ static void TikZ_Polygon( int n, double *x, double *y,
 
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+    /*Show only for debugging*/
+    if(tikzInfo->debug == TRUE) 
+            fprintf(tikzInfo->outputFile,
+                "\n%% Starting Polygon");
 
 	/* Start drawing, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
@@ -567,6 +653,11 @@ static void TikZ_Polygon( int n, double *x, double *y,
 
 	/* End path by cycling to first set of coordinates. */
 	fprintf( tikzInfo->outputFile, "\tcycle;\n" );
+
+    /*Show only for debugging*/
+    if(tikzInfo->debug == TRUE) 
+            fprintf(tikzInfo->outputFile,
+                "%% End Polyline\n");
 
 }
 
