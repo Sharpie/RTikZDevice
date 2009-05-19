@@ -1,6 +1,8 @@
 tikz <-
-function (file = "foo.tex")
+function (file = "Rplots.tex", width = 7, height = 7)
 {
-      .External('tikzDevice', file) 
+  .External('tikzDevice', file, width, height) 
+	
+	invisible()	
 }
 
