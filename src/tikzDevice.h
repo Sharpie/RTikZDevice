@@ -19,8 +19,8 @@ typedef struct{
 	FILE *outputFile;
 	char outFileName[128];
 	Rboolean firstPage;
-  Rboolean debug;
-  Rboolean standAlone;
+	Rboolean debug;
+	Rboolean standAlone;
 } tikzDevDesc;
 
 
@@ -69,6 +69,12 @@ static void TikZ_Polyline( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
+static void StyleDef(Rboolean def, const pGEcontext plotParams, 
+		pDevDesc deviceInfo);
+static void SetColor(int color, Rboolean def, pDevDesc deviceInfo);
+static void SetFill(int color, Rboolean def, pDevDesc deviceInfo);
+static void CheckAndSetAlpha(int color, pDevDesc deviceInfo);
+static void SetScale(double cex, pDevDesc deviceInfo);
 
 
 /* Dummy routines. */

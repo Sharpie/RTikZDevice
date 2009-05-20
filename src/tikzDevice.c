@@ -32,7 +32,7 @@ SEXP tikzDevice ( SEXP args ){
 	const char *fileName;
 	const char *bg, *fg;
 	double width, height;
-  Rboolean standAlone;
+	Rboolean standAlone;
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -41,7 +41,7 @@ SEXP tikzDevice ( SEXP args ){
 	 * which containts information specific to the implementation of
 	 * the tikz device. The creation and initialization of this component
 	 * is one ofthe main tasks of this routine.
-  */
+  	*/
 	pGEDevDesc tikzDev;
 
 
@@ -62,18 +62,18 @@ SEXP tikzDevice ( SEXP args ){
 	/* Recover figure dimensions. */
 	/* For now these are assumed to be in inches. */
 	width = asReal(CAR(args)); args = CDR(args);
-  height = asReal(CAR(args)); args = CDR(args);
+	height = asReal(CAR(args)); args = CDR(args);
     
 	/* Recover initial background and foreground colors. */
 	bg = CHAR(asChar(CAR(args))); args = CDR(args);
 	fg = CHAR(asChar(CAR(args))); args = CDR(args);
 
 
-  /* 
-	 * Set the standalone parameter for wrapping the picture in a LaTeX 
-   * document
-  */
-  standAlone = asLogical(CAR(args)); args = CDR(args);
+	/* 
+	* Set the standalone parameter for wrapping the picture in a LaTeX 
+	* document
+	*/
+	standAlone = asLogical(CAR(args)); args = CDR(args);
 
 	/* Ensure there is an empty slot avaliable for a new device. */
 	R_CheckDeviceAvailable();
@@ -85,14 +85,14 @@ SEXP tikzDevice ( SEXP args ){
 		 * which describe the specifics of this graphics device. After
          * setup, this information will be incorporated into the pGEDevDesc
 		 * variable tikzDev.
-	  */ 
+		*/ 
 		pDevDesc deviceInfo;
 
 		/* 
 		 * Create the deviceInfo variable. If this operation fails, 
 		 * a 0 is returned in order to cause R to shut down due to the
 		 * possibility of corrupted memory.
-	  */
+		*/
 		if( !( deviceInfo = (pDevDesc) calloc(1, sizeof(DevDesc))) )
 			return 0;
 
@@ -159,27 +159,27 @@ static Rboolean TikZ_Setup(
 	/* 
 	 * Initialize tikzInfo, return false if this fails. A false return
 	 * value will cause the whole device initialization routine to fail.
-  */
+	*/
 	if( !( tikzInfo = (tikzDevDesc *) malloc(sizeof(tikzDevDesc)) ) )
 		return FALSE;
 
 	/* Copy TikZ-specific information to the tikzInfo variable. */
 	strcpy( tikzInfo->outFileName, fileName);
 	tikzInfo->firstPage = TRUE;
-  tikzInfo->debug = DEBUG;
-  tikzInfo->standAlone = standAlone;
+	tikzInfo->debug = DEBUG;
+	tikzInfo->standAlone = standAlone;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
 
 	/* 
 	 * These next statements define the capabilities of the device.
-   * These capabilities include:
-   *	-Device/user interaction
-   *	-Gamma correction
-   *	-Clipping abilities
-   *	-UTF8 support
-   *  -Text justification/alignment abilities
+	 * These capabilities include:
+	 *	-Device/user interaction
+	 *	-Gamma correction
+	 *	-Clipping abilities
+	 *	-UTF8 support
+	 *  -Text justification/alignment abilities
 	*/
 
 	/* 
@@ -203,20 +203,20 @@ static Rboolean TikZ_Setup(
 	deviceInfo->canHAdj = 0;
 
 	/*
-   * useRotatedTextInContour specifies if the text function along with
-   * rotation parameters should be used over Hershey fonts when printing
-   * contour plot labels. As one of the primary goals of this device
-   * is to unify font choices, this value is set to true.
-  */
+	 * useRotatedTextInContour specifies if the text function along with
+	 * rotation parameters should be used over Hershey fonts when printing
+	 * contour plot labels. As one of the primary goals of this device
+	 * is to unify font choices, this value is set to true.
+	*/
 	deviceInfo->useRotatedTextInContour = TRUE; 
 
 	/*
-   * canClip specifies whether the device implements routines for filtering
-   * plotting input such that it falls within a rectangular clipping area.
-   * Implementing this leads to an interesting design choice- to implement
-   * clipping here in the C code or hand it off to the TikZ clipping routines.
-   * Clipping at the C level may reduce  and simplify the final output file 
-   * by not printing objects that fall outside the plot boundaries. 
+	 * canClip specifies whether the device implements routines for filtering
+	 * plotting input such that it falls within a rectangular clipping area.
+	 * Implementing this leads to an interesting design choice- to implement
+	 * clipping here in the C code or hand it off to the TikZ clipping routines.
+	 * Clipping at the C level may reduce  and simplify the final output file 
+	 * by not printing objects that fall outside the plot boundaries. 
 	*/
 	deviceInfo->canClip = TRUE;
 
@@ -231,40 +231,40 @@ static Rboolean TikZ_Setup(
 	deviceInfo->canGenKeybd = FALSE;
 
 	/* 
-   * This parameter specifies whether the device is set up to handle UTF8
+	 * This parameter specifies whether the device is set up to handle UTF8
 	 * characters. This makes a difference in the complexity of the text
-   * handling functions that must be built into the device. If set to true
-   * both hook functions textUTF8 and strWidthUTF8 must be implemented.
-   * Compared to ASCII, which only has 128 character values, UTF8 has
-   * thousends. This will require a fairly sophisticated function for
-   * calculating string widths.
-   *
-   * UTF8 support would be a great feature to include as it would make
-   * this device useful for an international audience. For now only
-   * the ASCII character set will be used as it is easy to implement.
-   * 
-   * wantSymbolUTF8 indicates if mathematical symbols should be treated
-   * as UTF8 characters.
-  */
-  deviceInfo->hasTextUTF8 = FALSE;
+	 * handling functions that must be built into the device. If set to true
+	 * both hook functions textUTF8 and strWidthUTF8 must be implemented.
+	 * Compared to ASCII, which only has 128 character values, UTF8 has
+	 * thousends. This will require a fairly sophisticated function for
+	 * calculating string widths.
+	 *
+	 * UTF8 support would be a great feature to include as it would make
+	 * this device useful for an international audience. For now only
+	 * the ASCII character set will be used as it is easy to implement.
+	 * 
+	 * wantSymbolUTF8 indicates if mathematical symbols should be treated
+	 * as UTF8 characters.
+	*/
+	deviceInfo->hasTextUTF8 = FALSE;
 	deviceInfo->wantSymbolUTF8 = FALSE;
 
-  /*
-   * Initialize device parameters. These concern properties such as the plotting
-   * canvas size, the initial foreground and background colors and the initial
-   * clipping area. Other parameters related to fonts and text output are also
-   * included.
-  */
+	/*
+	 * Initialize device parameters. These concern properties such as the plotting
+	 * canvas size, the initial foreground and background colors and the initial
+	 * clipping area. Other parameters related to fonts and text output are also
+	 * included.
+	*/
 
-  /*
-   * Set canvas size. The bottom left corner is considered the origin and assigned
-   * the value of 0pt, 0pt. The upper right corner is assigned by converting the
-   * specified height and width of the device to points.
-  */
-  deviceInfo->bottom = 0;
+	/*
+	* Set canvas size. The bottom left corner is considered the origin and assigned
+	* the value of 0pt, 0pt. The upper right corner is assigned by converting the
+	* specified height and width of the device to points.
+	*/
+	deviceInfo->bottom = 0;
 	deviceInfo->left = 0;
 	deviceInfo->top = dim2dev( height );
-  deviceInfo->right = dim2dev( width );
+	deviceInfo->right = dim2dev( width );
 
 	/* Set default character size in pixels. */
 	deviceInfo->cra[0] = 9;
@@ -358,32 +358,32 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 	if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
 		return FALSE;
 
-  /* Header for a standalone LaTeX document*/
-  if(tikzInfo->standAlone == TRUE){
+	/* Header for a standalone LaTeX document*/
+	if(tikzInfo->standAlone == TRUE){
 		fprintf(tikzInfo->outputFile,"\\documentclass{article}\n");
 		fprintf(tikzInfo->outputFile,"\\usepackage{tikz}\n");
 		fprintf(tikzInfo->outputFile,"\\usepackage[active,tightpage]{preview}\n");
 		fprintf(tikzInfo->outputFile,"\\PreviewEnvironment{pgfpicture}\n");
 		fprintf(tikzInfo->outputFile,"\\setlength\\PreviewBorder{0pt}\n\n");
 		fprintf(tikzInfo->outputFile,"\\begin{document}\n\n");
-   }
+	}
 
-  /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
+	/*Show only for debugging*/
+	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
 			"%% Beginning tikzpicture, this file is %s\n",
 			R_ExpandFileName(tikzInfo->outFileName));
 
 	/* Start the tikz environment. */
-  fprintf(tikzInfo->outputFile,"%% Created by tikzDevice x.x.x, on DATE, at TIME\n");
+	fprintf(tikzInfo->outputFile,"%% Created by tikzDevice x.x.x, on DATE, at TIME\n");
 	fprintf(tikzInfo->outputFile, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
 
 	/* 
 	 * For now, print an invisible rectangle to ensure all of the plotting area is used.
 	 * Once color options are implemented, this could be replaced with a call to
 	 * TikZ_Rectangle, if feasible.
-  */
-	fprintf(tikzInfo->outputFile, "\\draw[color=white] (0,0) rectangle (%6.2f,%6.2f);",
+	*/
+	fprintf(tikzInfo->outputFile, "\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);",
 			deviceInfo->right,deviceInfo->top);
 
 	return TRUE;
@@ -400,7 +400,7 @@ static void TikZ_Close( pDevDesc deviceInfo){
 	
 	/* Close off the standalone document*/
 	if(tikzInfo->standAlone == TRUE)
-    fprintf(tikzInfo->outputFile,"\n\\end{document}\n");
+		fprintf(tikzInfo->outputFile,"\n\\end{document}\n");
 
 	/* Close the file and destroy the tikzInfo structure. */
 	fclose(tikzInfo->outputFile);
@@ -444,9 +444,9 @@ static void TikZ_Clip( double x0, double x1,
 
 	/*
 	 * This function will set some sort of clipping region for the device,
-   * the PiCTeX device stores this info in the deviceSpecific variable.
-   * not really shure what to do here yet.
-  */
+	 * the PiCTeX device stores this info in the deviceSpecific variable.
+	 * not really shure what to do here yet.
+	*/
 
 	deviceInfo->clipBottom = y0;
 	deviceInfo->clipLeft = x0;
@@ -506,11 +506,11 @@ static void TikZ_Text( double x, double y, const char *str,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-    /*Show only for debugging*/
-    if(tikzInfo->debug == TRUE) 
-           fprintf(tikzInfo->outputFile,
-                "\n%% Drawing node at x = %f, y = %f",
-                x,y);
+	/*Show only for debugging*/
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"\n%% Drawing node at x = %f, y = %f",
+			x,y);
 
 	/* Start a node for the text, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\node[");
@@ -527,39 +527,6 @@ static void TikZ_Text( double x, double y, const char *str,
 
 }
 
-/* TeX Text Translations from the PixTeX Device, I thought we might be able to 
- * use these possibly for an option to sanitize TeX strings
- */
-static void textext(const char *str,  tikzDevDesc *td){
-    fputc('{', td->outputFile);
-    for( ; *str ; str++)
-	switch(*str) {
-	case '$':
-	    fprintf(td->outputFile, "\\$");
-	    break;
-
-	case '%':
-	    fprintf(td->outputFile, "\\%%");
-	    break;
-
-	case '{':
-	    fprintf(td->outputFile, "\\{");
-	    break;
-
-	case '}':
-	    fprintf(td->outputFile, "\\}");
-	    break;
-
-	case '^':
-	    fprintf(td->outputFile, "\\^{}");
-	    break;
-
-	default:
-	    fputc(*str, td->outputFile);
-	    break;
-	}
-    fprintf(td->outputFile,"} ");
-}
 
 static void TikZ_Line( double x1, double y1,
 		double x2, double y2, const pGEcontext plotParams, pDevDesc deviceInfo){
@@ -567,14 +534,20 @@ static void TikZ_Line( double x1, double y1,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-    /*Show only for debugging*/
-    if(tikzInfo->debug == TRUE) 
-           fprintf(tikzInfo->outputFile,
-                "\n%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f",
-                x1,y1,x2,y2);
+	/*Show only for debugging*/
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"\n%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f",
+			x1,y1,x2,y2);
+
+	/*Define the colors for fill and border*/
+	StyleDef(TRUE, plotParams, deviceInfo);
 
 	/* Start drawing a line, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
+	
+	/*Define the draw styles*/
+	StyleDef(FALSE, plotParams, deviceInfo);
 
 	/* More options would go here such as line thickness, style, color etc. */
 	
@@ -590,24 +563,30 @@ static void TikZ_Circle( double x, double y, double r,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-    /*Show only for debugging*/
-    if(tikzInfo->debug == TRUE) 
-           fprintf(tikzInfo->outputFile,
-                "\n%% Drawing Circle at x = %10.4f, y = %10.4f, r = ",
-                x,y,r);
-           
+	/*Show only for debugging*/
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"\n%% Drawing Circle at x = %f, y = %f, r = %f",
+			x,y,r);
+
+	/*Define the colors for fill and border*/
+	StyleDef(TRUE, plotParams, deviceInfo);
+
 	/* Start drawing, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
 
 	/* 
 	 * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
-	*/
+	 * and fill color etc. 
+	*/ 
+	
+	/*Define the draw styles*/
+	StyleDef(FALSE, plotParams, deviceInfo);
+
 	
 	/* End options, print coordinates. */
 	fprintf( tikzInfo->outputFile, "] (%6.2f,%6.2f) circle (%6.2f);\n",
 		x,y,r);
-
 }
 
 static void TikZ_Rectangle( double x0, double y0,
@@ -616,18 +595,24 @@ static void TikZ_Rectangle( double x0, double y0,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-    /*Show only for debugging*/
-    if(tikzInfo->debug == TRUE) 
-            fprintf(tikzInfo->outputFile,
-                "\n%% Drawing Rectangle from x0 = %10.4f, y0 = %10.4f to x1 = %10.4f, y1 = %10.4f",
-                x0,y0,x1,y1);
+	/*Show only for debugging*/
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"\n%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f",
+			x0,y0,x1,y1);
+
+	/*Define the colors for fill and border*/
+	StyleDef(TRUE, plotParams, deviceInfo);
 
 	/* Start drawing, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
 
+	/*Define the draw styles*/
+	StyleDef(FALSE, plotParams, deviceInfo);
+
 	/* 
 	 * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
+	 * and fill color etc. 
 	*/
 	
 	/* End options, print coordinates. */
@@ -642,15 +627,20 @@ static void TikZ_Polyline( int n, double *x, double *y,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-    /*Show only for debugging*/
-    if(tikzInfo->debug == TRUE) 
-            fprintf(tikzInfo->outputFile,
-                "\n%% Starting Polyline");
+	/*Show only for debugging*/
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"\n%% Starting Polyline");
+
+	/*Define the colors for fill and border*/
+	StyleDef(TRUE, plotParams, deviceInfo);
 
 	/* Start drawing, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
 
 	/* More options would go here such as line thickness, style and color */
+	/*Define the draw styles*/
+	StyleDef(FALSE, plotParams, deviceInfo);
 
 	/* End options, print first set of coordinates. */
 	fprintf( tikzInfo->outputFile, "] (%6.2f,%6.2f) --\n",
@@ -670,9 +660,9 @@ static void TikZ_Polyline( int n, double *x, double *y,
 		x[n-1],y[n-1]);
 		
 	/*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
-    fprintf(tikzInfo->outputFile,
-      "%% End Polyline\n");
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"%% End Polyline\n");
 
 }
 
@@ -682,10 +672,10 @@ static void TikZ_Polygon( int n, double *x, double *y,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
-    fprintf(tikzInfo->outputFile,
-      "\n%% Starting Polygon");
+	/*Show only for debugging*/
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"\n%% Starting Polygon");
 
 	/* Start drawing, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
@@ -711,13 +701,130 @@ static void TikZ_Polygon( int n, double *x, double *y,
 	/* End path by cycling to first set of coordinates. */
 	fprintf( tikzInfo->outputFile, "\tcycle;\n" );
 
-  /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
-    fprintf(tikzInfo->outputFile,
-      "%% End Polyline\n");
+	/*Show only for debugging*/
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"%% End Polyline\n");
 
 }
 
+/* TeX Text Translations from the PixTeX Device, I thought we might be able to 
+ * use these possibly for an option to sanitize TeX strings
+ */
+static void textext(const char *str,  tikzDevDesc *td){
+	fputc('{', td->outputFile);
+	for( ; *str ; str++)
+	switch(*str) {
+	case '$':
+		fprintf(td->outputFile, "\\$");
+		break;
+
+	case '%':
+		fprintf(td->outputFile, "\\%%");
+		break;
+
+	case '{':
+		fprintf(td->outputFile, "\\{");
+		break;
+
+	case '}':
+		fprintf(td->outputFile, "\\}");
+		break;
+
+	case '^':
+		fprintf(td->outputFile, "\\^{}");
+		break;
+
+	default:
+		fputc(*str, td->outputFile);
+		break;
+	}
+	fprintf(td->outputFile,"} ");
+}
+
+/* This function either prints out the color definitions for outline and fill 
+ * colors or the style tags in the \draw[] command, the def parameter tells 
+ * if the color/style is being defined or used.
+ * SetLineStyle and CheckAndSetAlpha are only run if the style is being used 
+ * because there are no color definitions outside of the draw command. 
+*/
+static void StyleDef(Rboolean def, const pGEcontext plotParams, pDevDesc deviceInfo){
+	
+	/*From devPS.c, PS_Circle()*/
+	int code;
+    /* code is set as follows */
+    /* code == 0, nothing to draw */
+    /* code == 1, outline only */
+    /* code == 2, fill only */
+    /* code == 3, outline and fill */
+
+    code = 2 * (R_OPAQUE(plotParams->fill)) + (R_OPAQUE(plotParams->col));
+
+	if (code) {
+		if(code & 1) {
+			/* Define outline draw color*/
+			SetColor(plotParams->col, def, deviceInfo);
+			//if(def == FALSE)SetLineStyle()
+		}
+		if(code & 2){
+			/* Define fill color*/
+			SetFill(plotParams->fill, def, deviceInfo);
+		}
+	}
+	/*Alpha is causing wierdness and is disabled for now */
+	//if(def == FALSE) CheckAndSetAlpha(plotParams->fill,deviceInfo);
+	
+}
+
+static void SetFill(int color, Rboolean def, pDevDesc deviceInfo){
+	
+	/* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+	
+	if(def == TRUE){
+		fprintf(tikzInfo->outputFile,
+				"\n\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}",
+				R_RED(color)/255.0,
+				R_GREEN(color)/255.0,
+				R_BLUE(color)/255.0);
+	}else{
+		fprintf( tikzInfo->outputFile, "fill=fillColor,");
+	}
+	
+}
+
+
+static void SetColor(int color, Rboolean def, pDevDesc deviceInfo){
+	
+	/* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+	
+	if(def == TRUE){
+		fprintf(tikzInfo->outputFile,
+				"\n\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}",
+				R_RED(color)/255.0,
+				R_GREEN(color)/255.0,
+				R_BLUE(color)/255.0);
+	}else{
+		fprintf( tikzInfo->outputFile, "color=drawColor,");
+	}
+}
+
+
+static void CheckAndSetAlpha(int color, pDevDesc deviceInfo){
+	
+	/* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+	
+	double alpha;
+	alpha = R_ALPHA(color)/255.0;
+	
+	/*Possibly set draw opacity and fill opacity separately here*/
+	if(!R_OPAQUE(color)){
+		fprintf(tikzInfo->outputFile,"opacity=%4.2f,",alpha);
+	}
+	
+}
 
 /* 
  * Activate and deactivate execute commands when the active R device is changed.
