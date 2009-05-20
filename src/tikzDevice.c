@@ -30,8 +30,9 @@ SEXP tikzDevice ( SEXP args ){
 
 	/* Declare local variabls for holding function arguments. */
 	const char *fileName;
+	const char *bg, *fg;
 	double width, height;
-    Rboolean standalone;
+  Rboolean standAlone;
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -61,12 +62,18 @@ SEXP tikzDevice ( SEXP args ){
 	/* Recover figure dimensions. */
 	/* For now these are assumed to be in inches. */
 	width = asReal(CAR(args)); args = CDR(args);
-    height = asReal(CAR(args)); args = CDR(args);
+  height = asReal(CAR(args)); args = CDR(args);
     
-    /* Set the standalone parameter for wrapping the picture in a LaTeX 
-    * document
-    */
-    standalone = asLogical(CAR(args)); args = CDR(args);
+	/* Recover initial background and foreground colors. */
+	bg = CHAR(asChar(CAR(args))); args = CDR(args);
+	fg = CHAR(asChar(CAR(args))); args = CDR(args);
+
+
+  /* 
+	 * Set the standalone parameter for wrapping the picture in a LaTeX 
+   * document
+  */
+  standAlone = asLogical(CAR(args)); args = CDR(args);
 
 	/* Ensure there is an empty slot avaliable for a new device. */
 	R_CheckDeviceAvailable();
@@ -94,7 +101,8 @@ SEXP tikzDevice ( SEXP args ){
 		 * R graphics function hooks with the appropriate C routines
 		 * in this file.
 		*/
-		if( !TikZ_Setup( deviceInfo, fileName, width, height, standalone) ){
+		if( !TikZ_Setup( deviceInfo, fileName, 
+					width, height, bg, fg, standAlone) ){
 			/* 
 			 * If setup was unsuccessful, destroy the device and return
 			 * an error message.
@@ -129,7 +137,8 @@ static Rboolean TikZ_Setup(
 	pDevDesc deviceInfo,
 	const char *fileName,
 	double width, double height,
-	Rboolean standalone){
+	const char *bg, const char *fg,
+	Rboolean standAlone){
 
 	/* 
 	 * Create tikzInfo, this variable contains information which is
@@ -157,8 +166,8 @@ static Rboolean TikZ_Setup(
 	/* Copy TikZ-specific information to the tikzInfo variable. */
 	strcpy( tikzInfo->outFileName, fileName);
 	tikzInfo->firstPage = TRUE;
-    tikzInfo->debug = DEBUG;
-    tikzInfo->standalone = standalone;
+  tikzInfo->debug = DEBUG;
+  tikzInfo->standAlone = standAlone;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -237,29 +246,35 @@ static Rboolean TikZ_Setup(
    * wantSymbolUTF8 indicates if mathematical symbols should be treated
    * as UTF8 characters.
   */
-    deviceInfo->hasTextUTF8 = FALSE;
+  deviceInfo->hasTextUTF8 = FALSE;
 	deviceInfo->wantSymbolUTF8 = FALSE;
 
-    /*
-    * Initialize device parameters. These concern properties such as the plotting
-    * canvas size, the initial foreground and background colors and the initial
-    * clipping area. Other parameters related to fonts and text output are also
-    * included.
-    */
+  /*
+   * Initialize device parameters. These concern properties such as the plotting
+   * canvas size, the initial foreground and background colors and the initial
+   * clipping area. Other parameters related to fonts and text output are also
+   * included.
+  */
 
   /*
    * Set canvas size. The bottom left corner is considered the origin and assigned
    * the value of 0pt, 0pt. The upper right corner is assigned by converting the
    * specified height and width of the device to points.
   */
-    deviceInfo->bottom = 0;
+  deviceInfo->bottom = 0;
 	deviceInfo->left = 0;
 	deviceInfo->top = dim2dev( height );
-    deviceInfo->right = dim2dev( width );
+  deviceInfo->right = dim2dev( width );
 
 	/* Set default character size in pixels. */
 	deviceInfo->cra[0] = 9;
 	deviceInfo->cra[1] = 12;
+
+	/* Set initial font. */
+	deviceInfo->startfont = 1;
+
+	/* Set initial font size. */
+	deviceInfo->startps = 10;
 
 	/* 
 	* Apparently these are supposed to center text strings over the points at
@@ -272,6 +287,13 @@ static Rboolean TikZ_Setup(
 	/* Specify the number of inches per pixel in the x and y directions. */
 	deviceInfo->ipr[0] = 1/dim2dev(1);
 	deviceInfo->ipr[1] = 1/dim2dev(1);
+
+	/* Set initial foreground and background colors. */
+	deviceInfo->startfill = R_GE_str2col( bg );
+	deviceInfo->startcol = R_GE_str2col( fg );
+
+	/* Set initial line type. */
+	deviceInfo->startlty = 0;
 
 
 	/* 
@@ -336,25 +358,33 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 	if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
 		return FALSE;
 
-    /* Header for a standalone LaTeX document*/
-    if(tikzInfo->standalone == TRUE){
-        fprintf(tikzInfo->outputFile,"\\documentclass{article}\n");
-        fprintf(tikzInfo->outputFile,"\\usepackage{tikz}\n");
-        fprintf(tikzInfo->outputFile,"\\usepackage[active,tightpage]{preview}\n");
-        fprintf(tikzInfo->outputFile,"\\PreviewEnvironment{pgfpicture}\n");
-        fprintf(tikzInfo->outputFile,"\\setlength\\PreviewBorder{0pt}\n\n");
-        fprintf(tikzInfo->outputFile,"\\begin{document}\n\n");
-    }
+  /* Header for a standalone LaTeX document*/
+  if(tikzInfo->standAlone == TRUE){
+		fprintf(tikzInfo->outputFile,"\\documentclass{article}\n");
+		fprintf(tikzInfo->outputFile,"\\usepackage{tikz}\n");
+		fprintf(tikzInfo->outputFile,"\\usepackage[active,tightpage]{preview}\n");
+		fprintf(tikzInfo->outputFile,"\\PreviewEnvironment{pgfpicture}\n");
+		fprintf(tikzInfo->outputFile,"\\setlength\\PreviewBorder{0pt}\n\n");
+		fprintf(tikzInfo->outputFile,"\\begin{document}\n\n");
+   }
 
-    /*Show only for debugging*/
-    if(tikzInfo->debug == TRUE) 
-            fprintf(tikzInfo->outputFile,
-                "%% Beginning tikzpicture, this file is %s\n",
-                R_ExpandFileName(tikzInfo->outFileName));
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"%% Beginning tikzpicture, this file is %s\n",
+			R_ExpandFileName(tikzInfo->outFileName));
 
 	/* Start the tikz environment. */
-            fprintf(tikzInfo->outputFile,"%% Created by tikzDevice x.x.x, on DATE, at TIME\n");
+  fprintf(tikzInfo->outputFile,"%% Created by tikzDevice x.x.x, on DATE, at TIME\n");
 	fprintf(tikzInfo->outputFile, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
+
+	/* 
+	 * For now, print an invisible rectangle to ensure all of the plotting area is used.
+	 * Once color options are implemented, this could be replaced with a call to
+	 * TikZ_Rectangle, if feasible.
+  */
+	fprintf(tikzInfo->outputFile, "\\draw[color=white] (0,0) rectangle (%6.2f,%6.2f);",
+			deviceInfo->right,deviceInfo->top);
 
 	return TRUE;
 
@@ -369,8 +399,8 @@ static void TikZ_Close( pDevDesc deviceInfo){
 	fprintf(tikzInfo->outputFile, "\\end{tikzpicture}\n");
 	
 	/* Close off the standalone document*/
-	if(tikzInfo->standalone == TRUE)
-        fprintf(tikzInfo->outputFile,"\n\\end{document}\n");
+	if(tikzInfo->standAlone == TRUE)
+    fprintf(tikzInfo->outputFile,"\n\\end{document}\n");
 
 	/* Close the file and destroy the tikzInfo structure. */
 	fclose(tikzInfo->outputFile);
@@ -384,22 +414,27 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
 	if ( tikzInfo->firstPage ){
-		
 		tikzInfo->firstPage = FALSE;
-
 	}else{
 
 		/* End the current TikZ environment. */
 		fprintf(tikzInfo->outputFile, "\\end{tikzpicture}\n");
 
-        /*Show only for debugging*/
-        if(tikzInfo->debug == TRUE) 
-                fprintf(tikzInfo->outputFile,
-                    "%% Beginning new tikzpicture 'page'");
+		/*Show only for debugging*/
+		if(tikzInfo->debug == TRUE) 
+			fprintf(tikzInfo->outputFile,
+				"%% Beginning new tikzpicture 'page'");
 
 		/* Start a new TikZ envioronment. */
 		fprintf(tikzInfo->outputFile, "\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-	
+		
+		/* 
+		 * For now, print an invisible rectangle to ensure all of the plotting area is used.
+		 * Once color options are implemented, this could be replaced with a call to
+		 * TikZ_Rectangle, if feasible.
+		*/
+		fprintf(tikzInfo->outputFile, "\\draw[color=white] (0,0) rectangle (%6.2f,%6.2f);",
+				deviceInfo->right,deviceInfo->top);
 	}
 
 }
@@ -632,12 +667,12 @@ static void TikZ_Polyline( int n, double *x, double *y,
 
 	/* Print last set of coordinates. End path. */
 	fprintf( tikzInfo->outputFile, "\t(%6.2f,%6.2f);\n",
-		x[n],y[n]);
+		x[n-1],y[n-1]);
 		
 	/*Show only for debugging*/
-    if(tikzInfo->debug == TRUE) 
-            fprintf(tikzInfo->outputFile,
-                "%% End Polyline\n");
+  if(tikzInfo->debug == TRUE) 
+    fprintf(tikzInfo->outputFile,
+      "%% End Polyline\n");
 
 }
 
@@ -647,10 +682,10 @@ static void TikZ_Polygon( int n, double *x, double *y,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-    /*Show only for debugging*/
-    if(tikzInfo->debug == TRUE) 
-            fprintf(tikzInfo->outputFile,
-                "\n%% Starting Polygon");
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    fprintf(tikzInfo->outputFile,
+      "\n%% Starting Polygon");
 
 	/* Start drawing, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
@@ -676,10 +711,10 @@ static void TikZ_Polygon( int n, double *x, double *y,
 	/* End path by cycling to first set of coordinates. */
 	fprintf( tikzInfo->outputFile, "\tcycle;\n" );
 
-    /*Show only for debugging*/
-    if(tikzInfo->debug == TRUE) 
-            fprintf(tikzInfo->outputFile,
-                "%% End Polyline\n");
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    fprintf(tikzInfo->outputFile,
+      "%% End Polyline\n");
 
 }
 

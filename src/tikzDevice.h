@@ -19,8 +19,8 @@ typedef struct{
 	FILE *outputFile;
 	char outFileName[128];
 	Rboolean firstPage;
-    Rboolean debug;
-    Rboolean standalone;
+  Rboolean debug;
+  Rboolean standAlone;
 } tikzDevDesc;
 
 
@@ -30,7 +30,8 @@ static Rboolean TikZ_Setup(
 		pDevDesc deviceInfo,
 		const char *fileName,
 		double width, double height,
-		Rboolean standalone);
+		const char *bg, const char *fg,
+		Rboolean standAlone);
 
 double dim2dev( double length );
 static void textext(const char *str,  tikzDevDesc *td);

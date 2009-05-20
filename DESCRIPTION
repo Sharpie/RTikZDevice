@@ -1,7 +1,7 @@
 Package: tikzDevice
 Type: Package
 Title: A Device for R Graphics Output in PGF/TikZ Format
-Version: 0.2
+Version: 0.2.5
 Date: 2009-05-19
 Author: Charlie Sharpsteen and Cameron Bracken
 Maintainer: Charlie Sharpsteen <source@sharpsteen.net>
