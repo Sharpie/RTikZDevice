@@ -2,10 +2,10 @@
 
 library(tikzDevice)
 
-tikz('test1.tikz')
+tikz('test1.tex',standalone=T)
 plot(1,axes=F,xlab='X Axis',ylab='Y Axis')
 dev.off()
 
-tikz('test2.tikz')
+tikz('test2.tex',standalone=T)
 plot(1)
 dev.off()

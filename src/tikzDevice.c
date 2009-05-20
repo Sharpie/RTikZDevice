@@ -31,6 +31,7 @@ SEXP tikzDevice ( SEXP args ){
 	/* Declare local variabls for holding function arguments. */
 	const char *fileName;
 	double width, height;
+    Rboolean standalone;
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -60,7 +61,12 @@ SEXP tikzDevice ( SEXP args ){
 	/* Recover figure dimensions. */
 	/* For now these are assumed to be in inches. */
 	width = asReal(CAR(args)); args = CDR(args);
-  height = asReal(CAR(args)); args = CDR(args);
+    height = asReal(CAR(args)); args = CDR(args);
+    
+    /* Set the standalone parameter for wrapping the picture in a LaTeX 
+    * document
+    */
+    standalone = asLogical(CAR(args)); args = CDR(args);
 
 	/* Ensure there is an empty slot avaliable for a new device. */
 	R_CheckDeviceAvailable();
@@ -70,7 +76,7 @@ SEXP tikzDevice ( SEXP args ){
 		/* 
 		 * The pDevDesc variable specifies which funtions and components 
 		 * which describe the specifics of this graphics device. After
-     * setup, this information will be incorporated into the pGEDevDesc
+         * setup, this information will be incorporated into the pGEDevDesc
 		 * variable tikzDev.
 	  */ 
 		pDevDesc deviceInfo;
@@ -88,7 +94,7 @@ SEXP tikzDevice ( SEXP args ){
 		 * R graphics function hooks with the appropriate C routines
 		 * in this file.
 		*/
-		if( !TikZ_Setup( deviceInfo, fileName, width, height ) ){
+		if( !TikZ_Setup( deviceInfo, fileName, width, height, standalone) ){
 			/* 
 			 * If setup was unsuccessful, destroy the device and return
 			 * an error message.
@@ -122,7 +128,8 @@ SEXP tikzDevice ( SEXP args ){
 static Rboolean TikZ_Setup(
 	pDevDesc deviceInfo,
 	const char *fileName,
-	double width, double height){
+	double width, double height,
+	Rboolean standalone){
 
 	/* 
 	 * Create tikzInfo, this variable contains information which is
@@ -151,6 +158,7 @@ static Rboolean TikZ_Setup(
 	strcpy( tikzInfo->outFileName, fileName);
 	tikzInfo->firstPage = TRUE;
     tikzInfo->debug = DEBUG;
+    tikzInfo->standalone = standalone;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -229,33 +237,33 @@ static Rboolean TikZ_Setup(
    * wantSymbolUTF8 indicates if mathematical symbols should be treated
    * as UTF8 characters.
   */
-  deviceInfo->hasTextUTF8 = FALSE;
+    deviceInfo->hasTextUTF8 = FALSE;
 	deviceInfo->wantSymbolUTF8 = FALSE;
 
-	/*
-   * Initialize device parameters. These concern properties such as the plotting
-   * canvas size, the initial foreground and background colors and the initial
-   * clipping area. Other parameters related to fonts and text output are also
-   * included.
-  */
+    /*
+    * Initialize device parameters. These concern properties such as the plotting
+    * canvas size, the initial foreground and background colors and the initial
+    * clipping area. Other parameters related to fonts and text output are also
+    * included.
+    */
 
   /*
-	 * Set canvas size. The bottom left corner is considered the origin and assigned
+   * Set canvas size. The bottom left corner is considered the origin and assigned
    * the value of 0pt, 0pt. The upper right corner is assigned by converting the
    * specified height and width of the device to points.
   */
-  deviceInfo->bottom = 0;
+    deviceInfo->bottom = 0;
 	deviceInfo->left = 0;
 	deviceInfo->top = dim2dev( height );
-  deviceInfo->right = dim2dev( width );
+    deviceInfo->right = dim2dev( width );
 
 	/* Set default character size in pixels. */
 	deviceInfo->cra[0] = 9;
 	deviceInfo->cra[1] = 12;
 
 	/* 
-	 * Apparently these are supposed to center text strings over the points at
-   * which they are plottet. TikZ does this automagically.
+	* Apparently these are supposed to center text strings over the points at
+    * which they are plottet. TikZ does this automagically.
 	*/
 	deviceInfo->xCharOffset = 0;	
 	deviceInfo->yCharOffset = 0;	
@@ -328,6 +336,16 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 	if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
 		return FALSE;
 
+    /* Header for a standalone LaTeX document*/
+    if(tikzInfo->standalone == TRUE){
+        fprintf(tikzInfo->outputFile,"\\documentclass{article}\n");
+        fprintf(tikzInfo->outputFile,"\\usepackage{tikz}\n");
+        fprintf(tikzInfo->outputFile,"\\usepackage[active,tightpage]{preview}\n");
+        fprintf(tikzInfo->outputFile,"\\PreviewEnvironment{pgfpicture}\n");
+        fprintf(tikzInfo->outputFile,"\\setlength\\PreviewBorder{0pt}\n\n");
+        fprintf(tikzInfo->outputFile,"\\begin{document}\n\n");
+    }
+
     /*Show only for debugging*/
     if(tikzInfo->debug == TRUE) 
             fprintf(tikzInfo->outputFile,
@@ -349,6 +367,10 @@ static void TikZ_Close( pDevDesc deviceInfo){
 
 	/* End the tikz environment. */
 	fprintf(tikzInfo->outputFile, "\\end{tikzpicture}\n");
+	
+	/* Close off the standalone document*/
+	if(tikzInfo->standalone == TRUE)
+        fprintf(tikzInfo->outputFile,"\n\\end{document}\n");
 
 	/* Close the file and destroy the tikzInfo structure. */
 	fclose(tikzInfo->outputFile);
