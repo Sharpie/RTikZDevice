@@ -168,6 +168,9 @@ static Rboolean TikZ_Setup(
 	tikzInfo->firstPage = TRUE;
 	tikzInfo->debug = DEBUG;
 	tikzInfo->standAlone = standAlone;
+	tikzInfo->oldFillColor = 0;
+	tikzInfo->oldDrawColor = 0;
+	tikzInfo->oldLineType = 0;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -782,11 +785,14 @@ static void SetFill(int color, Rboolean def, pDevDesc deviceInfo){
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 	
 	if(def == TRUE){
-		fprintf(tikzInfo->outputFile,
-				"\n\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}",
-				R_RED(color)/255.0,
-				R_GREEN(color)/255.0,
-				R_BLUE(color)/255.0);
+		if(!(color == tikzInfo->oldFillColor)){
+			tikzInfo->oldFillColor = color;
+			fprintf(tikzInfo->outputFile,
+					"\n\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}",
+					R_RED(color)/255.0,
+					R_GREEN(color)/255.0,
+					R_BLUE(color)/255.0);
+		}
 	}else{
 		fprintf( tikzInfo->outputFile, "fill=fillColor,");
 	}
@@ -800,11 +806,14 @@ static void SetColor(int color, Rboolean def, pDevDesc deviceInfo){
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 	
 	if(def == TRUE){
-		fprintf(tikzInfo->outputFile,
-				"\n\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}",
-				R_RED(color)/255.0,
-				R_GREEN(color)/255.0,
-				R_BLUE(color)/255.0);
+		if(!(color == tikzInfo->oldDrawColor)){
+			tikzInfo->oldDrawColor = color;
+			fprintf(tikzInfo->outputFile,
+					"\n\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}",
+					R_RED(color)/255.0,
+					R_GREEN(color)/255.0,
+					R_BLUE(color)/255.0);
+		}
 	}else{
 		fprintf( tikzInfo->outputFile, "color=drawColor,");
 	}
@@ -816,8 +825,8 @@ static void CheckAndSetAlpha(int color, pDevDesc deviceInfo){
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 	
-	double alpha;
-	alpha = R_ALPHA(color)/255.0;
+	unsigned int alpha = R_ALPHA(color);
+	double dalpha = alpha/255.0;
 	
 	/*Possibly set draw opacity and fill opacity separately here*/
 	if(!R_OPAQUE(color)){

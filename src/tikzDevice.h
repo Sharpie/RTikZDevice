@@ -21,6 +21,9 @@ typedef struct{
 	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
+	int oldFillColor;
+	int oldDrawColor;
+	int oldLineType;
 } tikzDevDesc;
 
 

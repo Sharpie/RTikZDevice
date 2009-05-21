@@ -11,13 +11,20 @@ FIX:
    string width.
  * The CheckAndSetAlpha() function provides inconsistent results for, for 
    example test3 is completely transparent but test4 is not though 
- * Fill and draw colors are redefined before every shape is drawn, this works 
-   as a first cut but is VERY inefficient for large numbers of points which 
-   are not changing colors. possibly use \begin{scope}\end{scope} if possible
  * Fill colors are still shown for polylines and lines; This does not affect 
    the output but is inefficient.  
+ * Shapes are plotted with a default color border of black when it should be 
+   transparent
 
 FIXED:
+* Fill and draw colors are redefined before every shape is drawn, this works 
+  as a first cut but is VERY inefficient for large numbers of points which 
+  are not changing colors. possibly use \begin{scope}\end{scope} if possible
+    [Solution]
+    Introduced the parameters oldFillColor and oldDrawColor in the tikzInfo 
+    structure whci are check against the current color and only redefined if 
+    different 
+    
  * when using plot(1,1), all calls to text result in proper output with one
    exception: the coordinates of the text nodes are nan.
 	 [Solution]
@@ -30,8 +37,8 @@ FIXED:
    The line travels through the correct points, then returns to (0,0) which results
    in the right hand side of the plot having a funky edge.
 	 [Solution]
-   This bug was a result of incorrect handling of C's #&@!&^ 0 array indexing
-   by TikZ_Polyline.
+     This bug was a result of incorrect handling of C's #&@!&^ 0 array indexing
+     by TikZ_Polyline.
 
 TODO:
 	* Currently the device ignores all parameters passed into plotting functions 
