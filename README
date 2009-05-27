@@ -1,10 +1,11 @@
-Version 0.3: Alpha
+Version 0.3.1: Alpha
 
 STATUS:
 	The tikzDevice implements the tikz() graphics driver in R. This driver
 	is currently complete to the extent that all skeleton routines have been
 	implemented. The device passes the plot(1,1) test.  Currently the device 
-	supports colors, line types, line weights and semi-transparency.
+	supports colors, line types, line weights, semi-transparency, line endings 
+	and line joining. 
 
 FIX:
     * When using plot(1,1), all text labels are placed incorrectly. This may
@@ -13,6 +14,9 @@ FIX:
    
     * Fill colors are still shown for polylines and lines; This does not 
       affect the output but is inefficient.  
+      
+    * Line endings are still shown for circles and squares; This does not 
+      affect the output but is inefficient.
 
 FIXED:
     * Shapes are plotted with a default color border of black when it should 
@@ -54,7 +58,7 @@ FIXED:
 TODO:
     * Clipping
     
-    * Line endings and joinings
+    * Line mitre
 
     * The setup of the text functions is extremely janky. No attempt is made 
 	  to determine string width or font metrics. This could be a possible 

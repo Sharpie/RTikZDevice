@@ -54,7 +54,7 @@ dev.off()
 
 #test for line weight
 tikz('test09.tex', standAlone=T)
-plot(0, type='n', xlim=c(0,1), ylim=c(0,6), axes=F, xlab='', ylab='', main='test08')
+plot(0, type='n', xlim=c(0,1), ylim=c(0,6), axes=F, xlab='', ylab='', main='test09')
 for(i in 0:6)
 	lines(c(0,1), c(i,i), lwd=i)
 dev.off()

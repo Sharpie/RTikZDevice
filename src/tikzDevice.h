@@ -37,7 +37,7 @@ static Rboolean TikZ_Setup(
 		Rboolean standAlone);
 
 double dim2dev( double length );
-static void textext(const char *str,  tikzDevDesc *td);
+static void TeXText(const char *str,  tikzDevDesc *tikzInfo);
 
 static Rboolean TikZ_Open( pDevDesc deviceInfo );
 
@@ -72,13 +72,18 @@ static void TikZ_Polyline( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
+		
+/*Internal style definition routines*/
 static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
 	pDevDesc deviceInfo);
 static void SetColor(int color, Rboolean def, pDevDesc deviceInfo);
 static void SetFill(int color, Rboolean def, pDevDesc deviceInfo);
-static void CheckAndSetAlpha(int color, Rboolean fill, pDevDesc deviceInfo);
-static void SetScale(double cex, pDevDesc deviceInfo);
+static void SetAlpha(int color, Rboolean fill, pDevDesc deviceInfo);
 static void SetLineStyle(int lty, int lwd, pDevDesc deviceInfo);
+static void SetDashPattern(int lty, FILE *outputFile);
+static void SetLineWeight(int lwd, FILE *outputFile);
+static void SetLineJoin(R_GE_linejoin ljoin, pDevDesc deviceInfo);
+static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo);
 
 
 /* Dummy routines. */

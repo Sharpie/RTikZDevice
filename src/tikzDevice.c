@@ -17,7 +17,7 @@
  * provided by the R language.
 */
 #include "tikzDevice.h"
-#define DEBUG TRUE
+#define DEBUG FALSE
 
 SEXP tikzDevice ( SEXP args ){
 
@@ -723,40 +723,6 @@ static void TikZ_Polygon( int n, double *x, double *y,
 
 }
 
-/* TeX Text Translations from the PixTeX Device, I thought we might be able to 
- * use these possibly for an option to sanitize TeX strings
- */
-static void textext(const char *str,  tikzDevDesc *td){
-	fputc('{', td->outputFile);
-	for( ; *str ; str++)
-	switch(*str) {
-	case '$':
-		fprintf(td->outputFile, "\\$");
-		break;
-
-	case '%':
-		fprintf(td->outputFile, "\\%%");
-		break;
-
-	case '{':
-		fprintf(td->outputFile, "\\{");
-		break;
-
-	case '}':
-		fprintf(td->outputFile, "\\}");
-		break;
-
-	case '^':
-		fprintf(td->outputFile, "\\^{}");
-		break;
-
-	default:
-		fputc(*str, td->outputFile);
-		break;
-	}
-	fprintf(td->outputFile,"} ");
-}
-
 /* This function either prints out the color definitions for outline and fill 
  * colors or the style tags in the \draw[] command, the defineColor parameter 
  * tells if the color/style is being defined or used.
@@ -780,8 +746,11 @@ static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
 		if(code & 1) {
 			/* Define outline draw color*/
 			SetColor(plotParams->col, defineColor, deviceInfo);
-			if(defineColor == FALSE)
+			if(defineColor == FALSE){
 				SetLineStyle(plotParams->lty, plotParams->lwd, deviceInfo);
+				SetLineEnd(plotParams->lend, deviceInfo);
+				SetLineJoin(plotParams->ljoin, deviceInfo);
+			}
 		}
 		if(code & 2){
 			/* Define fill color*/
@@ -791,9 +760,9 @@ static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
 	/*Set Alpha*/
 	if(defineColor == FALSE){
 		/*Set Fill opacity Alpha*/
-		CheckAndSetAlpha(plotParams->fill, TRUE, deviceInfo);
+		SetAlpha(plotParams->fill, TRUE, deviceInfo);
 		/*Set Draw opacity Alpha*/
-		CheckAndSetAlpha(plotParams->col, FALSE, deviceInfo);
+		SetAlpha(plotParams->col, FALSE, deviceInfo);
 	}
 	
 }
@@ -827,8 +796,6 @@ static void SetColor(int color, Rboolean def, pDevDesc deviceInfo){
 	if(def == TRUE){
 		if(color != tikzInfo->oldDrawColor){
 			tikzInfo->oldDrawColor = color;
-			fprintf(tikzInfo->outputFile, "\n%%%d\n", color);
-			fprintf(tikzInfo->outputFile, "%%%d\n", tikzInfo->oldDrawColor);
 			fprintf(tikzInfo->outputFile,
 					"\n\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}",
 					R_RED(color)/255.0,
@@ -844,6 +811,16 @@ static void SetLineStyle(int lty, int lwd, pDevDesc deviceInfo){
 	
     /* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+		
+	SetLineWeight(lwd, tikzInfo->outputFile);
+	
+    if (lty && lwd) {
+	
+		SetDashPattern(lty, tikzInfo->outputFile);
+    }
+}
+
+static void SetDashPattern(int lty, FILE *outputFile){
 	char dashlist[8];
 	int i, nlty;
 	
@@ -865,36 +842,36 @@ static void SetLineStyle(int lty, int lwd, pDevDesc deviceInfo){
 	 * (0=blank, 1=solid (default), 2=dashed, 
 	 *  3=dotted, 4=dotdash, 5=longdash, 6=twodash) 
 	*/
-		
-	/*Set the line width, 0.4pt is the TikZ default*/
-	if(lwd != 1)
-		fprintf(tikzInfo->outputFile,"line width=%4.1fpt,",0.4*lwd);
+	/*Retrieve the line type pattern*/
 	
-    if (lty) {
-		/*Retrieve the line type pattern*/
-		for(i = 0; i < 8 && lty & 15 ; i++) {
-			dashlist[i] = lty & 15;
-			lty = lty >> 4;
+	for(i = 0; i < 8 && lty & 15 ; i++) {
+		dashlist[i] = lty & 15;
+		lty = lty >> 4;
+	}
+	nlty = i; i = 0; 
+	
+	fprintf(outputFile, "dash pattern=");
+	
+	/*Set the dash pattern*/
+	while(i < nlty){
+		if( (i % 2) == 0 ){
+			fprintf(outputFile, "on %dpt ", dashlist[i]);
+		}else{
+			fprintf(outputFile, "off %dpt ", dashlist[i]);
 		}
-		nlty = i; i = 0; 
-		
-		fprintf(tikzInfo->outputFile, "dash pattern=");
-		
-		/*Set the dash pattern*/
-		while(i < nlty){
-			if( (i % 2) == 0 ){
-				fprintf(tikzInfo->outputFile, "on %dpt ", dashlist[i]);
-			}else{
-				fprintf(tikzInfo->outputFile, "off %dpt ", dashlist[i]);
-			}
-			i++;
-		}
-		fprintf(tikzInfo->outputFile, ",");
-    }
+		i++;
+	}
+	fprintf(outputFile, ",");
 }
 
+static void SetLineWeight(int lwd, FILE *outputFile){
+	
+	/*Set the line width, 0.4pt is the TikZ default so scale lwd=1 to that*/
+	if(lwd != 1)
+		fprintf(outputFile,"line width=%4.1fpt,",0.4*lwd);
+}
 
-static void CheckAndSetAlpha(int color, Rboolean fill, pDevDesc deviceInfo){
+static void SetAlpha(int color, Rboolean fill, pDevDesc deviceInfo){
 	
 	/* If the parameter fill == TRUE then set the fill opacity otherwise set 
 	 * the outline opacity
@@ -905,7 +882,7 @@ static void CheckAndSetAlpha(int color, Rboolean fill, pDevDesc deviceInfo){
 	
 	unsigned int alpha = R_ALPHA(color);
 	
-	/*Possibly set draw opacity and fill opacity separately here*/
+	/*draw opacity and fill opacity separately here*/
 	if(!R_OPAQUE(color)){
 		if(fill == TRUE)
 			fprintf(tikzInfo->outputFile,"fill opacity=%4.2f,",alpha/255.0);
@@ -913,6 +890,76 @@ static void CheckAndSetAlpha(int color, Rboolean fill, pDevDesc deviceInfo){
 			fprintf(tikzInfo->outputFile,"draw opacity=%4.2f,",alpha/255.0);
 	}
 	
+}
+
+
+static void SetLineJoin(R_GE_linejoin ljoin, pDevDesc deviceInfo){
+	
+	/* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+	
+	switch (ljoin) {
+		case GE_ROUND_JOIN:
+			fprintf(tikzInfo->outputFile, "line join=round,");
+			break;
+		case GE_MITRE_JOIN:
+			/*Default if nothing is specified*/
+			break;
+		case GE_BEVEL_JOIN:
+			fprintf(tikzInfo->outputFile, "line join=bevel,");
+	}
+}
+
+static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo){
+	
+	/* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+	
+	switch (lend) {
+		case GE_ROUND_CAP:
+			fprintf(tikzInfo->outputFile, "line cap=round,");
+			break;
+		case GE_BUTT_CAP:
+			/*Default if nothing is specified*/
+			break;
+		case GE_SQUARE_CAP:
+			fprintf(tikzInfo->outputFile, "line cap=rect,");
+	}
+}
+
+
+/* TeX Text Translations from the PixTeX Device, I thought we might be able to 
+ * use these possibly for an option to sanitize TeX strings
+ */
+static void TeXText(const char *str,  tikzDevDesc *tikzInfo){
+	fputc('{', tikzInfo->outputFile);
+	for( ; *str ; str++)
+		switch(*str) {
+		case '$':
+			fprintf(tikzInfo->outputFile, "\\$");
+			break;
+
+		case '%':
+			fprintf(tikzInfo->outputFile, "\\%%");
+			break;
+
+		case '{':
+			fprintf(tikzInfo->outputFile, "\\{");
+			break;
+
+		case '}':
+			fprintf(tikzInfo->outputFile, "\\}");
+			break;
+
+		case '^':
+			fprintf(tikzInfo->outputFile, "\\^{}");
+			break;
+
+		default:
+			fputc(*str, tikzInfo->outputFile);
+			break;
+		}
+	fprintf(tikzInfo->outputFile,"} ");
 }
 
 
