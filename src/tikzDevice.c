@@ -436,8 +436,14 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 		 * Once color options are implemented, this could be replaced with a call to
 		 * TikZ_Rectangle, if feasible.
 		*/
-		fprintf(tikzInfo->outputFile, "\\draw[color=white] (0,0) rectangle (%6.2f,%6.2f);",
-				deviceInfo->right,deviceInfo->top);
+		fprintf(tikzInfo->outputFile, 
+			"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
+			deviceInfo->right,deviceInfo->top);
+				
+		/*Define default colors*/
+		SetColor(plotParams->col, TRUE, deviceInfo);
+		SetFill(plotParams->fill, TRUE, deviceInfo);
+		
 	}
 
 }
@@ -679,14 +685,20 @@ static void TikZ_Polygon( int n, double *x, double *y,
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
 			"\n%% Starting Polygon");
-
+			
+	/*Define the colors for fill and border*/
+	StyleDef(TRUE, plotParams, deviceInfo);
+	
 	/* Start drawing, open an options bracket. */
 	fprintf( tikzInfo->outputFile,"\n\\draw[");
-
+	
 	/* 
 	 * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
+	 * and fill color etc. 
 	*/
+	
+	/*Define the draw styles*/
+	StyleDef(FALSE, plotParams, deviceInfo);
 
 	/* End options, print first set of coordinates. */
 	fprintf( tikzInfo->outputFile, "] (%6.2f,%6.2f) --\n",
@@ -746,12 +758,13 @@ static void textext(const char *str,  tikzDevDesc *td){
 }
 
 /* This function either prints out the color definitions for outline and fill 
- * colors or the style tags in the \draw[] command, the def parameter tells 
- * if the color/style is being defined or used.
+ * colors or the style tags in the \draw[] command, the defineColor parameter 
+ * tells if the color/style is being defined or used.
  * SetLineStyle and CheckAndSetAlpha are only run if the style is being used 
  * because there are no color definitions outside of the draw command. 
 */
-static void StyleDef(Rboolean def, const pGEcontext plotParams, pDevDesc deviceInfo){
+static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
+						pDevDesc deviceInfo){
 	
 	/*From devPS.c, PS_Circle()*/
 	int code;
@@ -761,21 +774,27 @@ static void StyleDef(Rboolean def, const pGEcontext plotParams, pDevDesc deviceI
     /* code == 2, fill only */
     /* code == 3, outline and fill */
 
-    code = 2 * (R_OPAQUE(plotParams->fill)) + (R_OPAQUE(plotParams->col));
+    code = 3 - 2 * (R_TRANSPARENT(plotParams->fill)) - (R_TRANSPARENT(plotParams->col));
 
 	if (code) {
 		if(code & 1) {
 			/* Define outline draw color*/
-			SetColor(plotParams->col, def, deviceInfo);
-			//if(def == FALSE)SetLineStyle()
+			SetColor(plotParams->col, defineColor, deviceInfo);
+			if(defineColor == FALSE)
+				SetLineStyle(plotParams->lty, plotParams->lwd, deviceInfo);
 		}
 		if(code & 2){
 			/* Define fill color*/
-			SetFill(plotParams->fill, def, deviceInfo);
+			SetFill(plotParams->fill, defineColor, deviceInfo);
 		}
 	}
-	/*Alpha is causing wierdness and is disabled for now */
-	//if(def == FALSE) CheckAndSetAlpha(plotParams->fill,deviceInfo);
+	/*Set Alpha*/
+	if(defineColor == FALSE){
+		/*Set Fill opacity Alpha*/
+		CheckAndSetAlpha(plotParams->fill, TRUE, deviceInfo);
+		/*Set Draw opacity Alpha*/
+		CheckAndSetAlpha(plotParams->col, FALSE, deviceInfo);
+	}
 	
 }
 
@@ -785,7 +804,7 @@ static void SetFill(int color, Rboolean def, pDevDesc deviceInfo){
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 	
 	if(def == TRUE){
-		if(!(color == tikzInfo->oldFillColor)){
+		if(color != tikzInfo->oldFillColor){
 			tikzInfo->oldFillColor = color;
 			fprintf(tikzInfo->outputFile,
 					"\n\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}",
@@ -806,8 +825,10 @@ static void SetColor(int color, Rboolean def, pDevDesc deviceInfo){
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 	
 	if(def == TRUE){
-		if(!(color == tikzInfo->oldDrawColor)){
+		if(color != tikzInfo->oldDrawColor){
 			tikzInfo->oldDrawColor = color;
+			fprintf(tikzInfo->outputFile, "\n%%%d\n", color);
+			fprintf(tikzInfo->outputFile, "%%%d\n", tikzInfo->oldDrawColor);
 			fprintf(tikzInfo->outputFile,
 					"\n\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}",
 					R_RED(color)/255.0,
@@ -819,21 +840,81 @@ static void SetColor(int color, Rboolean def, pDevDesc deviceInfo){
 	}
 }
 
+static void SetLineStyle(int lty, int lwd, pDevDesc deviceInfo){
+	
+    /* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+	char dashlist[8];
+	int i, nlty;
+	
+	/* From ?par
+	 * Line types can either be specified by giving an index into a small 
+	 * built-in table of line types (1 = solid, 2 = dashed, etc, see lty 
+	 * above) or directly as the lengths of on/off stretches of line. This 
+	 * is done with a string of an even number (up to eight) of characters, 
+	 * namely non-zero (hexadecimal) digits which give the lengths in 
+	 * consecutive positions in the string. For example, the string "33" 
+	 * specifies three units on followed by three off and "3313" specifies 
+	 * three units on followed by three off followed by one on and finally 
+	 * three off. The ‘units’ here are (on most devices) proportional to lwd, 
+	 * and with lwd = 1 are in pixels or points or 1/96 inch.
 
-static void CheckAndSetAlpha(int color, pDevDesc deviceInfo){
+	 * The five standard dash-dot line types (lty = 2:6) correspond to 
+	 * c("44", "13", "1343", "73", "2262").
+	 * 
+	 * (0=blank, 1=solid (default), 2=dashed, 
+	 *  3=dotted, 4=dotdash, 5=longdash, 6=twodash) 
+	*/
+		
+	/*Set the line width, 0.4pt is the TikZ default*/
+	if(lwd != 1)
+		fprintf(tikzInfo->outputFile,"line width=%4.1fpt,",0.4*lwd);
+	
+    if (lty) {
+		/*Retrieve the line type pattern*/
+		for(i = 0; i < 8 && lty & 15 ; i++) {
+			dashlist[i] = lty & 15;
+			lty = lty >> 4;
+		}
+		nlty = i; i = 0; 
+		
+		fprintf(tikzInfo->outputFile, "dash pattern=");
+		
+		/*Set the dash pattern*/
+		while(i < nlty){
+			if( (i % 2) == 0 ){
+				fprintf(tikzInfo->outputFile, "on %dpt ", dashlist[i]);
+			}else{
+				fprintf(tikzInfo->outputFile, "off %dpt ", dashlist[i]);
+			}
+			i++;
+		}
+		fprintf(tikzInfo->outputFile, ",");
+    }
+}
+
+
+static void CheckAndSetAlpha(int color, Rboolean fill, pDevDesc deviceInfo){
+	
+	/* If the parameter fill == TRUE then set the fill opacity otherwise set 
+	 * the outline opacity
+	*/
 	
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 	
 	unsigned int alpha = R_ALPHA(color);
-	double dalpha = alpha/255.0;
 	
 	/*Possibly set draw opacity and fill opacity separately here*/
 	if(!R_OPAQUE(color)){
-		fprintf(tikzInfo->outputFile,"opacity=%4.2f,",alpha);
+		if(fill == TRUE)
+			fprintf(tikzInfo->outputFile,"fill opacity=%4.2f,",alpha/255.0);
+		else
+			fprintf(tikzInfo->outputFile,"draw opacity=%4.2f,",alpha/255.0);
 	}
 	
 }
+
 
 /* 
  * Activate and deactivate execute commands when the active R device is changed.

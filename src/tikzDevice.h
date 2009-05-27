@@ -72,12 +72,13 @@ static void TikZ_Polyline( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
-static void StyleDef(Rboolean def, const pGEcontext plotParams, 
-		pDevDesc deviceInfo);
+static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
+	pDevDesc deviceInfo);
 static void SetColor(int color, Rboolean def, pDevDesc deviceInfo);
 static void SetFill(int color, Rboolean def, pDevDesc deviceInfo);
-static void CheckAndSetAlpha(int color, pDevDesc deviceInfo);
+static void CheckAndSetAlpha(int color, Rboolean fill, pDevDesc deviceInfo);
 static void SetScale(double cex, pDevDesc deviceInfo);
+static void SetLineStyle(int lty, int lwd, pDevDesc deviceInfo);
 
 
 /* Dummy routines. */
