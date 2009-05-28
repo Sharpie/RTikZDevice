@@ -769,7 +769,7 @@ static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
 			if(defineColor == FALSE){
 				SetLineStyle(plotParams->lty, plotParams->lwd, deviceInfo);
 				SetLineEnd(plotParams->lend, deviceInfo);
-				SetLineJoin(plotParams->ljoin, deviceInfo);
+				SetLineJoin(plotParams->ljoin, plotParams->lmitre, deviceInfo);
 			}
 		}
 		if(code & 2){
@@ -862,8 +862,8 @@ static void SetDashPattern(int lty, FILE *outputFile){
 	 * (0=blank, 1=solid (default), 2=dashed, 
 	 *  3=dotted, 4=dotdash, 5=longdash, 6=twodash) 
 	*/
-	/*Retrieve the line type pattern*/
 	
+	/*Retrieve the line type pattern*/
 	for(i = 0; i < 8 && lty & 15 ; i++) {
 		dashlist[i] = lty & 15;
 		lty = lty >> 4;
@@ -913,7 +913,7 @@ static void SetAlpha(int color, Rboolean fill, pDevDesc deviceInfo){
 }
 
 
-static void SetLineJoin(R_GE_linejoin ljoin, pDevDesc deviceInfo){
+static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, pDevDesc deviceInfo){
 	
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
@@ -924,10 +924,18 @@ static void SetLineJoin(R_GE_linejoin ljoin, pDevDesc deviceInfo){
 			break;
 		case GE_MITRE_JOIN:
 			/*Default if nothing is specified*/
+			SetMitreLimit(lmitre, tikzInfo->outputFile);
 			break;
 		case GE_BEVEL_JOIN:
 			fprintf(tikzInfo->outputFile, "line join=bevel,");
 	}
+}
+
+static void SetMitreLimit(double lmitre, FILE *outputFile){
+	
+	if(lmitre != 10)
+		fprintf(outputFile, "mitre limit=%4.2f,",lmitre);
+	
 }
 
 static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo){
@@ -946,6 +954,7 @@ static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo){
 			fprintf(tikzInfo->outputFile, "line cap=rect,");
 	}
 }
+
 
 
 /* TeX Text Translations from the PixTeX Device, I thought we might be able to 
