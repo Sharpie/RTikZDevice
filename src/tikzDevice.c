@@ -155,6 +155,8 @@ static Rboolean TikZ_Setup(
 	 *
 	*/
 	tikzDevDesc *tikzInfo;
+	
+	pGEcontext plotParams;
 
 	/* 
 	 * Initialize tikzInfo, return false if this fails. A false return
@@ -168,9 +170,11 @@ static Rboolean TikZ_Setup(
 	tikzInfo->firstPage = TRUE;
 	tikzInfo->debug = DEBUG;
 	tikzInfo->standAlone = standAlone;
+	tikzInfo->firstClip = TRUE;
 	tikzInfo->oldFillColor = 0;
 	tikzInfo->oldDrawColor = 0;
 	tikzInfo->oldLineType = 0;
+	tikzInfo->plotParams = plotParams;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -386,7 +390,8 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 	 * Once color options are implemented, this could be replaced with a call to
 	 * TikZ_Rectangle, if feasible.
 	*/
-	fprintf(tikzInfo->outputFile, "\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);",
+	fprintf(tikzInfo->outputFile, 
+			"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
 			deviceInfo->right,deviceInfo->top);
 
 	return TRUE;
@@ -399,6 +404,7 @@ static void TikZ_Close( pDevDesc deviceInfo){
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
 	/* End the tikz environment. */
+	fprintf(tikzInfo->outputFile, "\\end{scope}\n");
 	fprintf(tikzInfo->outputFile, "\\end{tikzpicture}\n");
 	
 	/* Close off the standalone document*/
@@ -448,20 +454,29 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
 }
 
-static void TikZ_Clip( double x0, double x1,
+static void TikZ_Clip( double x0, double x1, 
 		double y0, double y1, pDevDesc deviceInfo ){
-
-	/*
-	 * This function will set some sort of clipping region for the device,
-	 * the PiCTeX device stores this info in the deviceSpecific variable.
-	 * not really shure what to do here yet.
-	*/
+	
+	/* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
 	deviceInfo->clipBottom = y0;
 	deviceInfo->clipLeft = x0;
 	deviceInfo->clipTop = y1;
 	deviceInfo->clipRight = x1;
-
+	
+	if(tikzInfo->firstClip != TRUE)
+		fprintf(tikzInfo->outputFile, "\\end{scope}\n");
+	else
+		tikzInfo->firstClip = FALSE;
+	
+	fprintf(tikzInfo->outputFile, "\\begin{scope}\n");
+	fprintf(tikzInfo->outputFile,
+			"\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+			x0,y0,x1,y1);
+			
+	/*Define the colors for fill and border*/
+	StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
 }
 
 static void TikZ_Size( double *left, double *right,
@@ -472,7 +487,6 @@ static void TikZ_Size( double *left, double *right,
 	*left = deviceInfo->left;
 	*top = deviceInfo->top;
 	*right = deviceInfo->right;
-
 }
 
 
@@ -493,8 +507,14 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 /*
  * This function is supposed to calculate the plotted with, in device raster
  * units of an arbitrary string. This is perhaps the most difficult function
- * that a device needs to implement. Given this difficulty the function
- * currently returns a nice round number- 42.
+ * that a device needs to implement.  Calculating the exact with of a string 
+ * is actually impossible because this device is designed to print characters 
+ * in whatever font is being used in the the TeX document. The font is unknown
+ * (and cannot be known) in the device. The problem is further complicated by 
+ * the fact that TeX strings can be used directly in annotations.  For example 
+ * the string \textit{x} would be seen by the device as 10 characters when it 
+ * should only count as 1.  Given this difficulty the function currently 
+ * returns a nice round number- 42.
 */
 static double TikZ_StrWidth( const char *str,
 		const pGEcontext plotParams, pDevDesc deviceInfo ){
