@@ -64,3 +64,8 @@ tikz('test10.tex', standAlone=T)
 plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main='test10')
 points(rnorm(50), rnorm(50), pch=21, bg=rainbow(50,alpha=.5), cex=10)
 dev.off()
+
+f <- 'filesizes.txt'
+texfiles <- list.files(,'tex')
+newsizes <- file.info(texfiles)$size
+cat(paste(texfiles,newsizes,sep='\t'),sep='\n',file=f)
