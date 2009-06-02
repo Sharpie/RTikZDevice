@@ -68,7 +68,20 @@ dev.off()
 #test of many points for file size
 tikz('test11.tex', standAlone=T)
 plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main='test11')
-points(rnorm(5000), rnorm(5000), pch=21, bg=rainbow(50,alpha=.5), cex=10)
+points(rnorm(500), rnorm(500), pch=21, bg=rainbow(50,alpha=.5), cex=10)
+dev.off()
+
+#Test with many strings and complex clipping from help(contour)
+tikz('test12.tex', standAlone=T)
+x <- -6:16
+op <- par(mfrow = c(2, 2))
+contour(outer(x, x), method = "edge")
+z <- outer(x, sqrt(abs(x)), FUN = "/")
+image(x, x, z)
+contour(x, x, z, col = "pink", add = TRUE, method = "edge")
+contour(x, x, z, ylim = c(1, 6), method = "simple", labcex = 1)
+contour(x, x, z, ylim = c(-6, 6), nlev = 20, lty = 2, method = "simple")
+par(op)
 dev.off()
 
 f <- 'filesizes.txt'

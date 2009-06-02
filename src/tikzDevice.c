@@ -17,7 +17,7 @@
  * provided by the R language.
 */
 #include "tikzDevice.h"
-#define DEBUG FALSE
+#define DEBUG TRUE
 
 SEXP tikzDevice ( SEXP args ){
 
@@ -474,6 +474,10 @@ static void TikZ_Clip( double x0, double x1,
 	fprintf(tikzInfo->outputFile,
 			"\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
 			x0,y0,x1,y1);
+	if(tikzInfo->debug == TRUE)
+		fprintf(tikzInfo->outputFile,
+				"\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+				x0,y0,x1,y1);
 			
 	/*Define the colors for fill and border*/
 	StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
@@ -518,7 +522,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 */
 static double TikZ_StrWidth( const char *str,
 		const pGEcontext plotParams, pDevDesc deviceInfo ){
-	return 42;
+	return 0.1;
 }
 
 /*
@@ -551,7 +555,7 @@ static void TikZ_Text( double x, double y, const char *str,
 	/* More options would go here such as scaling, color etc. */
 	
 	/* End options, print coordinates and string. */
-	fprintf( tikzInfo->outputFile, "] at (%6.2f,%6.2f) {%s};\n",
+	fprintf( tikzInfo->outputFile, ",anchor=base] at (%6.2f,%6.2f) {%s};\n",
 		x,y,str);
 
 }
