@@ -17,6 +17,7 @@
  * provided by the R language.
 */
 #include "tikzDevice.h"
+#include <stdio.h>
 #define DEBUG TRUE
 
 SEXP tikzDevice ( SEXP args ){
@@ -221,16 +222,17 @@ static Rboolean TikZ_Setup(
 	 * canClip specifies whether the device implements routines for filtering
 	 * plotting input such that it falls within a rectangular clipping area.
 	 * Implementing this leads to an interesting design choice- to implement
-	 * clipping here in the C code or hand it off to the TikZ clipping routines.
-	 * Clipping at the C level may reduce  and simplify the final output file 
-	 * by not printing objects that fall outside the plot boundaries. 
+	 * clipping here in the C code or hand it off to the TikZ clipping 
+	 * routines.  Clipping at the C level may reduce  and simplify the final 
+	 * output file by not printing objects that fall outside the plot 
+	 * boundaries. 
 	*/
 	deviceInfo->canClip = TRUE;
 
 	/*
-	 * These next parameters speficy if the device reacts to keyboard and mouse
-	 * events. Since this device outputs to a file, not a screen window, these
-	 * actions are disabled.
+	 * These next parameters speficy if the device reacts to keyboard and 
+	 * mouse events. Since this device outputs to a file, not a screen window, 
+	 * these actions are disabled.
 	*/
 	deviceInfo->canGenMouseDown = FALSE;
 	deviceInfo->canGenMouseMove = FALSE;
@@ -257,16 +259,16 @@ static Rboolean TikZ_Setup(
 	deviceInfo->wantSymbolUTF8 = FALSE;
 
 	/*
-	 * Initialize device parameters. These concern properties such as the plotting
-	 * canvas size, the initial foreground and background colors and the initial
-	 * clipping area. Other parameters related to fonts and text output are also
-	 * included.
+	 * Initialize device parameters. These concern properties such as the 
+	 * plotting canvas size, the initial foreground and background colors and 
+	 * the initial clipping area. Other parameters related to fonts and text 
+	 * output are also included.
 	*/
 
 	/*
-	* Set canvas size. The bottom left corner is considered the origin and assigned
-	* the value of 0pt, 0pt. The upper right corner is assigned by converting the
-	* specified height and width of the device to points.
+	* Set canvas size. The bottom left corner is considered the origin and 
+	* assigned the value of 0pt, 0pt. The upper right corner is assigned by 
+	* converting the specified height and width of the device to points.
 	*/
 	deviceInfo->bottom = 0;
 	deviceInfo->left = 0;
@@ -386,9 +388,9 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 	fprintf(tikzInfo->outputFile, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
 
 	/* 
-	 * For now, print an invisible rectangle to ensure all of the plotting area is used.
-	 * Once color options are implemented, this could be replaced with a call to
-	 * TikZ_Rectangle, if feasible.
+	 * For now, print an invisible rectangle to ensure all of the plotting 
+	 * area is used. Once color options are implemented, this could be 
+	 * replaced with a call to TikZ_Rectangle, if feasible.
 	*/
 	fprintf(tikzInfo->outputFile, 
 			"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
@@ -435,12 +437,13 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 				"%% Beginning new tikzpicture 'page'");
 
 		/* Start a new TikZ envioronment. */
-		fprintf(tikzInfo->outputFile, "\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
+		fprintf(tikzInfo->outputFile, 
+			"\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
 		
 		/* 
-		 * For now, print an invisible rectangle to ensure all of the plotting area is used.
-		 * Once color options are implemented, this could be replaced with a call to
-		 * TikZ_Rectangle, if feasible.
+		 * For now, print an invisible rectangle to ensure all of the plotting 
+		 * area is used. Once color options are implemented, this could be 
+		 * replaced with a call to TikZ_Rectangle, if feasible.
 		*/
 		fprintf(tikzInfo->outputFile, 
 			"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
@@ -495,9 +498,10 @@ static void TikZ_Size( double *left, double *right,
 
 
 /*
- * This function is supposed to calculate character metrics (such as raised letters,
- * stretched letters, ect). Currently the TikZ device does not perform such functions,
- * so this function returns a mandatory 0 for each component.
+ * This function is supposed to calculate character metrics (such as raised 
+ * letters, stretched letters, ect). Currently the TikZ device does not 
+ * perform such functions, so this function returns a mandatory 0 for each 
+ * component.
 */ 
 static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 		double *ascent, double *descent, double *width, pDevDesc deviceInfo ){
@@ -570,7 +574,8 @@ static void TikZ_Line( double x1, double y1,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"\n%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f",
+			"\n%% Drawing line from x1 = %10.4f, 
+			y1 = %10.4f to x2 = %10.4f, y2 = %10.4f",
 			x1,y1,x2,y2);
 
 	/*Define the colors for fill and border*/
@@ -631,7 +636,8 @@ static void TikZ_Rectangle( double x0, double y0,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"\n%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f",
+			"\n%% Drawing Rectangle from x0 = %f, 
+			y0 = %f to x1 = %f, y1 = %f",
 			x0,y0,x1,y1);
 
 	/*Define the colors for fill and border*/
@@ -649,7 +655,8 @@ static void TikZ_Rectangle( double x0, double y0,
 	*/
 	
 	/* End options, print coordinates. */
-	fprintf( tikzInfo->outputFile, "] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+	fprintf( tikzInfo->outputFile, 
+		"] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
 		x0,y0,x1,y1);
 
 }
@@ -764,7 +771,8 @@ static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
     /* code == 2, fill only */
     /* code == 3, outline and fill */
 
-    code = 3 - 2 * (R_TRANSPARENT(plotParams->fill)) - (R_TRANSPARENT(plotParams->col));
+    code = 3 - 2 * (R_TRANSPARENT(plotParams->fill)) - 
+					(R_TRANSPARENT(plotParams->col));
 
 	if (code) {
 		if(code & 1) {
@@ -773,7 +781,8 @@ static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
 			if(defineColor == FALSE){
 				SetLineStyle(plotParams->lty, plotParams->lwd, deviceInfo);
 				SetLineEnd(plotParams->lend, deviceInfo);
-				SetLineJoin(plotParams->ljoin, plotParams->lmitre, deviceInfo);
+				SetLineJoin(plotParams->ljoin, 
+							plotParams->lmitre, deviceInfo);
 			}
 		}
 		if(code & 2){
@@ -800,10 +809,10 @@ static void SetFill(int color, Rboolean def, pDevDesc deviceInfo){
 		if(color != tikzInfo->oldFillColor){
 			tikzInfo->oldFillColor = color;
 			fprintf(tikzInfo->outputFile,
-					"\n\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}",
-					R_RED(color)/255.0,
-					R_GREEN(color)/255.0,
-					R_BLUE(color)/255.0);
+				"\n\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}",
+				R_RED(color)/255.0,
+				R_GREEN(color)/255.0,
+				R_BLUE(color)/255.0);
 		}
 	}else{
 		fprintf( tikzInfo->outputFile, "fill=fillColor,");
@@ -821,10 +830,10 @@ static void SetColor(int color, Rboolean def, pDevDesc deviceInfo){
 		if(color != tikzInfo->oldDrawColor){
 			tikzInfo->oldDrawColor = color;
 			fprintf(tikzInfo->outputFile,
-					"\n\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}",
-					R_RED(color)/255.0,
-					R_GREEN(color)/255.0,
-					R_BLUE(color)/255.0);
+				"\n\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}",
+				R_RED(color)/255.0,
+				R_GREEN(color)/255.0,
+				R_BLUE(color)/255.0);
 		}
 	}else{
 		fprintf( tikzInfo->outputFile, "color=drawColor,");
@@ -917,7 +926,8 @@ static void SetAlpha(int color, Rboolean fill, pDevDesc deviceInfo){
 }
 
 
-static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, pDevDesc deviceInfo){
+static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, 
+						pDevDesc deviceInfo){
 	
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
@@ -959,7 +969,25 @@ static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo){
 	}
 }
 
+/* 
+ * Returns the width of a latex string in points
+ */
 
+static float GetLatexStringWidth(const char *str){
+	
+	FILE *tf = tempfile();
+	fprintf(tf,"documentclass{article}\n
+				\\usepackage[utf8]{inputenc}\n
+				\\usepackage[T1]{fontenc}\n
+				%%... other font setup stuff\n 
+				\\sbox0{%s}\n
+				\\typeout{width=\\the\\wd0}\n
+				\\makeatletter\n
+				\\@@end",str);
+	system("latex %s",tf);
+	// Parse the log file to get the width
+	
+}
 
 /* TeX Text Translations from the PixTeX Device, I thought we might be able to 
  * use these possibly for an option to sanitize TeX strings
@@ -997,11 +1025,12 @@ static void TeXText(const char *str,  tikzDevDesc *tikzInfo){
 
 
 /* 
- * Activate and deactivate execute commands when the active R device is changed.
- * For devices using plotting windows, these routines usually change the window
- * title to something like "Active" or "Inactive". Locator is a routine that is
- * determines coordinates on the plotting canvas corresponding to a mouse click.
- * For devices plotting to files these functions can be left as dummy routines.
+ * Activate and deactivate execute commands when the active R device is 
+ * changed. For devices using plotting windows, these routines usually change 
+ * the window title to something like "Active" or "Inactive". Locator is a 
+ * routine that is determines coordinates on the plotting canvas corresponding 
+ * to a mouse click. For devices plotting to files these functions can be left 
+ * as dummy routines.
 */
 static void TikZ_Activate( pDevDesc deviceInfo ){}
 static void TikZ_Deactivate( pDevDesc deviceInfo ){}
