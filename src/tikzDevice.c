@@ -176,6 +176,7 @@ static Rboolean TikZ_Setup(
 	tikzInfo->oldDrawColor = 0;
 	tikzInfo->oldLineType = 0;
 	tikzInfo->plotParams = plotParams;
+	tikzInfo->stringWidthCalls = 0;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -412,6 +413,11 @@ static void TikZ_Close( pDevDesc deviceInfo){
 	/* Close off the standalone document*/
 	if(tikzInfo->standAlone == TRUE)
 		fprintf(tikzInfo->outputFile,"\n\\end{document}\n");
+	
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"%% Calculated string width %d times",
+			tikzInfo->stringWidthCalls);
 
 	/* Close the file and destroy the tikzInfo structure. */
 	fclose(tikzInfo->outputFile);
@@ -527,7 +533,10 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 static double TikZ_StrWidth( const char *str,
 		const pGEcontext plotParams, pDevDesc deviceInfo ){
 			
-	return(GetLatexStringWidth(str));
+	/* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+			
+	return(GetLatexStringWidth(str,tikzInfo));
 			
 }
 
@@ -973,11 +982,14 @@ static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo){
  * Returns the width of a latex string in points by doing a system call to latex
  */
 
-static double GetLatexStringWidth(const char *str){
+static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 
+	/*Increment the number of times this function has been called*/
+	tikzInfo->stringWidthCalls++;
+	
     FILE *pLatexFile = NULL;
-	FILE *pLatexLogFile = NULL;
-	int lineLen = 320;
+	FILE *pLatexOutput = NULL;
+	int lineLen = 512;
 	char line[lineLen];
 	char *latexFile = "str-width.tex";
 	char *latexLogFile = "str-width.log";
@@ -986,7 +998,7 @@ static double GetLatexStringWidth(const char *str){
 
 	/*Just about every output suppressing option possible.
 	 Hopefully other platforms will just ride over the unknown options*/
-	char cmd[300] = "pdflatex --quiet -quiet -silent -interaction=batchmode -c-style-errors ";
+	char cmd[512] = "pdflatex -interaction=batchmode ";
 	double width;
 
 	/* Open the LaTeX file */
@@ -1008,30 +1020,32 @@ static double GetLatexStringWidth(const char *str){
 	/*Stop before creating output*/
 	fprintf(pLatexFile,"\\makeatletter\n");
 	fprintf(pLatexFile,"\\@@end\n");
-    printf("Wrote LaTeX file.\n");
-
+	
 	/*Close the LaTeX file, ready to compile*/ 
 	fclose(pLatexFile);
 
 	/*Call LaTeX to calculate the string width, possible allow for 
 	  the use of XeTeX here*/
 	strcat(cmd,latexFile);
-    system(cmd);
 
-	/* Open the LaTeX log file that was just created */
-	pLatexLogFile = fopen(latexLogFile, readMode);
+	/* popen creates a pipe so we can read the output
+     	of the program we are invoking */
+	 if (!(pLatexOutput = popen(cmd, "r"))) {
+	   exit(1);
+	 }
 
 	/* Parse the log file to get the string width */
-	while(fgets(line, lineLen, pLatexLogFile) != NULL){
-		printf("%s",line);
+	while(fgets(line, lineLen, pLatexOutput) != NULL){
+		//printf("%s",line);
 		if(sscanf(line,"width=%fpt",&width) == 1){
-			fclose(pLatexLogFile);
+			 /* close the pipe */
+			pclose(pLatexOutput);
 			return(width);
 		}
 	}
 
 	/*Close the file in case we didn't find anything*/
-	fclose(pLatexLogFile);
+	fclose(pLatexOutput);
 	/*Return width of zero if nothing was there*/
 	return(0.0);
 }
