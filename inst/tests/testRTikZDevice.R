@@ -1,90 +1,6 @@
 #!/usr/bin/env Rscript
 
 library(tikzDevice)
-<<<<<<< HEAD:inst/tests/testRTikZDevice.R
-
-#test a circle and some simple text
-tikz('test01.tex', standAlone=T)
-plot(1, axes=F, xlab='', ylab='', main='test01')
-text(1, 1.1, 'Some Text')
-dev.off()
-
-#test a rectangular box
-tikz('test02.tex', standAlone=T)
-plot(1, type='n', axes=F, main='test02')
-box()
-dev.off()
-
-#tests a outline colored circle
-tikz('test03.tex', standAlone=T)
-plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main='test03')
-points(rnorm(10), rnorm(10), col = "red")
-points(rnorm(10)/2, rnorm(10)/2, col = "blue")
-dev.off()
-
-#test for filled circle color
-tikz('test04.tex', standAlone=T)
-plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main='test04')
-points(rnorm(10), rnorm(10), pch=21, col='blue', bg='forestgreen')
-dev.off()
-
-#test for a colored line
-tikz('test05.tex', standAlone=T)
-plot(c(0,1), c(0,1), type = "l", axes=F, xlab='', ylab='', col='red3', main='test05')
-dev.off()
-
-#tests cex, there is actually nothing in the tikzDevice that handles this
-# all the work is done by the graphics engine
-tikz('test06.tex', standAlone=T)
-plot(1, axes=F, xlab='', ylab='', cex=10, main='test06')
-points(1, cex=.5)
-dev.off()
-
-#test for filled color rectangle
-tikz('test07.tex', standAlone=T)
-plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main='test07')
-points(rnorm(10), rnorm(10), pch=22, col='red', bg='gold')
-dev.off()
-
-#test for line types
-tikz('test08.tex', standAlone=T)
-plot(0, type='n', xlim=c(0,1), ylim=c(0,6), axes=F, xlab='', ylab='', main='test08')
-for(i in 0:6)
-	lines(c(0, 1), c(i, i), main='test08', lty=i)
-dev.off()
-
-#test for line weight
-tikz('test09.tex', standAlone=T)
-plot(0, type='n', xlim=c(0,1), ylim=c(0,6), axes=F, xlab='', ylab='', main='test09')
-for(i in 0:6)
-	lines(c(0,1), c(i,i), lwd=i)
-dev.off()
-
-#test for transparency
-tikz('test10.tex', standAlone=T)
-plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main='test10')
-points(rnorm(50), rnorm(50), pch=21, bg=rainbow(50,alpha=.5), cex=10)
-dev.off()
-
-#test of many points for file size
-tikz('test11.tex', standAlone=T)
-plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main='test11')
-points(rnorm(500), rnorm(500), pch=21, bg=rainbow(50,alpha=.5), cex=10)
-dev.off()
-
-#Test with many strings and complex clipping from help(contour)
-tikz('test12.tex', standAlone=T)
-x <- -6:16
-op <- par(mfrow = c(2, 2))
-contour(outer(x, x), method = "edge")
-z <- outer(x, sqrt(abs(x)), FUN = "/")
-image(x, x, z)
-contour(x, x, z, col = "pink", add = TRUE, method = "edge")
-contour(x, x, z, ylim = c(1, 6), method = "simple", labcex = 1)
-contour(x, x, z, ylim = c(-6, 6), nlev = 20, lty = 2, method = "simple")
-par(op)
-dev.off()
-=======
 library(getopt)
 
 #Column 3: Argument mask of the flag. An integer. Possible values: 
@@ -125,7 +41,8 @@ tests[[4]] <- function(main='test04'){
 
 #test for a colored line
 tests[[5]] <- function(main='test05')
-    plot(c(0,1), c(0,1), type = "l", axes=F, xlab='', ylab='', col='red3', main=main)
+    plot(c(0,1), c(0,1), type = "l", axes=F, 
+            xlab='', ylab='', col='red3', main=main)
 
 
 #tests cex, there is actually nothing in the tikzDevice that handles this
@@ -143,14 +60,16 @@ tests[[7]] <- function(main='test07'){
 
 #test for line types
 tests[[8]] <- function(main='test08'){
-    plot(0, type='n', xlim=c(0,1), ylim=c(0,6), axes=F, xlab='', ylab='', main=main)
+    plot(0, type='n', xlim=c(0,1), ylim=c(0,6), 
+            axes=F, xlab='', ylab='', main=main)
     for(i in 0:6)
     	lines(c(0, 1), c(i, i), lty=i)
 }
 
 #test for line weight
 tests[[9]] <- function(main='test09'){
-    plot(0, type='n', xlim=c(0,1), ylim=c(0,6), axes=F, xlab='', ylab='', main=main)
+    plot(0, type='n', xlim=c(0,1), ylim=c(0,6), 
+            axes=F, xlab='', ylab='', main=main)
     for(i in 0:6)
     	lines(c(0,1), c(i,i), lwd=i)
 }
@@ -183,7 +102,8 @@ tests[[12]] <- function(main='test12'){
 #Run the tests
 for(i in 1:length(tests)){
     cat("Running Test",sprintf('%02d',i),"... ")
-    this.testfile <- file.path(prefix,paste('test',sprintf('%02d',i),'.tex',sep=''))
+    this.testfile <- file.path(prefix,
+                                paste('test',sprintf('%02d',i),'.tex',sep=''))
     t <- system.time(
     {
         tikz(this.testfile,standAlone=T)
@@ -191,11 +111,11 @@ for(i in 1:length(tests)){
         dev.off()
     })
     last.line <- length(count.fields(this.testfile,blank.lines.skip=F))
-    info.line <- scan(this.testfile,skip=(last.line-1),nlines=1,what='character',quiet=T)
+    info.line <- scan(this.testfile,skip=(last.line-1),
+                        nlines=1,what='character',quiet=T)
     cat("Done, took ",t[['elapsed']],"seconds.\n")
     cat(info.line,'\n\n')
 }
->>>>>>> 1cc13569b87fee165bcbc2a19d4a9038197fb563:inst/tests/testRTikZDevice.R
 
 f <- 'filesizes.txt'
 texfiles <- list.files(,'tex')

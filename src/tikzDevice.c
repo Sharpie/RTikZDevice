@@ -416,7 +416,7 @@ static void TikZ_Close( pDevDesc deviceInfo){
 	
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"%% Calculated string width %d times",
+			"%% Calculated string width %d times\n",
 			tikzInfo->stringWidthCalls);
 
 	/* Close the file and destroy the tikzInfo structure. */
@@ -440,7 +440,7 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 		/*Show only for debugging*/
 		if(tikzInfo->debug == TRUE) 
 			fprintf(tikzInfo->outputFile,
-				"%% Beginning new tikzpicture 'page'");
+				"%% Beginning new tikzpicture 'page'\n");
 
 		/* Start a new TikZ envioronment. */
 		fprintf(tikzInfo->outputFile, 
@@ -535,9 +535,16 @@ static double TikZ_StrWidth( const char *str,
 			
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-			
-	return(GetLatexStringWidth(str,tikzInfo));
-			
+	
+	double width = GetLatexStringWidth(str,tikzInfo);
+	
+	/*Show only for debugging*/
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"%% Calculated string width of %s as %f\n",str,width);
+	
+	return(width);
+		
 }
 
 /*
@@ -557,7 +564,7 @@ static void TikZ_Text( double x, double y, const char *str,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"\n%% Drawing node at x = %f, y = %f",
+			"%% Drawing node at x = %f, y = %f\n",
 			x,y);
 
 	/* Start a node for the text, open an options bracket. */
@@ -585,7 +592,7 @@ static void TikZ_Line( double x1, double y1,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"\n%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f",
+			"%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
 			x1,y1,x2,y2);
 
 	/*Define the colors for fill and border*/
@@ -614,7 +621,7 @@ static void TikZ_Circle( double x, double y, double r,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"\n%% Drawing Circle at x = %f, y = %f, r = %f",
+			"%% Drawing Circle at x = %f, y = %f, r = %f\n",
 			x,y,r);
 
 	/*Define the colors for fill and border*/
@@ -646,7 +653,7 @@ static void TikZ_Rectangle( double x0, double y0,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"\n%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f",
+			"%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f\n",
 			x0,y0,x1,y1);
 
 	/*Define the colors for fill and border*/
@@ -679,7 +686,7 @@ static void TikZ_Polyline( int n, double *x, double *y,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"\n%% Starting Polyline");
+			"%% Starting Polyline\n");
 
 	/*Define the colors for fill and border*/
 	StyleDef(TRUE, plotParams, deviceInfo);
@@ -724,7 +731,7 @@ static void TikZ_Polygon( int n, double *x, double *y,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"\n%% Starting Polygon");
+			"%% Starting Polygon\n");
 			
 	/*Define the colors for fill and border*/
 	StyleDef(TRUE, plotParams, deviceInfo);
@@ -818,7 +825,7 @@ static void SetFill(int color, Rboolean def, pDevDesc deviceInfo){
 		if(color != tikzInfo->oldFillColor){
 			tikzInfo->oldFillColor = color;
 			fprintf(tikzInfo->outputFile,
-				"\n\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}",
+				"\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
 				R_RED(color)/255.0,
 				R_GREEN(color)/255.0,
 				R_BLUE(color)/255.0);
@@ -839,7 +846,7 @@ static void SetColor(int color, Rboolean def, pDevDesc deviceInfo){
 		if(color != tikzInfo->oldDrawColor){
 			tikzInfo->oldDrawColor = color;
 			fprintf(tikzInfo->outputFile,
-				"\n\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}",
+				"\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
 				R_RED(color)/255.0,
 				R_GREEN(color)/255.0,
 				R_BLUE(color)/255.0);
@@ -987,8 +994,10 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 	/*Increment the number of times this function has been called*/
 	tikzInfo->stringWidthCalls++;
 	
+	char *width;
     FILE *pLatexFile = NULL;
 	FILE *pLatexOutput = NULL;
+	FILE *pLatexLogFile = NULL;
 	int lineLen = 512;
 	char line[lineLen];
 	char *latexFile = "str-width.tex";
@@ -999,7 +1008,6 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 	/*Just about every output suppressing option possible.
 	 Hopefully other platforms will just ride over the unknown options*/
 	char cmd[512] = "pdflatex -interaction=batchmode ";
-	double width;
 
 	/* Open the LaTeX file */
 	pLatexFile = fopen(latexFile, writeMode);
@@ -1029,24 +1037,33 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 	strcat(cmd,latexFile);
 
 	/* popen creates a pipe so we can read the output
-     	of the program we are invoking */
-	 if (!(pLatexOutput = popen(cmd, "r"))) {
-	   exit(1);
-	 }
-
+     	of the program we are invoking, but in this case, 
+		we are just dount it to supress output.*/
+	if (!(pLatexOutput = popen(cmd, "r"))) {
+		exit(1);
+	}
+	/*Cycle through the output*/
+	while(fgets(line, lineLen, pLatexOutput) != NULL){}
+	pclose(pLatexOutput);
+	
+	/*Now open the Log file for reading*/
+	pLatexLogFile = fopen(latexLogFile, readMode);
+	
 	/* Parse the log file to get the string width */
-	while(fgets(line, lineLen, pLatexOutput) != NULL){
-		//printf("%s",line);
-		if(sscanf(line,"width=%fpt",&width) == 1){
-			 /* close the pipe */
-			pclose(pLatexOutput);
-			return(width);
+	while(fgets(line, lineLen, pLatexLogFile) != NULL){
+		if(sscanf(line,"width=%spt",width) == 1){
+			//printf("\n%s",line);
+			//printf("float: %s\n",width);
+			
+			 /* found the width line so close the file and return width*/
+			fclose(pLatexLogFile);
+			return(atof(width));
 		}
 	}
 
-	/*Close the file in case we didn't find anything*/
-	fclose(pLatexOutput);
-	/*Return width of zero if nothing was there*/
+	printf("%s", "past the loop");
+	/*Close the file and return zero in case we didn't find anything*/
+	fclose(pLatexLogFile);
 	return(0.0);
 }
 
