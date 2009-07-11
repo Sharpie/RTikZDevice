@@ -1061,7 +1061,6 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 		}
 	}
 
-	printf("%s", "past the loop");
 	/*Close the file and return zero in case we didn't find anything*/
 	fclose(pLatexLogFile);
 	return(0.0);
