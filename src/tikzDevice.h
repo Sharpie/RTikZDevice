@@ -26,6 +26,7 @@ typedef struct{
 	int oldDrawColor;
 	int oldLineType;
 	pGEcontext plotParams;
+	int stringWidthCalls;
 } tikzDevDesc;
 
 
@@ -87,7 +88,7 @@ static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, pDevDesc deviceInfo)
 static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo);
 static void SetMitreLimit(double lmitre, FILE *outputFile);
 static void TeXText(const char *str,  tikzDevDesc *tikzInfo);
-static float GetLatexStringWidth(const char *str);
+static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo);
 
 
 /* Dummy routines. */

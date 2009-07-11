@@ -176,6 +176,7 @@ static Rboolean TikZ_Setup(
 	tikzInfo->oldDrawColor = 0;
 	tikzInfo->oldLineType = 0;
 	tikzInfo->plotParams = plotParams;
+	tikzInfo->stringWidthCalls = 0;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -412,6 +413,11 @@ static void TikZ_Close( pDevDesc deviceInfo){
 	/* Close off the standalone document*/
 	if(tikzInfo->standAlone == TRUE)
 		fprintf(tikzInfo->outputFile,"\n\\end{document}\n");
+	
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"%% Calculated string width %d times",
+			tikzInfo->stringWidthCalls);
 
 	/* Close the file and destroy the tikzInfo structure. */
 	fclose(tikzInfo->outputFile);
@@ -526,7 +532,12 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 */
 static double TikZ_StrWidth( const char *str,
 		const pGEcontext plotParams, pDevDesc deviceInfo ){
-	return 0.1;
+			
+	/* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+			
+	return(GetLatexStringWidth(str,tikzInfo));
+			
 }
 
 /*
@@ -574,8 +585,7 @@ static void TikZ_Line( double x1, double y1,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"\n%% Drawing line from x1 = %10.4f, 
-			y1 = %10.4f to x2 = %10.4f, y2 = %10.4f",
+			"\n%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f",
 			x1,y1,x2,y2);
 
 	/*Define the colors for fill and border*/
@@ -636,8 +646,7 @@ static void TikZ_Rectangle( double x0, double y0,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
-			"\n%% Drawing Rectangle from x0 = %f, 
-			y0 = %f to x1 = %f, y1 = %f",
+			"\n%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f",
 			x0,y0,x1,y1);
 
 	/*Define the colors for fill and border*/
@@ -970,23 +979,75 @@ static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo){
 }
 
 /* 
- * Returns the width of a latex string in points
+ * Returns the width of a latex string in points by doing a system call to latex
  */
 
-static float GetLatexStringWidth(const char *str){
+static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
+
+	/*Increment the number of times this function has been called*/
+	tikzInfo->stringWidthCalls++;
 	
-	FILE *tf = tempfile();
-	fprintf(tf,"documentclass{article}\n
-				\\usepackage[utf8]{inputenc}\n
-				\\usepackage[T1]{fontenc}\n
-				%%... other font setup stuff\n 
-				\\sbox0{%s}\n
-				\\typeout{width=\\the\\wd0}\n
-				\\makeatletter\n
-				\\@@end",str);
-	system("latex %s",tf);
-	// Parse the log file to get the width
+    FILE *pLatexFile = NULL;
+	FILE *pLatexOutput = NULL;
+	int lineLen = 512;
+	char line[lineLen];
+	char *latexFile = "str-width.tex";
+	char *latexLogFile = "str-width.log";
+	char *writeMode = "w";
+	char *readMode = "r";
+
+	/*Just about every output suppressing option possible.
+	 Hopefully other platforms will just ride over the unknown options*/
+	char cmd[512] = "pdflatex -interaction=batchmode ";
+	double width;
+
+	/* Open the LaTeX file */
+	pLatexFile = fopen(latexFile, writeMode);
+
+	/*Write the contents of the latex file that will return the width */
+	fprintf(pLatexFile,"\\documentclass{article}\n");
+	fprintf(pLatexFile,"\\usepackage[utf8]{inputenc}\n");
+	fprintf(pLatexFile,"\\usepackage[T1]{fontenc}\n");
+	fprintf(pLatexFile,"\\batchmode\n");
+
+	/* This is here as a reminder, add an argument that allows 
+	   the user to specify the font packages, */
+	fprintf(pLatexFile,"%%... other font setup stuff\n ");
+
+	fprintf(pLatexFile,"\\sbox0{%s}\n",str);
+	fprintf(pLatexFile,"\\typeout{width=\\the\\wd0}\n");
+
+	/*Stop before creating output*/
+	fprintf(pLatexFile,"\\makeatletter\n");
+	fprintf(pLatexFile,"\\@@end\n");
 	
+	/*Close the LaTeX file, ready to compile*/ 
+	fclose(pLatexFile);
+
+	/*Call LaTeX to calculate the string width, possible allow for 
+	  the use of XeTeX here*/
+	strcat(cmd,latexFile);
+
+	/* popen creates a pipe so we can read the output
+     	of the program we are invoking */
+	 if (!(pLatexOutput = popen(cmd, "r"))) {
+	   exit(1);
+	 }
+
+	/* Parse the log file to get the string width */
+	while(fgets(line, lineLen, pLatexOutput) != NULL){
+		//printf("%s",line);
+		if(sscanf(line,"width=%fpt",&width) == 1){
+			 /* close the pipe */
+			pclose(pLatexOutput);
+			return(width);
+		}
+	}
+
+	/*Close the file in case we didn't find anything*/
+	fclose(pLatexOutput);
+	/*Return width of zero if nothing was there*/
+	return(0.0);
 }
 
 /* TeX Text Translations from the PixTeX Device, I thought we might be able to 
