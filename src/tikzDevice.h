@@ -1,5 +1,17 @@
 /* Declarations for functions provided by the R language */
 
+
+/*
+ * There probably won't be more than one C source file using
+ * this header, but it's still a good idea to make sure the
+ * compiler will only include it once. Errors could result
+ * otherwise.
+*/
+
+#ifndef HAVE_TIKZDEV_H
+
+#define HAVE_TIKZDEV_H 
+
 /* Use default graphics engine function declarations. */
 #define R_USE_PROTOTYPES 1
 
@@ -18,6 +30,7 @@
 typedef struct{
 	FILE *outputFile;
 	char outFileName[128];
+	char latexCmd[128];
 	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
@@ -37,7 +50,8 @@ static Rboolean TikZ_Setup(
 		const char *fileName,
 		double width, double height,
 		const char *bg, const char *fg,
-		Rboolean standAlone);
+		Rboolean standAlone,
+		const char *latexCmd );
 
 double dim2dev( double length );
 
@@ -96,3 +110,5 @@ static void TikZ_Activate( pDevDesc deviceInfo );
 static void TikZ_Deactivate( pDevDesc deviceInfo );
 static Rboolean TikZ_Locator( double *x, double *y, pDevDesc deviceInfo );
 static void TikZ_Mode( int mode, pDevDesc deviceInfo );
+
+#endif // End of Once Only header

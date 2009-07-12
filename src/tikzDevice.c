@@ -34,6 +34,7 @@ SEXP tikzDevice ( SEXP args ){
 	const char *bg, *fg;
 	double width, height;
 	Rboolean standAlone;
+	const char *latexCmd;
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -76,6 +77,15 @@ SEXP tikzDevice ( SEXP args ){
 	*/
 	standAlone = asLogical(CAR(args)); args = CDR(args);
 
+	/*
+	 * Recover the path to latex as given by the user or reported by
+	 * Sys.getenv('R_PDFLATEX') in R. This is added due to the fact
+	 * The certain GUIs (such as the Mac GUI) do not have extensive
+	 * knowlege of executable PATHs. Running LaTeX in order to determine
+	 * string width without a PATH that contains LaTeX causes a crash.
+  */
+	latexCmd = translateChar(asChar(CAR(args))); args = CDR(args);
+
 	/* Ensure there is an empty slot avaliable for a new device. */
 	R_CheckDeviceAvailable();
 
@@ -103,7 +113,7 @@ SEXP tikzDevice ( SEXP args ){
 		 * in this file.
 		*/
 		if( !TikZ_Setup( deviceInfo, fileName, 
-					width, height, bg, fg, standAlone) ){
+					width, height, bg, fg, standAlone, latexCmd ) ){
 			/* 
 			 * If setup was unsuccessful, destroy the device and return
 			 * an error message.
@@ -139,7 +149,8 @@ static Rboolean TikZ_Setup(
 	const char *fileName,
 	double width, double height,
 	const char *bg, const char *fg,
-	Rboolean standAlone){
+	Rboolean standAlone,
+	const char *latexCmd ){
 
 	/* 
 	 * Create tikzInfo, this variable contains information which is
@@ -168,6 +179,7 @@ static Rboolean TikZ_Setup(
 
 	/* Copy TikZ-specific information to the tikzInfo variable. */
 	strcpy( tikzInfo->outFileName, fileName);
+	strcpy( tikzInfo->latexCmd, latexCmd);
 	tikzInfo->firstPage = TRUE;
 	tikzInfo->debug = DEBUG;
 	tikzInfo->standAlone = standAlone;
@@ -370,6 +382,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/* Header for a standalone LaTeX document*/
 	if(tikzInfo->standAlone == TRUE){
+		fprintf(tikzInfo->outputFile,"%% %s\n",tikzInfo->latexCmd);
 		fprintf(tikzInfo->outputFile,"\\documentclass{article}\n");
 		fprintf(tikzInfo->outputFile,"\\usepackage{tikz}\n");
 		fprintf(tikzInfo->outputFile,"\\usepackage[active,tightpage]{preview}\n");
@@ -995,7 +1008,7 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 	tikzInfo->stringWidthCalls++;
 	
 	char *width;
-    FILE *pLatexFile = NULL;
+  FILE *pLatexFile = NULL;
 	FILE *pLatexOutput = NULL;
 	FILE *pLatexLogFile = NULL;
 	int lineLen = 512;
@@ -1005,9 +1018,15 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 	char *writeMode = "w";
 	char *readMode = "r";
 
+	/*
+	 * Build LaTeX command from the value passed into this function
+	 * by R or the user.
+	*/
+	char cmd[512];
+ 	strcpy(cmd, tikzInfo->latexCmd );
 	/*Just about every output suppressing option possible.
 	 Hopefully other platforms will just ride over the unknown options*/
-	char cmd[512] = "pdflatex -interaction=batchmode ";
+	strcat(cmd," -interaction=batchmode ");
 
 	/* Open the LaTeX file */
 	pLatexFile = fopen(latexFile, writeMode);

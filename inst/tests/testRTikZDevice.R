@@ -116,6 +116,17 @@ tests[[13]] <- function(main='test13'){
     
 }
 
+# Plotting test- with legend
+tests[[14]] <- function(main='test14'){
+
+	plot(1,1, xlim=c(0,10), ylim=c(0,10))
+
+	legend( x='top', title='Legend Test', legend=c('Hello, world!') )
+
+	legend( 6, 4, title='Another Legend Test', legend=c('Test 1','Test 2'), pch=c(1,16))
+    
+}
+
 ## ADD NEW TESTS HERE
 
 #Run the tests
