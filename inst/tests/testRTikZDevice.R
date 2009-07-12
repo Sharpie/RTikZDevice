@@ -99,6 +99,25 @@ tests[[12]] <- function(main='test12'){
     par(op)
 }
 
+# test for string placement, symbol should be centered on point
+tests[[13]] <- function(main='test13'){
+
+    syms <-c('alpha','theta','tau','beta','vartheta','pi','upsilon',
+    		  'gamma','gamma','varpi','phi','delta','kappa','rho','varphi',
+    		  'epsilon','lambda','varrho','chi','varepsilon','mu','sigma',
+    		  'psi','zeta','nu','varsigma','omega','eta','xi','Gamma',
+    		  'Lambda','Sigma','Psi','Delta','Xi','Upsilon','Omega',
+    		  'Theta','Pi','Phi')
+    x <- rnorm(length(syms))
+    y <- rnorm(length(syms))
+    plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main=main)
+    points(x, y, pch=21,  bg='black', cex=.5)
+    text(x,y,paste('\\Large$\\',syms,'$',sep=''))
+    
+}
+
+## ADD NEW TESTS HERE
+
 #Run the tests
 for(i in 1:length(tests)){
     cat("Running Test",sprintf('%02d',i),"... ")
@@ -114,10 +133,14 @@ for(i in 1:length(tests)){
     info.line <- scan(this.testfile,skip=(last.line-1),
                         nlines=1,what='character',quiet=T)
     cat("Done, took ",t[['elapsed']],"seconds.\n")
-    cat(info.line,'\n\n')
+    if(!(info.line == "\\end{document}")){
+        # then debugging is turned on 
+        cat(info.line,'\n\n')
+    }
 }
 
+# calculate the file sizes of the output files
 f <- 'filesizes.txt'
-texfiles <- list.files(,'tex')
-newsizes <- file.info(texfiles)$size
+texfiles <- list.files(prefix,'tex')
+newsizes <- file.info(file.path(prefix,texfiles))$size
 cat(paste(texfiles,newsizes,sep='\t'),sep='\n',file=f)

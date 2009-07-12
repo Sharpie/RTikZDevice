@@ -1038,7 +1038,7 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 
 	/* popen creates a pipe so we can read the output
      	of the program we are invoking, but in this case, 
-		we are just dount it to supress output.*/
+		we are just doing it to supress output.*/
 	if (!(pLatexOutput = popen(cmd, "r"))) {
 		exit(1);
 	}
@@ -1054,10 +1054,11 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 		if(sscanf(line,"width=%spt",width) == 1){
 			//printf("\n%s",line);
 			//printf("float: %s\n",width);
+			//printf("Returning %f for %s\n",atof(width)/72.0,str);
 			
 			 /* found the width line so close the file and return width*/
 			fclose(pLatexLogFile);
-			return(atof(width));
+			return(atof(width)/72.0);
 		}
 	}
 
