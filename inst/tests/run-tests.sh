@@ -2,17 +2,14 @@
 
 OUTDIR=output/
 
-#
-touch $OUTDIR/foo.{tex,log,pdf,aux}
-rm $OUTDIR*.{tex,log,pdf,aux}
+# wipe the output directory
+rm -rf $OUTDIR
+mkdir $OUTDIR
 
 # Install the package so changes update
 R CMD INSTALL ../../
 
 # Run the test suite
-rm -rf $OUTDIR
-mkdir $OUTDIR
-
 Rscript testRTikZDevice.R --output-prefix=$OUTDIR
 
 # compile the tex files

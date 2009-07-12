@@ -131,7 +131,7 @@ for(i in 1:length(tests)){
     })
     last.line <- length(count.fields(this.testfile,blank.lines.skip=F))
     info.line <- scan(this.testfile,skip=(last.line-1),
-                        nlines=1,what='character',quiet=T)
+                        nlines=1,what='character',sep='?',quiet=T)
     cat("Done, took ",t[['elapsed']],"seconds.\n")
     if(!(info.line == "\\end{document}")){
         # then debugging is turned on 
