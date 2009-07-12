@@ -8,6 +8,9 @@ STATUS:
 	and line joining. 
 
 FIX:
+		* Adding legends to plots results in incorrect sizing and positioning.
+			See Test #14 for an example of this behavoir.
+
     * When using plot(1,1), all text labels are placed incorrectly. This may
       be a result of neglecting to provide a serious attempt at calculating
       string width.
