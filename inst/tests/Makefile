@@ -7,6 +7,7 @@ tests:
 	Rscript testRTikZDevice.R 
 
 pdfs:
+	touch tests.pdf; rm tests.pdf
 	for i in $(shell ls *.tex) ; do pdflatex $$i ; done
 	gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH *.pdf
 	@echo

@@ -33,11 +33,12 @@ typedef struct{
 	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
+	Rboolean firstClip;
 	int oldFillColor;
 	int oldDrawColor;
 	int oldLineType;
-	int fontsize;
-	int fontface;
+	pGEcontext plotParams;
+	int stringWidthCalls;
 } tikzDevDesc;
 
 
@@ -51,7 +52,6 @@ static Rboolean TikZ_Setup(
 		Rboolean standAlone);
 
 double dim2dev( double length );
-static void TeXText(const char *str,  tikzDevDesc *tikzInfo);
 
 static Rboolean TikZ_Open( pDevDesc deviceInfo );
 
@@ -80,7 +80,7 @@ static void TikZ_Line( double x1, double y1,
 		double x2, double y2, const pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Circle( double x, double y, double r,
 		const pGEcontext plotParams, pDevDesc deviceInfo );
-static void TikZ_Rectangle( double x0, double y0,
+static void TikZ_Rectangle( double x0, double y0, 
 		double x1, double y1, const pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Polyline( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
@@ -96,8 +96,11 @@ static void SetAlpha(int color, Rboolean fill, pDevDesc deviceInfo);
 static void SetLineStyle(int lty, int lwd, pDevDesc deviceInfo);
 static void SetDashPattern(int lty, FILE *outputFile);
 static void SetLineWeight(int lwd, FILE *outputFile);
-static void SetLineJoin(R_GE_linejoin ljoin, pDevDesc deviceInfo);
+static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, pDevDesc deviceInfo);
 static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo);
+static void SetMitreLimit(double lmitre, FILE *outputFile);
+static void TeXText(const char *str,  tikzDevDesc *tikzInfo);
+static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo);
 
 
 /* Dummy routines. */
