@@ -590,8 +590,12 @@ static void TikZ_Text( double x, double y, const char *str,
 	/* More options would go here such as scaling, color etc. */
 	
 	/* End options, print coordinates and string. */
-	fprintf( tikzInfo->outputFile, ",anchor=base] at (%6.2f,%6.2f) {%s};\n",
-		x,y,str);
+	fprintf( tikzInfo->outputFile, ",anchor=south west, inner sep=0pt, outer sep=0pt] at (%6.2f,%6.2f) {%s};\n",
+		x, y, str);
+
+	// Add a small red marker to indicate the point the text string is being aligned to.
+	if( DEBUG == TRUE )
+		fprintf( tikzInfo->outputFile, "\n\\draw[color=red, fill=red] (%6.2f,%6.2f) circle (0.5pt);\n", x, y);
 
 }
 
@@ -1077,7 +1081,7 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 			
 			 /* found the width line so close the file and return width*/
 			fclose(pLatexLogFile);
-			return(atof(width)/72.0);
+			return(atof(width));
 		}
 	}
 
