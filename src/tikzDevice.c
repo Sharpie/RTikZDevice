@@ -300,7 +300,7 @@ static Rboolean TikZ_Setup(
 
 	/* 
 	* Apparently these are supposed to center text strings over the points at
-    * which they are plottet. TikZ does this automagically.
+  * which they are plotted. TikZ does this automagically.
 	*/
 	deviceInfo->xCharOffset = 0;	
 	deviceInfo->yCharOffset = 0;	
@@ -590,7 +590,7 @@ static void TikZ_Text( double x, double y, const char *str,
 	/* More options would go here such as scaling, color etc. */
 	
 	/* End options, print coordinates and string. */
-	fprintf( tikzInfo->outputFile, ",anchor=south west, inner sep=0pt, outer sep=0pt] at (%6.2f,%6.2f) {%s};\n",
+	fprintf( tikzInfo->outputFile, ",anchor=base west, inner sep=0pt, outer sep=0pt] at (%6.2f,%6.2f) {%s};\n",
 		x, y, str);
 
 	// Add a small red marker to indicate the point the text string is being aligned to.
@@ -1047,6 +1047,8 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 
 	fprintf(pLatexFile,"\\sbox0{%s}\n",str);
 	fprintf(pLatexFile,"\\typeout{width=\\the\\wd0}\n");
+	fprintf(pLatexFile,"\\typeout{line height=\\the\\linewidth}\n");
+	fprintf(pLatexFile,"\\typeout{line skip=\\the\\baselineskip}\n");
 
 	/*Stop before creating output*/
 	fprintf(pLatexFile,"\\makeatletter\n");
