@@ -158,6 +158,16 @@ static Rboolean TikZ_Setup(
 	
 	pGEcontext plotParams;
 
+	/*
+	 * pGEcontext is actually a *pointer* to a structure of type
+	 * R_GE_gcontext. If we don't allocate it, it will be passed
+	 * into the initialization routine without actually pointing
+	 * to anything. This causes nasty crashes- for some reason
+	 * only on Windows and Linux...
+  */	
+	if( !( plotParams = (pGEcontext) malloc(sizeof(pGEcontext)) ) )
+		return FALSE;
+
 	/* 
 	 * Initialize tikzInfo, return false if this fails. A false return
 	 * value will cause the whole device initialization routine to fail.
