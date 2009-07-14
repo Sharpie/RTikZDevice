@@ -17,7 +17,7 @@
  * provided by the R language.
 */
 #include "tikzDevice.h"
-#define DEBUG TRUE
+#define DEBUG FALSE
 
 SEXP tikzDevice ( SEXP args ){
 
@@ -157,6 +157,16 @@ static Rboolean TikZ_Setup(
 	tikzDevDesc *tikzInfo;
 	
 	pGEcontext plotParams;
+
+	/*
+	 * pGEcontext is actually a *pointer* to a structure of type
+	 * R_GE_gcontext. If we don't allocate it, it will be passed
+	 * into the initialization routine without actually pointing
+	 * to anything. This causes nasty crashes- for some reason
+	 * only on Windows and Linux...
+  */	
+	if( !( plotParams = (pGEcontext) malloc(sizeof(pGEcontext)) ) )
+		return FALSE;
 
 	/* 
 	 * Initialize tikzInfo, return false if this fails. A false return
@@ -474,10 +484,6 @@ static void TikZ_Clip( double x0, double x1,
 	fprintf(tikzInfo->outputFile,
 			"\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
 			x0,y0,x1,y1);
-	if(tikzInfo->debug == TRUE)
-		fprintf(tikzInfo->outputFile,
-				"\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-				x0,y0,x1,y1);
 			
 	/*Define the colors for fill and border*/
 	StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
@@ -522,7 +528,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 */
 static double TikZ_StrWidth( const char *str,
 		const pGEcontext plotParams, pDevDesc deviceInfo ){
-	return 0.1;
+	return 42;
 }
 
 /*
@@ -555,7 +561,7 @@ static void TikZ_Text( double x, double y, const char *str,
 	/* More options would go here such as scaling, color etc. */
 	
 	/* End options, print coordinates and string. */
-	fprintf( tikzInfo->outputFile, ",anchor=base] at (%6.2f,%6.2f) {%s};\n",
+	fprintf( tikzInfo->outputFile, "] at (%6.2f,%6.2f) {%s};\n",
 		x,y,str);
 
 }
