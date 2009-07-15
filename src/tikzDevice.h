@@ -15,9 +15,9 @@
 /* Use default graphics engine function declarations. */
 #define R_USE_PROTOTYPES 1
 
-#include "R.h"
-#include "Rinternals.h"
-#include "R_ext/GraphicsEngine.h"
+#include <R.h>
+#include <Rinternals.h>
+#include <R_ext/GraphicsEngine.h>
 
 /*
  * tikzDevDesc is a structure that is used to hold information
