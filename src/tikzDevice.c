@@ -1,4 +1,3 @@
-
 /* 
  * Function prototypes are defined in here. Apparently in C
  * it is absolutely necessary for function definitions to appear 
@@ -558,14 +557,80 @@ static double TikZ_StrWidth( const char *str,
 			
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+	/*
+	 * New string with calculation method: call back to R
+	 * and run the R function getLatexStrWidth.
+	 *
+	 * Why?
+	 *
+	 * - Windows and Linux did not suppress the output
+	 *   of the call to LaTeX which resulted in lag.
+	 *
+	 * - Using R's system() call we gain a level of
+	 *   abstraction that works accross all platforms.
+	 *   We can also use functions like tempdir() to
+	 *   do the dirty work somewhere where the user
+	 *   won't have to clean it up.
+	 *
+	 * - If a LaTeX parser ever gets implemented, it
+	 *   will probably be easiest to implement it in
+	 *   R. If a LaTeX parser ever gets stolen from
+	 *   something like python's matplotlib, R will
+	 *   probably provide the interface. Therefore
+	 *   a callback to R is necessary anyway.
+	 *
+	 * - It's fucking cool.
+	 *
+	*/
 	
-	double width = GetLatexStringWidth(str,tikzInfo);
+	// Call out to R to retrieve the getLatexStrWidth function.
+	SEXP widthFun = findFun( install("getLatexStrWidth"), R_GlobalEnv );
+
+	/*
+	 * Create a SEXP that will be the R function call. The SEXP will
+	 * have two components- the R function being called and the
+	 * string being passed. Therefore it is allocated as a  LANGSXP
+	 * vector of length 2. This is done inside a PROTECT() function
+	 * to keep the R garbage collector from saying "Hmmm... what's
+	 * this? Looks like noone is using it so I guess I will nuke it."
+  */
+	SEXP RCallBack;
+	PROTECT( RCallBack = allocVector(LANGSXP,2) );
+
+	// Place the function into the first slot of the SEXP.
+	SETCAR( RCallBack, widthFun );
+
+	// Place the string into the second slot of the SEXP.
+	SETCADR( RCallBack, mkString( str ) );
+	// Tag the string with a name, this name coressponds to the
+	// dummy argument of the R function getLatexStringWidth.
+	SET_TAG( CDR( RCallBack ), install("texString") );
+
+	/*
+	 * Call the R function, capture the result.
+	 * PROTECT may not be necessary here, but I'm doing
+	 * it just in case the SEXP holds a pointer to an
+	 * R function return value that the garbage collector
+	 * decides to nuke.
+	*/
+	SEXP RStrWidth;
+ 	PROTECT( RStrWidth = eval( RCallBack, R_GlobalEnv ) );
+
+	double width = REAL(RStrWidth)[0];
+
+	// Since we called PROTECT twice, we must call UNPROTECT
+	// and pass the number 2.
+	UNPROTECT(2);
 	
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		fprintf(tikzInfo->outputFile,
 			"%% Calculated string width of %s as %f\n",str,width);
 	
+	/*Increment the number of times this function has been called*/
+	tikzInfo->stringWidthCalls++;
+
 	return(width);
 		
 }
