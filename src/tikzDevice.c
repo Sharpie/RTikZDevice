@@ -33,7 +33,6 @@ SEXP tikzDevice ( SEXP args ){
 	const char *bg, *fg;
 	double width, height;
 	Rboolean standAlone;
-	const char *latexCmd;
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -103,7 +102,7 @@ SEXP tikzDevice ( SEXP args ){
 		 * in this file.
 		*/
 		if( !TikZ_Setup( deviceInfo, fileName, 
-					width, height, bg, fg, standAlone, latexCmd ) ){
+					width, height, bg, fg, standAlone ) ){
 			/* 
 			 * If setup was unsuccessful, destroy the device and return
 			 * an error message.
@@ -380,7 +379,6 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/* Header for a standalone LaTeX document*/
 	if(tikzInfo->standAlone == TRUE){
-		fprintf(tikzInfo->outputFile,"%% %s\n",tikzInfo->latexCmd);
 		fprintf(tikzInfo->outputFile,"\\documentclass{article}\n");
 		fprintf(tikzInfo->outputFile,"\\usepackage{tikz}\n");
 		fprintf(tikzInfo->outputFile,"\\usepackage[active,tightpage]{preview}\n");
