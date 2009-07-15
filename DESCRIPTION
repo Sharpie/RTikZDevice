@@ -7,4 +7,5 @@ Author: Charlie Sharpsteen and Cameron Bracken
 Maintainer: Charlie Sharpsteen <source@sharpsteen.net>
 Description: This package is just okay today. Hopefully it will rock hard someday.
 License: GPL (>= 2.0)
+Depends: filehash
 LazyLoad: yes

@@ -1,4 +1,4 @@
-.First.lib <-
+.onLoad<-
 function(libname, pkgname) {
 
 	# Perform a search for an executable LaTeX program.
@@ -71,3 +71,7 @@ function(libname, pkgname) {
 
   library.dynam(pkgname, pkgname, libname)
 }
+
+# Any variables defined in here will be hidden
+# from normal users.
+.tikzOptions <- new.env()
