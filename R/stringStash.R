@@ -15,7 +15,9 @@ function( texString ){
 	# from within .tikzOptions. So we'll export it into 
 	# tikzOptions as a quick fix.
 	#
-	# Something seems very wrong about this...
+	# Something seems dirty about this... I guess we will remove
+	# the variable before we exit in order to keep .tikzOptions
+	# clean.
 	assign('texString', texString, envir=.tikzOptions)
 
 	# Check for the string.
@@ -23,6 +25,8 @@ function( texString ){
 
 		# Yay! The width exists! Recover and return it.
 		width <- evalq( dictionary[[ sha1(texString) ]], .tikzOptions)
+		# Clean up .tikzOptions.
+		remove('texString', envir= .tikzOptions, inherits=F)
 		return( width )
 
 	}else{
@@ -49,6 +53,9 @@ function( texString, width ){
 
 	evalq( dictionary[[ sha1(texString) ]] <- width, .tikzOptions)
 
+	# Clean up .tikzOptions.
+	remove(list=c('texString','width'), envir= .tikzOptions, inherits=F)
+
 	# Return nothing.
 	invisible()
 
@@ -60,13 +67,28 @@ function(){
 
 	# This function checks to see if our dictionary has been
 	# created as a variable in our private .tikzOptions
-	# enviornment. If not, it creates a new dictionary file
-	# in tempdir() and creates a connection in .tikzOptions
+	# enviornment. If not, it either opens a user specified
+	# dictionary or creates a new one in tempdir().
 	if( !exists('dictionary', envir=.tikzOptions, inherits=F) ){
 
-		# Create the dictionary.
-		dbFile <- file.path( tempdir(), 'tikzMetricsDictionary' ) 
-		dbCreate( dbFile )
+		# Check for a user specified dictionary.
+		if( !is.null( getOption('tikzMetricsDictionary') ) ){
+
+			dbFile <- getOption('tikzMetricsDictionary')
+
+			# Create the database file if it does not exist.
+			if( !file.exists( dbFile ) ){
+				message("Creating new tikz metrics dictionary in:\n\t",dbFile)
+				dbCreate( dbFile, type='DB1' )
+			}
+
+
+		}else{
+			# Create a temporary dictionary- it will disappear after
+			# the R session finishes.
+			dbFile <- file.path( tempdir(), 'tikzMetricsDictionary' ) 
+			dbCreate( dbFile, type='DB1' )
+		}
 
 		# Add the dictionary as an object in the .tikzOptions
 		# environment.

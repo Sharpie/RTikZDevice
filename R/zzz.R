@@ -8,6 +8,10 @@ function(libname, pkgname) {
 	# this package will be aborted as a LaTeX compiler is
 	# required in order to determine string metrics.
 
+	if( !require( filehash ) ){ 
+		stop("tikzDevice requires the filehash package to be available.") 
+	}
+
 	foundLatex <- FALSE
 	checked <- c()
 
