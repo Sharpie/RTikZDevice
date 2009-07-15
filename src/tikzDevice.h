@@ -30,7 +30,6 @@
 typedef struct{
 	FILE *outputFile;
 	char outFileName[128];
-	char latexCmd[128];
 	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;

@@ -76,15 +76,6 @@ SEXP tikzDevice ( SEXP args ){
 	*/
 	standAlone = asLogical(CAR(args)); args = CDR(args);
 
-	/*
-	 * Recover the path to latex as given by the user or reported by
-	 * Sys.getenv('R_PDFLATEX') in R. This is added due to the fact
-	 * The certain GUIs (such as the Mac GUI) do not have extensive
-	 * knowlege of executable PATHs. Running LaTeX in order to determine
-	 * string width without a PATH that contains LaTeX causes a crash.
-  */
-	latexCmd = translateChar(asChar(CAR(args))); args = CDR(args);
-
 	/* Ensure there is an empty slot avaliable for a new device. */
 	R_CheckDeviceAvailable();
 
@@ -148,8 +139,7 @@ static Rboolean TikZ_Setup(
 	const char *fileName,
 	double width, double height,
 	const char *bg, const char *fg,
-	Rboolean standAlone,
-	const char *latexCmd ){
+	Rboolean standAlone ){
 
 	/* 
 	 * Create tikzInfo, this variable contains information which is
@@ -188,7 +178,6 @@ static Rboolean TikZ_Setup(
 
 	/* Copy TikZ-specific information to the tikzInfo variable. */
 	strcpy( tikzInfo->outFileName, fileName);
-	strcpy( tikzInfo->latexCmd, latexCmd);
 	tikzInfo->firstPage = TRUE;
 	tikzInfo->debug = DEBUG;
 	tikzInfo->standAlone = standAlone;
@@ -617,6 +606,8 @@ static double TikZ_StrWidth( const char *str,
 	SEXP RStrWidth;
  	PROTECT( RStrWidth = eval( RCallBack, R_GlobalEnv ) );
 
+	// Why REAL()[0] instead of asReal(CAR())? I have no fucking
+	// clue...
 	double width = REAL(RStrWidth)[0];
 
 	// Since we called PROTECT twice, we must call UNPROTECT
@@ -1101,8 +1092,7 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 	 * Build LaTeX command from the value passed into this function
 	 * by R or the user.
 	*/
-	char cmd[512];
- 	strcpy(cmd, tikzInfo->latexCmd );
+	char cmd[512] = "pdflatex";
 	/*Just about every output suppressing option possible.
 	 Hopefully other platforms will just ride over the unknown options*/
 	strcat(cmd," -interaction=batchmode ");
