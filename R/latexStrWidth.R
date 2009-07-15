@@ -1,6 +1,35 @@
 getLatexStrWidth <-
 function( texString ){
 
+	# Check to see if we have a width stored in
+	# our dictionary for this string.
+	width <- queryDictionaryForWidth( texString )
+
+	if( width > 0 ){
+
+		# Positive string width means there was a
+		# cached value available. Yay! We're done.
+		return( width )
+
+	}else{
+
+		# Bummer. No width on record for this string.
+		# Call LaTeX and get one.
+		width <- latexParseStrForWidth( texString )
+
+		# Store the width in the dictionary so we don't
+		# have to do this again.
+		storeWidthInDictionary( texString, width )
+
+		# Return the width.
+		return( width )
+
+	}
+}
+
+latexParseStrForWidth <-
+function( texString ){
+
 	# Reimplementation of the origonal C function since
 	# the C function causes all kings of gibberish to
 	# hit the screen when called under Windows and
