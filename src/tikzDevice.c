@@ -16,6 +16,8 @@
  * provided by the R language.
 */
 #include "tikzDevice.h"
+
+// We are writing to files so we need stdio.h
 #include <stdio.h>
 #define DEBUG TRUE
 
@@ -41,9 +43,8 @@ SEXP tikzDevice ( SEXP args ){
 	 * which containts information specific to the implementation of
 	 * the tikz device. The creation and initialization of this component
 	 * is one ofthe main tasks of this routine.
-  	*/
+  */
 	pGEDevDesc tikzDev;
-
 
 
 	/* Retrieve function arguments from input SEXP. */
@@ -68,7 +69,6 @@ SEXP tikzDevice ( SEXP args ){
 	bg = CHAR(asChar(CAR(args))); args = CDR(args);
 	fg = CHAR(asChar(CAR(args))); args = CDR(args);
 
-
 	/* 
 	* Set the standalone parameter for wrapping the picture in a LaTeX 
 	* document
@@ -83,7 +83,7 @@ SEXP tikzDevice ( SEXP args ){
 		/* 
 		 * The pDevDesc variable specifies which funtions and components 
 		 * which describe the specifics of this graphics device. After
-         * setup, this information will be incorporated into the pGEDevDesc
+     * setup, this information will be incorporated into the pGEDevDesc
 		 * variable tikzDev.
 		*/ 
 		pDevDesc deviceInfo;
@@ -114,6 +114,8 @@ SEXP tikzDevice ( SEXP args ){
 		/* Create tikzDev as a Graphics Engine device using deviceInfo. */
 		tikzDev = GEcreateDevDesc( deviceInfo );
 
+		// Register the device as an avaiable graphics device in the R
+		// Session.
 		GEaddDevice2( tikzDev, "tikz output" );
 
 	} END_SUSPEND_INTERRUPTS;
@@ -298,6 +300,9 @@ static Rboolean TikZ_Setup(
 	/* 
 	* Apparently these are supposed to center text strings over the points at
   * which they are plotted. TikZ does this automagically.
+	*
+	* We hope.
+	*
 	*/
 	deviceInfo->xCharOffset = 0;	
 	deviceInfo->yCharOffset = 0;	
@@ -339,7 +344,7 @@ static Rboolean TikZ_Setup(
 	deviceInfo->polyline = TikZ_Polyline;
 	deviceInfo->polygon = TikZ_Polygon;
 
-	/* Dummy routines. */
+	/* Dummy routines. These are mainly used by GUI graphics devices. */
 	deviceInfo->activate = TikZ_Activate;
 	deviceInfo->deactivate = TikZ_Deactivate;
 	deviceInfo->locator = TikZ_Locator;
@@ -515,29 +520,50 @@ static void TikZ_Size( double *left, double *right,
 /*
  * This function is supposed to calculate character metrics (such as raised 
  * letters, stretched letters, ect). Currently the TikZ device does not 
- * perform such functions, so this function returns a mandatory 0 for each 
- * component.
+ * perform such functions, so this function returns the default metrics
+ * the Quartz device uses when it can't think of anything else.
+ * 
+ * The fact that this function is not implemented is the most likely cause
+ * for the *vertical* alignment of text strings being off. This shortcoming
+ * is most obvious when plot legends are created.
+ *
 */ 
 static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 		double *ascent, double *descent, double *width, pDevDesc deviceInfo ){
 
-	*ascent = 0.0;
-	*descent = 0.0;
-	*width = 0.0;
+	*ascent = 10.0;
+	*descent = 2.0;
+	*width = 9.0;
 
 }
 
 /*
  * This function is supposed to calculate the plotted with, in device raster
  * units of an arbitrary string. This is perhaps the most difficult function
- * that a device needs to implement.  Calculating the exact with of a string 
- * is actually impossible because this device is designed to print characters 
- * in whatever font is being used in the the TeX document. The font is unknown
- * (and cannot be known) in the device. The problem is further complicated by 
- * the fact that TeX strings can be used directly in annotations.  For example 
- * the string \textit{x} would be seen by the device as 10 characters when it 
- * should only count as 1.  Given this difficulty the function currently 
- * returns a nice round number- 42.
+ * that a device needs to implement. Calculating the exact with of a string 
+ * is especially tricky because this device is designed to print characters 
+ * in whatever font is being used in the the TeX document. The end font that
+ * the user decides to typeset their document in may also be unknown to the
+ * device. The problem is further complicated by the fact that TeX strings 
+ * can be used directly in annotations.  For example the string \textit{x} 
+ * literaly has 10 characters but when it is actually typeset it only has
+ * one. Given this difficulty the function currently writes the string
+ * to a temporary file and calls LaTeX in order to obtain an authoratative
+ * measure of the string width.
+ *
+ * There is a rediculous amount of overhead involved with this process and
+ * the number of calls required to obtion widths for common things such as
+ * all the number s on a plot axes can easily add up to several seconds.
+ *
+ * However, if we do not perform string width calculation R is unable to
+ * properly align text in the plots R. This is something that LaTeX and
+ * TikZ should actually be taking care of by themselves but the current
+ * graphics system does not allow for this.
+ *
+ * Given that we need text strings to be aligned for good output, we are
+ * stuck using this inefficient hybrid system untill we think of something
+ * better.
+ *
 */
 static double TikZ_StrWidth( const char *str,
 		const pGEcontext plotParams, pDevDesc deviceInfo ){
@@ -549,10 +575,19 @@ static double TikZ_StrWidth( const char *str,
 	 * New string with calculation method: call back to R
 	 * and run the R function getLatexStrWidth.
 	 *
-	 * Why?
+	 * This used to be implemented as a C function, but
+	 * the nuts and bolts were re-implemented on back
+	 * on the R side of this package. There seems to
+	 * have been no major performance penalty associated
+	 * with doing this.
+	 *
+	 * Why was it done?
 	 *
 	 * - Windows and Linux did not suppress the output
-	 *   of the call to LaTeX which resulted in lag.
+	 *   of the C system call to LaTeX which resulted 
+	 *   in spam and lag. In the case of Windows, a
+	 *   whole mess of CMD windows were spawned which
+	 *   eventually crashed the system.
 	 *
 	 * - Using R's system() call we gain a level of
 	 *   abstraction that works accross all platforms.
@@ -567,7 +602,8 @@ static double TikZ_StrWidth( const char *str,
 	 *   probably provide the interface. Therefore
 	 *   a callback to R is necessary anyway.
 	 *
-	 * - It's fucking cool.
+	 * - Having C code called by R call R code is 
+	 *   fucking wicked.
 	 *
 	*/
 	
@@ -604,8 +640,30 @@ static double TikZ_StrWidth( const char *str,
 	SEXP RStrWidth;
  	PROTECT( RStrWidth = eval( RCallBack, R_GlobalEnv ) );
 
-	// Why REAL()[0] instead of asReal(CAR())? I have no fucking
-	// clue...
+	/*
+	 * Why REAL()[0] instead of asReal(CAR())? I have no fucking
+	 * clue...
+	 *
+	 * After browsing Rinternals.h, the location where SEXPs and
+	 * their access functions are defined, I have an explanation
+	 * that seems plausible.
+	 *
+	 * Since getLatexStrWidth returns a single variable of a single
+	 * type, it is returned as a vector SEXP. The value can be
+	 * extracted to a C variable by coercing the SEXP to real and
+	 * then accessing the first element of the resulting array.
+	 *
+	 * When a R function returns, or passes in the case of the 
+	 * .External call that leads into all of this code, a collection
+	 * of *different* objects they are passed as a list instead of
+	 * a vector. Therefore CAR is needed to access the list followed
+	 * by coercion using asReal().
+	 *
+	 * Seems like this explains what is going on here, although it
+	 * is just a wild guess on my part. Maybe I should post to
+	 * r-devel and ask for clarification...
+	 *
+  */
 	double width = REAL(RStrWidth)[0];
 
 	// Since we called PROTECT twice, we must call UNPROTECT
