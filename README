@@ -1,4 +1,4 @@
-Version 0.3.1: Alpha
+Version 0.3.5: Alpha
 
 STATUS:
 	The tikzDevice implements the tikz() graphics driver in R. This driver
@@ -7,13 +7,15 @@ STATUS:
 	supports colors, line types, line weights, semi-transparency, line endings 
 	and line joining. 
 
+	String width is now calculated by direct calls to a LaTeX compiler. This 
+	is an inefficient but robust method. Some of the inefficiency of this method
+	is compensated for by storing calculated string widths in a database managed
+	by the filehash package. This way if we pay a computational price to compute
+	the width of a string, we hopefully only pay it once.
+
 FIX:
 		* Adding legends to plots results in incorrect sizing and positioning.
 			See Test #14 for an example of this behavoir.
-
-    * When using plot(1,1), all text labels are placed incorrectly. This may
-      be a result of neglecting to provide a serious attempt at calculating
-      string width.
    
     * Fill colors are still shown for polylines and lines; This does not 
       affect the output but is inefficient.  
@@ -58,11 +60,21 @@ FIXED:
         This bug was a result of incorrect handling of C's #&@!&^ 0 array 
         indexing by TikZ_Polyline.
 
+    * When using plot(1,1), all text labels are placed incorrectly. This may
+      be a result of neglecting to provide a serious attempt at calculating
+      string width.
+			[Solution]
+				This was indeed a result of not making an attempt to calculate the 
+				width of LaTeX strings. This has been fixed by a somewhat elaborate
+				system call to the LaTeX compiler. This would be an elegent solution
+				except for the fact that we have to call the compiler 100s of times...
+
 TODO:
     * Clipping
     
     * Line mitre
 
-    * The setup of the text functions is extremely janky. No attempt is made 
-	  to determine string width or font metrics. This could be a possible 
-	  cause of the nan values that show up in the positions of text strings.
+    * The setup of the text functions is extremely janky. String width is
+			obtained through calles to the LaTeX compiler and font metrics are
+			not calculated. The lack of font metric calculation causes problems
+			with the vertical alignment of text strings. 
