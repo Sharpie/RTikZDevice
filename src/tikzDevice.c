@@ -1057,8 +1057,6 @@ static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
 
 	fprintf(pLatexFile,"\\sbox0{%s}\n",str);
 	fprintf(pLatexFile,"\\typeout{width=\\the\\wd0}\n");
-	fprintf(pLatexFile,"\\typeout{line height=\\the\\linewidth}\n");
-	fprintf(pLatexFile,"\\typeout{line skip=\\the\\baselineskip}\n");
 
 	/*Stop before creating output*/
 	fprintf(pLatexFile,"\\makeatletter\n");

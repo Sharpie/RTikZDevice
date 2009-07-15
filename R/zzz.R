@@ -13,7 +13,8 @@ function(libname, pkgname) {
 
 	latexTest <- function( pathToTeX, pathDesc ){
 
-		latexCheck <- system( paste( pathToTeX,'--version'), ignore.stderr=T)
+		latexCheck <- suppressWarnings(
+			system( paste( pathToTeX,'--version'), ignore.stderr=T) )
 
 		if( latexCheck == 0 ){
 			options( tikzLatex=pathToTeX )
