@@ -1,10 +1,11 @@
 Package: tikzDevice
 Type: Package
 Title: A Device for R Graphics Output in PGF/TikZ Format
-Version: 0.3.1
-Date: 2009-05-26
+Version: 0.3.5
+Date: 2009-07-15
 Author: Charlie Sharpsteen and Cameron Bracken
 Maintainer: Charlie Sharpsteen <source@sharpsteen.net>
-Description: This package is just okay today. Hopefully it will rock hard someday.
+Description: This package is starting to rock pretty hard. R's obsession with string metrics is still a problem though.
 License: GPL (>= 2.0)
+Depends: filehash
 LazyLoad: yes

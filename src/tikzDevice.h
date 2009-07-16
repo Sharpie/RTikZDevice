@@ -30,7 +30,6 @@
 typedef struct{
 	FILE *outputFile;
 	char outFileName[128];
-	char latexCmd[128];
 	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
@@ -50,8 +49,7 @@ static Rboolean TikZ_Setup(
 		const char *fileName,
 		double width, double height,
 		const char *bg, const char *fg,
-		Rboolean standAlone,
-		const char *latexCmd );
+		Rboolean standAlone );
 
 double dim2dev( double length );
 

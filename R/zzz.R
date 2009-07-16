@@ -1,4 +1,4 @@
-.First.lib <-
+.onLoad<-
 function(libname, pkgname) {
 
 	# Perform a search for an executable LaTeX program.
@@ -7,6 +7,10 @@ function(libname, pkgname) {
 	# on the path. If LaTeX can not be found, loading of
 	# this package will be aborted as a LaTeX compiler is
 	# required in order to determine string metrics.
+
+	if( !require( filehash ) ){ 
+		stop("tikzDevice requires the filehash package to be available.") 
+	}
 
 	foundLatex <- FALSE
 	checked <- c()
@@ -71,3 +75,7 @@ function(libname, pkgname) {
 
   library.dynam(pkgname, pkgname, libname)
 }
+
+# Any variables defined in here will be hidden
+# from normal users.
+.tikzOptions <- new.env()
