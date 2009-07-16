@@ -3,7 +3,7 @@ function( texString ){
 
 	# Check to see if we have a width stored in
 	# our dictionary for this string.
-	width <- queryDictionaryForWidth( texString )
+	width <- queryMetricsDictionary( texString )
 
 	if( width > 0 ){
 
@@ -19,7 +19,7 @@ function( texString ){
 
 		# Store the width in the dictionary so we don't
 		# have to do this again.
-		storeWidthInDictionary( texString, width )
+		storeMetricsInDictionary( texString, width )
 
 		# Return the width.
 		return( width )
@@ -102,6 +102,38 @@ function( texString ){
 
 }
 
+getLatexCharMetrics <-
+function( charCode ){
+
+	# This function is pretty much an exact duplicate of
+	# getLatexStrWidth, these two functions should be 
+	# generalized and combined.
+
+	# Check to see if we have metrics stored in
+	# our dictionary for this character.
+	metrics <- queryMetricsDictionary( charCode )
+
+	if( all(metrics >= 0) ){
+
+		# The metrics should be a vector of three non negative
+		# numbers.
+		return( metrics )
+
+	}else{
+
+		# Bummer. No metrics on record for this character.
+		# Call LaTeX to obtain them.
+		metrics <- latexParseCharForMetrics( charCode )
+
+		# Store the metrics in the dictionary so we don't
+		# have to do this again.
+		storeMetricsInDictionary( charCode, metrics )
+
+		return( metrics )
+
+	}
+}
+
 latexParseCharForMetrics <-
 function( charCode ){
 	
@@ -111,7 +143,7 @@ function( charCode ){
 	# so that both functions may be combined.
 	#
 	# Also, it would be nice to have the capability to load
-	# arbitrary pacakges and even things such as \newcommand
+	# arbitrary packages and even things such as \newcommand
 	# during the exection of these runs.
 
 	texDir <- tempdir()

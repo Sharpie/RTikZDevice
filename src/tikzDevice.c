@@ -47,7 +47,9 @@
  * 	to write C code. Hence the comments in this file will make many
  * 	observations that may seem obvious. There also may be a generous
  * 	amount of snide comments concerning the syntax of the C language.
- *
+*/
+
+/*
  * This header also includes other header files describing functions 
  * provided by the R language.
 */
@@ -66,7 +68,7 @@ SEXP tikzDevice ( SEXP args ){
 	*/
 	R_GE_checkVersionOrDie(R_GE_version);
 
-	/* Declare local variabls for holding function arguments. */
+	/* Declare local variabls for holding the components of the args SEXP */
 	const char *fileName;
 	const char *bg, *fg;
 	double width, height;
@@ -78,7 +80,7 @@ SEXP tikzDevice ( SEXP args ){
 	 * R system. It contains one important componant of type pDevDesc
 	 * which containts information specific to the implementation of
 	 * the tikz device. The creation and initialization of this component
-	 * is one ofthe main tasks of this routine.
+	 * is one of the main tasks of this routine.
   */
 	pGEDevDesc tikzDev;
 
@@ -314,9 +316,9 @@ static Rboolean TikZ_Setup(
 	*/
 
 	/*
-	* Set canvas size. The bottom left corner is considered the origin and 
-	* assigned the value of 0pt, 0pt. The upper right corner is assigned by 
-	* converting the specified height and width of the device to points.
+	 * Set canvas size. The bottom left corner is considered the origin and 
+	 * assigned the value of 0pt, 0pt. The upper right corner is assigned by 
+	 * converting the specified height and width of the device to points.
 	*/
 	deviceInfo->bottom = 0;
 	deviceInfo->left = 0;
@@ -334,11 +336,11 @@ static Rboolean TikZ_Setup(
 	deviceInfo->startps = 10;
 
 	/* 
-	* Apparently these are supposed to center text strings over the points at
-  * which they are plotted. TikZ does this automagically.
-	*
-	* We hope.
-	*
+	 * Apparently these are supposed to center text strings over the points at
+   * which they are plotted. TikZ does this automagically.
+	 *
+	 * We hope.
+	 *
 	*/
 	deviceInfo->xCharOffset = 0;	
 	deviceInfo->yCharOffset = 0;	
@@ -550,6 +552,7 @@ static void TikZ_Size( double *left, double *right,
 	*left = deviceInfo->left;
 	*top = deviceInfo->top;
 	*right = deviceInfo->right;
+
 }
 
 
@@ -577,15 +580,16 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 		*ascent = 0.0;
 		*descent = 0.0;
 		*width = 0.0;
+		return;
 	}
 
 	// Prepare to call back to R in order to retrieve character metrics.
 	
 	// Call out to R to retrieve the latexParseCharForMetrics function.
-	// Note: this code will eventuall call a different function that provides
+	// Note: this code will eventually call a different function that provides
 	// caching of the results. Right now we're directly calling the function
 	// that activates LaTeX.
-	SEXP metricFun = findFun( install("latexParseCharForMetrics"), R_GlobalEnv );
+	SEXP metricFun = findFun( install("getLatexCharMetrics"), R_GlobalEnv );
 
 	SEXP RCallBack;
 	PROTECT( RCallBack = allocVector(LANGSXP,2) );
@@ -749,7 +753,11 @@ static double TikZ_StrWidth( const char *str,
 		fprintf(tikzInfo->outputFile,
 			"%% Calculated string width of %s as %f\n",str,width);
 	
-	/*Increment the number of times this function has been called*/
+	/*
+	 * Increment the number of times this function has been called
+	 * Used for debugging purposes.
+	 *
+	*/
 	tikzInfo->stringWidthCalls++;
 
 	return(width);
