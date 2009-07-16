@@ -1,61 +1,54 @@
-\name{tikz}
 \Rdversion{1.1}
+\name{tikz}
 \alias{tikz}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
-%%  ~~function to do ... ~~
+TikZ Graphics Device
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+\code{tikz} is used to open a R graphics device which supports output in the TikZ graphics 
+language. TikZ code may be used inside a LaTeX document by specifying \code{\\usepackage\{tikz\}} 
+in the document header.
 }
 \usage{
-tikz(file = "foo.tex")
+tikz(file = "Rplots.tex", width = 7, height = 7, bg = "white", fg = "black"
+	standAlone = FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{file}{
-%%     ~~Describe \code{file} here~~
-}
+  \item{file}{A character string indicating the desired path to the output file.}
+  \item{width}{The width of the output figure, in \bold{inches}.}
+  \item{height}{The hegiht of the output figure, in \bold{inches}.}
+  \item{bg}{The starting background color for the plot.}
+  \item{fg}{The starting foreground color for the plot.}
+  \item{standAlone}{A logical value indicating whether the resulting file should be suitable for direct 
+		processing by LaTeX. A value of \code{FALSE} indicates that the file is intended for inclusion in a
+	  larger document. See \sQuote{Details}.}
   }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
-}
-\value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
-}
-\author{
-%%  ~~who you are~~
+The TikZ device enables LaTeX-ready output from R graphics functions. This is done by producing code that 
+can be understood by the TikZ graphics language. Current releases of the TikZ package are available from 
+\url{http://www.ctan.org}. The package may also be installed through the MikTeX package manager on Windows 
+or using the TeX Live package manager, \code{tlmgr}, on Unix/Linux/OS X. The TeX Live package manager will 
+only be installed by default for TeX Live distributions dated 2008 and later. Both bleeding-edge and release 
+versions of TikZ may be obtained from the project website hosted at \url{http://sourceforge.net/projects/pgf/}.
+
+The TikZ device currently supports two modes of output depending on the value of the parameter \code{standAlone}.
+If \code{standAlone} is set to \code{FALSE}, the default, the resulting file will only contain the \code{tikzpicture}
+environment and the commands to build your graphic. Since this file is not a complete LaTeX document, it will need to
+be included in another LaTeX document using the \code{\\input} command.
+
+When \code{standAlone} is set to \code{TRUE}, the device wraps the \code{tikzpicture} environment in a complete LaTeX
+document suitable for direct compilation. In this mode the \code{preview} package is used to crop the resulting output 
+to the bounding box of the graphic.
 }
 \note{
-%%  ~~further notes~~
+Should probably mention something about why plotting functions are so slow here...
 }
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\value{
+\code{tikz()} returns no values.
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-tikz <-
-function (file = "foo.tex")
-	{
-      .External('tikzDevice', file) 
-	}
-
+\references{
+The TikZ and PGF Packages: Manual for version 2.00\cr
+\url{http://sourceforge.net/projects/pgf}\cr
+Till Tantu, February 20, 2008
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

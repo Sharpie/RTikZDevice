@@ -1,44 +1,34 @@
-\name{pgfDevice-package}
+\name{tikzDevice-package}
 \Rdversion{1.1}
-\alias{pgfDevice-package}
-\alias{pgfDevice}
+\alias{tikzDevice-package}
+\alias{tikzDevice}
 \docType{package}
 \title{
-What the package does (short line)
-~~ package title ~~
+Support for native LaTeX output of R graphics
 }
 \description{
-More about what it does (maybe more than one line)
-~~ A concise (1-5 lines) description of the package ~~
+This package implements the \code{\link{tikz}} device which allows for the output of R graphics 
+functions to be saved in a LaTeX friendly format.
 }
 \details{
 \tabular{ll}{
-Package: \tab pgfDevice\cr
+Package: \tab tikzDevice\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2009-05-15\cr
-License: \tab What license is it under?\cr
+Version: \tab 0.35\cr
+Date: \tab 2009-07-16\cr
+License: \tab GPL 2.0 or greater\cr
 LazyLoad: \tab yes\cr
 }
-~~ An overview of how to use the package, including the most important ~~
-~~ functions ~~
 }
 \author{
-Who wrote it
+Cameron Bracken
 
-Maintainer: Who to complain to <yourfault@somewhere.net>
-~~ The author and/or maintainer of the package ~~
+Charlie Sharpsteen: \email{source@sharpsteen.net}
+
+Submit bug reports to: \email{tikzdevice-bugs@lists.r-forge.r-project.org}
 }
 \references{
-~~ Literature or other references for background information ~~
-}
-~~ Optionally other standard keywords, one per line, from file KEYWORDS in ~~
-~~ the R documentation directory ~~
-\keyword{ package }
-\seealso{
-~~ Optional links to other man pages, e.g. ~~
-~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
-}
-\examples{
-~~ simple examples of the most important functions ~~
+The TikZ and PGF Packages: Manual for version 2.00\cr
+\url{http://sourceforge.net/projects/pgf}\cr
+Till Tantu, February 20, 2008
 }
