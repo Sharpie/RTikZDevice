@@ -78,4 +78,4 @@ function(libname, pkgname) {
 
 # Any variables defined in here will be hidden
 # from normal users.
-.tikzOptions <- new.env()
+.tikzInternal <- new.env()
