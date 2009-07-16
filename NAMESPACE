@@ -2,4 +2,4 @@
 import( filehash )
 
 # Export user functions
-export( 'tikz', 'getLatexStrWidth' )
+export( 'tikz', 'getLatexStrWidth', 'latexParseCharForMetrics')
