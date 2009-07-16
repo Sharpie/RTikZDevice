@@ -1,6 +1,6 @@
-\name{latexParseCharForMetrics}
+\name{getLatexCharMetrics}
 \Rdversion{1.1}
-\alias{latexParseCharForMetrics}
+\alias{getLatexCharMetrics}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Calculate the ascent, descent, width of a single character as seen by LaTeX.
@@ -9,7 +9,7 @@ Calculate the ascent, descent, width of a single character as seen by LaTeX.
 This function calculates character metrics after being compiled by LaTeX. 
 }
 \usage{
-	latexParseCharForMetrics( charCode ) 
+	getLatexCharMetrics( charCode ) 
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,9 +20,7 @@ A bunch of voo doo. Charlie, you can do the honors.
 }
 
 \value{
-  \item{acent}{}
-  \item{decent}{}
-  \item{width}{}
+  \item{metrics}{A numeric vector holding ascent, descent, width character metrics. Values should all be nonegative. }
 
 }
 \references{
@@ -39,7 +37,7 @@ Charlie Sharpsteen \email{source@sharpsteen.net}
 \code{\link{tikz}}, \code{\link{getLatexStringWidth}}
 }
 \examples{
-	latexParseCharForMetrics('{\\\\tiny Hello \\\\LaTeX!}')
+	getLatexCharMetrics('{\\\\tiny Hello \\\\LaTeX!}')
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

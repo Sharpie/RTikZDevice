@@ -33,7 +33,7 @@ Charlie Sharpsteen \email{source@sharpsteen.net} and Cameron Bracken \email{came
 }
 
 \seealso{
-\code{\link{tikz}}, \code{\link{latexParseCharForMetrics}}
+\code{\link{tikz}}, \code{\link{getLatexCharMetrics}}
 }
 \examples{
 	getLatexStrWidth('{\\\\tiny Hello \\\\LaTeX!}')
