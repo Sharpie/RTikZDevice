@@ -114,7 +114,7 @@ function( charCode ){
 	# arbitrary pacakges and even things such as \newcommand
 	# during the exection of these runs.
 
-	texDir <- getwd()
+	texDir <- tempdir()
 	texLog <- file.path( texDir,'tikzStringWidthCalc.log' )
 	texFile <- file.path( texDir,'tikzStringWidthCalc.tex' )
 

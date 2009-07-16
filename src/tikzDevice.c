@@ -567,9 +567,47 @@ static void TikZ_Size( double *left, double *right,
 static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 		double *ascent, double *descent, double *width, pDevDesc deviceInfo ){
 
-	*ascent = 10.0;
-	*descent = 2.0;
-	*width = 9.0;
+	/* 
+	 * Assuming we are dealing with ASCII characters, check the character
+	 * code c to see if it falls outside the range of printable characters
+	 * which are: 32-126
+	*/
+	if( c < 32 || c > 126 ){
+		// Non-printable character. Set metrics to zero and return.
+		*ascent = 0.0;
+		*descent = 0.0;
+		*width = 0.0;
+	}
+
+	// Prepare to call back to R in order to retrieve character metrics.
+	
+	// Call out to R to retrieve the latexParseCharForMetrics function.
+	// Note: this code will eventuall call a different function that provides
+	// caching of the results. Right now we're directly calling the function
+	// that activates LaTeX.
+	SEXP metricFun = findFun( install("latexParseCharForMetrics"), R_GlobalEnv );
+
+	SEXP RCallBack;
+	PROTECT( RCallBack = allocVector(LANGSXP,2) );
+
+	// Place the function into the first slot of the SEXP.
+	SETCAR( RCallBack, metricFun );
+
+	// Place the character code into the second slot of the SEXP.
+	SETCADR( RCallBack, ScalarInteger( c ) );
+	SET_TAG( CDR( RCallBack ), install("charCode") );
+
+	SEXP RMetrics;
+ 	PROTECT( RMetrics = eval( RCallBack, R_GlobalEnv ) );
+
+	// Recover the metrics.
+	*ascent = REAL(RMetrics)[0];
+	*descent = REAL(RMetrics)[1];
+	*width = REAL(RMetrics)[2];
+
+	UNPROTECT(2);
+
+	return;
 
 }
 
