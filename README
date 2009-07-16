@@ -1,27 +1,35 @@
 Version 0.3.5: Alpha
 
 STATUS:
-	The tikzDevice implements the tikz() graphics driver in R. This driver
-	is currently complete to the extent that all skeleton routines have been
-	implemented. The device passes the plot(1,1) test.  Currently the device 
-	supports colors, line types, line weights, semi-transparency, line endings 
-	and line joining. 
+    The tikzDevice implements the tikz() graphics driver in R. This driver
+    is currently complete to the extent that all skeleton routines have been
+    implemented. The device passes the plot(1,1) test.  Currently the device 
+    supports colors, line types, line weights, semi-transparency, line endings 
+    and line joining. 
 
-	String width is now calculated by direct calls to a LaTeX compiler. This 
-	is an inefficient but robust method. Some of the inefficiency of this method
-	is compensated for by storing calculated string widths in a database managed
-	by the filehash package. This way if we pay a computational price to compute
-	the width of a string, we hopefully only pay it once.
+    String width is now calculated by direct calls to a LaTeX compiler. This 
+    is an inefficient but robust method. Some of the inefficiency of this method
+    is compensated for by storing calculated string widths in a database managed
+    by the filehash package. This way if we pay a computational price to compute
+    the width of a string, we hopefully only pay it once.
 
 FIX:
-		* Adding legends to plots results in incorrect sizing and positioning.
-			See Test #14 for an example of this behavoir.
+    * Adding legends to plots results in incorrect sizing and positioning.
+        See Test #14 for an example of this behavoir.
    
     * Fill colors are still shown for polylines and lines; This does not 
       affect the output but is inefficient.  
       
     * Line endings are still shown for circles and squares; This does not 
       affect the output but is inefficient.
+
+TODO:
+    * Add an option when standAlone is TRUE to allow for the inclusion of 
+      custom LaTeX headers and footers (e.g. font packages)
+
+    * Add an option to allow for custom packages to be included when 
+      calculating string widths or character metrics, default to computer
+      modern
 
 FIXED:
     * Shapes are plotted with a default color border of black when it should 
@@ -46,35 +54,25 @@ FIXED:
     
    * when using plot(1,1), all calls to text result in proper output with one
      exception: the coordinates of the text nodes are nan.
-	   [Solution]
-	   This error occurred because TikZ_Setup neglected to set the initial  
-	   size of the font by assigning a value to startps inside the device 
-	   structure. Additionally, plot characters were not produced because the 
-	   initial foreground and background colors were not set.
+       [Solution]
+       This error occurred because TikZ_Setup neglected to set the initial  
+       size of the font by assigning a value to startps inside the device 
+       structure. Additionally, plot characters were not produced because the 
+       initial foreground and background colors were not set.
 
     * when using plot(1,1), the bounding box of the plot is almost drawn 
       correctly. The line travels through the correct points, then returns to 
       (0,0) which results in the right hand side of the plot having a funky 
       edge.
-	    [Solution]
+        [Solution]
         This bug was a result of incorrect handling of C's #&@!&^ 0 array 
         indexing by TikZ_Polyline.
 
     * When using plot(1,1), all text labels are placed incorrectly. This may
       be a result of neglecting to provide a serious attempt at calculating
       string width.
-			[Solution]
-				This was indeed a result of not making an attempt to calculate the 
-				width of LaTeX strings. This has been fixed by a somewhat elaborate
-				system call to the LaTeX compiler. This would be an elegent solution
-				except for the fact that we have to call the compiler 100s of times...
-
-TODO:
-    * Clipping
-    
-    * Line mitre
-
-    * The setup of the text functions is extremely janky. String width is
-			obtained through calles to the LaTeX compiler and font metrics are
-			not calculated. The lack of font metric calculation causes problems
-			with the vertical alignment of text strings. 
+            [Solution]
+                This was indeed a result of not making an attempt to calculate the 
+                width of LaTeX strings. This has been fixed by a somewhat elaborate
+                system call to the LaTeX compiler. This would be an elegent solution
+                except for the fact that we have to call the compiler 100s of times...
