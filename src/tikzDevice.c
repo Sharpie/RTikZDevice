@@ -526,15 +526,38 @@ static void TikZ_Clip( double x0, double x1,
 	deviceInfo->clipTop = y1;
 	deviceInfo->clipRight = x1;
 	
-	if(tikzInfo->firstClip != TRUE)
+	if(tikzInfo->firstClip != TRUE){
 		fprintf(tikzInfo->outputFile, "\\end{scope}\n");
-	else
+	}else{
 		tikzInfo->firstClip = FALSE;
+	}
 	
 	fprintf(tikzInfo->outputFile, "\\begin{scope}\n");
 	fprintf(tikzInfo->outputFile,
-			"\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-			x0,y0,x1,y1);
+		"\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+		x0,y0,x1,y1);
+	
+	/*
+	 *     *** UGLY HACK ***
+	 * 
+	 * So, the device was building fine on Linux and Windows,
+	 * but when it came time to comple the output- pdflatex
+	 * barfed on both systems, complaining about fillColor or
+	 * drawColor not being defined. I'm pretty sure this is
+	 * because those color values are not preserved accross
+	 * scopes.
+	 *
+	 * I'm too tired to figure out the StyleDef code in detail
+	 * right now, so i'm tweaking the stored values here in
+	 * the hopes that it will force a reprint of style after
+	 * we begin a new scope.
+	 *
+	 * Seems to work.
+	*/
+	tikzInfo->oldFillColor = -999;
+	tikzInfo->oldDrawColor = -999;
+	tikzInfo->oldLineType = -999;
+
 	if(tikzInfo->debug == TRUE)
 		fprintf(tikzInfo->outputFile,
 				"\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
