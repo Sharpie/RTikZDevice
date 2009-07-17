@@ -1,0 +1,106 @@
+\documentclass{article}
+
+% \VignetteIndexEntry{The tikzDevice Package}
+% \VignetteDepends{tikzDevice}
+% \usepackage{Sweave}
+
+\usepackage[x11names]{xcolor}
+\usepackage{atbegshi}
+\usepackage{tikz}
+\usepackage[parfill]{parskip}
+\usepackage{fancyvrb}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks]{hyperref}
+\usepackage{graphicx}
+
+\newcommand{\lang}{\textsf}
+\newcommand{\code}{\texttt}
+\newcommand{\pkg}{\textbf}
+\newcommand{\TikZ}{Ti\textit{k}Z}
+
+<<setup,echo=F,results=tex>>=
+
+if( !file.exists( 'figs' ) ) dir.create( 'figs' )
+require(tikzDevice)
+cat('\\usepackage{',
+	file.path(R.home(),'share','texmf','Sweave'),'}\n',
+	sep='')
+	
+@
+
+\title{The \pkg{tikzDevice} Package}
+\author{Charlie Sharpsteen and Cameron Bracken}
+
+\begin{document}
+	
+	\SweaveOpts{echo=F,prefix.string=figs/fig}
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+The \pkg{tikzDevice} package allows for graphics output in native \LaTeX{} format.  That is, the output of the \code{tikz()} function can be directly included in \LaTeX{} documents by way of and \verb'\input{}' statement. For example, in \lang{R} 
+
+\begin{Verbatim}[frame=single]
+require(tikzDevice)
+tikz('simpleEx.tex',width=3.5,height=3.5)
+plot(1)
+dev.off()
+\end{Verbatim}
+
+And then in a \LaTeX{} document
+
+\begin{Verbatim}[frame=single]
+\documentclass{article}
+\usepackage{tikz}
+\begin{document}
+	\begin{figure}[!h]
+        \centering
+        \input{simpleEx.tex}
+        \caption{Simple Example}
+    \end{figure}
+\end{document}
+\end{Verbatim}
+
+And you get
+
+\begin{figure}[h]
+	\centering
+<<simpleEx,results=hide>>=
+
+tikz('figs/simpleEx.tex',width=3.5,height=3.5)
+plot(1)
+dev.off()
+
+@
+\input{figs/simpleEx.tex}
+\caption{Simple Example}
+\end{figure}
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Background}
+About \TikZ{}, the Pic\TeX{} device and the story of two fortran programmers with a dream.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{System Requirements}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Character Metrics and String Width}
+
+\subsection{Dictionaries}
+\subsection{What the Heck are Acent, Decent and Width}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{On the Importance of Font and Style Consistancy in Reports}
+
+\section{The \pkg{pgfSweave} Package and Automatic Report Generation}
+	
+\end{document}

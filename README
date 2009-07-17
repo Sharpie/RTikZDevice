@@ -20,6 +20,16 @@ FIX:
     * Line endings are still shown for circles and squares; This does not 
       affect the output but is inefficient.
 
+TODO:
+    * Add an option when standAlone is TRUE to allow for the inclusion of 
+      custom LaTeX headers and footers (e.g. font packages)
+
+    * Add an option to allow for custom packages to be included when 
+      calculating string widths or character metrics, default to computer
+      modern
+
+		* Add support for text foreground and background colors.
+
 FIXED:
     * Shapes are plotted with a default color border of black when it should 
       be transparent
