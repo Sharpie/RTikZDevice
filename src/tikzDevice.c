@@ -813,22 +813,7 @@ static void TikZ_Text( double x, double y, const char *str,
 	
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE) 
-		fprintf(tikzInfo->outputFile,
-			"%% Drawing node at x = %f, y = %f\n",
-			x,y);
-
-	/* Start a node for the text, open an options bracket. */
-	fprintf( tikzInfo->outputFile,"\n\\node[");
-
-	/* Rotate the text if desired. */
-	if( rot != 0 )
-		fprintf( tikzInfo->outputFile, "rotate=%6.2f", rot );
-
-	/* More options would go here such as scaling, color etc. */
-
+	
 	// Append font face commands depending on which font R is using.
 	char *tikzString = (char *) calloc( strlen(str) + 20, sizeof(char) );
 
@@ -854,8 +839,28 @@ static void TikZ_Text( double x, double y, const char *str,
 	// Form final output string.
 	strcat( tikzString, str );
 	
+	/*Show only for debugging*/
+	if(tikzInfo->debug == TRUE) 
+		fprintf(tikzInfo->outputFile,
+			"%% Drawing node at x = %f, y = %f\n",
+			x,y);
+
+	// Print out a definition for the text color.
+	SetColor( plotParams->col, TRUE, deviceInfo );	
+
+	/* Start a node for the text, open an options bracket. */
+	fprintf( tikzInfo->outputFile,"\n\\node[");
+
+	/* Rotate the text if desired. */
+	if( rot != 0 )
+		fprintf( tikzInfo->outputFile, "rotate=%6.2f,", rot );
+
+	/* More options would go here such as scaling, color etc. */
+	
+	// Add a reference to the text color to the node options.
+	SetColor( plotParams->col, FALSE, deviceInfo );
 	/* End options, print coordinates and string. */
-	fprintf( tikzInfo->outputFile, ",anchor=base west, inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s};\n",
+	fprintf( tikzInfo->outputFile, "anchor=base west, inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s};\n",
 		plotParams->cex, x, y, tikzString);
 
 	// Add a small red marker to indicate the point the text string is being aligned to.

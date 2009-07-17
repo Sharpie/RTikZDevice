@@ -26,6 +26,13 @@ function(main){
     box()
 },
 
+# Test of text color.
+function(main){
+    plot(1, type='n', main=main)
+    text(0.8,0.8,'red',col='red')
+		text(1.2,1.2,'blue',col='blue',cex=2)
+},
+
 # Plotting test- with legend
 function(main){
 
@@ -232,16 +239,20 @@ for(i in 1:length(tests)){
 		tests[[i]](main=paste('Control',i))
 		dev.off()
 
-		# Create a diff between the two files using ImageMagick's compare utility.
-		this.diffile <- file.path(prefix,
-			paste('diff',sprintf('%02d',i),'.pdf',sep=''))
+		# Commented Out ImageMagick comparison-- it doesn't seem to serve
+		# much purpose comparing the output of pdf() and tikz() is like comparing
+		# apples to oranges.
 
-		silence <- system( paste('compare',this.testfile,
-			this.controlfile,
-			this.diffile), intern=T )
+		#  # Create a diff between the two files using ImageMagick's compare utility.
+		#  this.diffile <- file.path(prefix,
+		#  	paste('diff',sprintf('%02d',i),'.pdf',sep=''))
+
+		#  silence <- system( paste('compare',this.testfile,
+		#  	this.controlfile,
+		#  	this.diffile), intern=T )
 
 		# Add file names to output list.
-		output.list <- c( output.list, this.testfile, this.controlfile, this.diffile )
+		output.list <- c( output.list, this.testfile, this.controlfile )
 
 }
 
@@ -257,4 +268,4 @@ silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=compares.p
 
 # Combine only the test files.
 silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH',
-	paste(output.list[seq(1,length(output.list),3)],collapse=' ') ), intern=T, ignore.stderr=T)
+	paste(output.list[seq(1,length(output.list),2)],collapse=' ') ), intern=T, ignore.stderr=T)
