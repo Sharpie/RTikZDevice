@@ -17,8 +17,9 @@ function(libname, pkgname) {
 
 	latexTest <- function( pathToTeX, pathDesc ){
 
+		tf <- tempfile()
 		latexCheck <- suppressWarnings(
-			system( paste( pathToTeX,'--version'), ignore.stderr=T) )
+			system( paste( pathToTeX,'--version >', tf ), ignore.stderr=T) )
 
 		if( latexCheck == 0 ){
 			options( tikzLatex=pathToTeX )
