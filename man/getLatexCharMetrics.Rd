@@ -34,10 +34,10 @@ Charlie Sharpsteen \email{source@sharpsteen.net}
 }
 
 \seealso{
-\code{\link{tikz}}, \code{\link{getLatexStringWidth}}
+\code{\link{tikz}}, \code{\link{getLatexStrWidth}}
 }
 \examples{
-	getLatexCharMetrics('{\\\\tiny Hello \\\\LaTeX!}')
+	getLatexCharMetrics(55)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

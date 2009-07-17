@@ -1,6 +1,6 @@
-\name{getLatexStringWidth}
+\name{getLatexStrWidth}
 \Rdversion{1.1}
-\alias{getLatexStringWidth}
+\alias{getLatexStrWidth}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Calculate the width of a LaTeX string

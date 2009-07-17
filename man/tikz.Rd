@@ -76,7 +76,7 @@ Charlie can wax poetic here about string widths, font metrics, encodings, metric
 }
 
 \seealso{
-\code{\link{pictex}}, \code{\link{latexParseCharForMetrics}}, \code{\link{getLatexStringWidth}}
+\code{\link{pictex}}, \code{\link{getLatexCharMetrics}}, \code{\link{getLatexStrWidth}}
 }
 \examples{
 \dontrun{

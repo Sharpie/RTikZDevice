@@ -8,7 +8,7 @@ Support for native LaTeX output of R graphics
 }
 \description{
 This package implements the \code{\link{tikz}} device which allows for the output of R graphics 
-to be saved in a LaTeX friendly format. All text in a graphic be typeset by LaTeX and therefore will match whatever fonts are currently used in the document.  This also means that \textbf{\textit{LaTeX mathematics can be typeset directly into labels and annotations}}
+to be saved in a LaTeX friendly format. All text in a graphic be typeset by LaTeX and therefore will match whatever fonts are currently used in the document.  This also means that \strong{LaTeX mathematics can be typeset directly into labels and annotations}
 }
 \details{
 \tabular{ll}{
