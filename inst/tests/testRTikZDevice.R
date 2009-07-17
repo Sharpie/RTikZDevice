@@ -182,7 +182,9 @@ function(main){
 # Neat example of image.plot using the fields package.
 function(main){
 
+	sink('/dev/null')
 	require(fields)
+	sink()
 	data(RCMexample)
 
 	image.plot( RCMexample$x, RCMexample$y, RCMexample$z[,,8], main=main )
@@ -217,7 +219,7 @@ for(i in 1:length(tests)){
     }
 
 		# Compile the resulting TeX file.
-		system( paste(Sys.getenv("R_PDFLATEXCMD"),'-output-directory',prefix,
+		silence <- system( paste(Sys.getenv("R_PDFLATEXCMD"),'-output-directory',prefix,
 			this.testfile), intern=T )
 
     this.testfile <- file.path(prefix,
@@ -234,7 +236,7 @@ for(i in 1:length(tests)){
 		this.diffile <- file.path(prefix,
 			paste('diff',sprintf('%02d',i),'.pdf',sep=''))
 
-		system( paste('compare',this.testfile,
+		silence <- system( paste('compare',this.testfile,
 			this.controlfile,
 			this.diffile), intern=T )
 
@@ -250,9 +252,9 @@ newsizes <- file.info(file.path(prefix,texfiles))$size
 cat(paste(texfiles,newsizes,sep='\t'),sep='\n',file=f)
 
 # Combine the output files into summary PDFs.
-system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=compares.pdf -dBATCH',
-	paste(output.list,collapse=' ') ))
+silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=compares.pdf -dBATCH',
+	paste(output.list,collapse=' ') ), intern=T, ignore.stderr=T)
 
 # Combine only the test files.
-system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH',
-	paste(output.list[seq(1,length(output.list),3)],collapse=' ') ))
+silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH',
+	paste(output.list[seq(1,length(output.list),3)],collapse=' ') ), intern=T, ignore.stderr=T)

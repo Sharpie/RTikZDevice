@@ -592,7 +592,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 	SEXP metricFun = findFun( install("getLatexCharMetrics"), R_GlobalEnv );
 
 	SEXP RCallBack;
-	PROTECT( RCallBack = allocVector(LANGSXP,2) );
+	PROTECT( RCallBack = allocVector(LANGSXP,4) );
 
 	// Place the function into the first slot of the SEXP.
 	SETCAR( RCallBack, metricFun );
@@ -600,6 +600,12 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 	// Place the character code into the second slot of the SEXP.
 	SETCADR( RCallBack, ScalarInteger( c ) );
 	SET_TAG( CDR( RCallBack ), install("charCode") );
+
+	// Pass graphics parameters cex and fontface.
+	SETCADDR( RCallBack,  ScalarReal( plotParams->cex ) );
+	SET_TAG( CDDR( RCallBack ), install("cex") );
+	SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
+	SET_TAG( CDR(CDDR( RCallBack )), install("face") );
 
 	SEXP RMetrics;
  	PROTECT( RMetrics = eval( RCallBack, R_GlobalEnv ) );
@@ -690,14 +696,15 @@ static double TikZ_StrWidth( const char *str,
 
 	/*
 	 * Create a SEXP that will be the R function call. The SEXP will
-	 * have two components- the R function being called and the
-	 * string being passed. Therefore it is allocated as a  LANGSXP
-	 * vector of length 2. This is done inside a PROTECT() function
+	 * have four components- the R function being called, the string 
+	 * being passed and the current value of the graphics parameters
+	 * cex and fontface. Therefore it is allocated as a  LANGSXP
+	 * vector of length 4. This is done inside a PROTECT() function
 	 * to keep the R garbage collector from saying "Hmmm... what's
 	 * this? Looks like noone is using it so I guess I will nuke it."
   */
 	SEXP RCallBack;
-	PROTECT( RCallBack = allocVector(LANGSXP,2) );
+	PROTECT( RCallBack = allocVector(LANGSXP,4) );
 
 	// Place the function into the first slot of the SEXP.
 	SETCAR( RCallBack, widthFun );
@@ -707,6 +714,12 @@ static double TikZ_StrWidth( const char *str,
 	// Tag the string with a name, this name coressponds to the
 	// dummy argument of the R function getLatexStringWidth.
 	SET_TAG( CDR( RCallBack ), install("texString") );
+
+	// Pass graphics parameters cex and fontface.
+	SETCADDR( RCallBack,  ScalarReal( plotParams->cex ) );
+	SET_TAG( CDDR( RCallBack ), install("cex") );
+	SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
+	SET_TAG( CDR(CDDR( RCallBack )), install("face") );
 
 	/*
 	 * Call the R function, capture the result.
@@ -792,10 +805,35 @@ static void TikZ_Text( double x, double y, const char *str,
 		fprintf( tikzInfo->outputFile, "rotate=%6.2f", rot );
 
 	/* More options would go here such as scaling, color etc. */
+
+	// Append font face commands depending on which font R is using.
+	char *tikzString = (char *) calloc( strlen(str) + 20, sizeof(char) );
+
+	switch( plotParams->fontface ){
+	
+		case 2:
+			// R is requesting bold font.
+			strcat( tikzString, "\\bfseries " );
+			break;
+
+		case 3:
+			// R is requesting italic font.
+			strcat( tikzString, "\\itshape " );
+			break;
+
+		case 4:
+			// R is requesting bold italic font.
+			strcat( tikzString, "\\bfseries\\itshape " );
+			break;
+
+	} // End font face switch.
+
+	// Form final output string.
+	strcat( tikzString, str );
 	
 	/* End options, print coordinates and string. */
-	fprintf( tikzInfo->outputFile, ",anchor=base west, inner sep=0pt, outer sep=0pt] at (%6.2f,%6.2f) {%s};\n",
-		x, y, str);
+	fprintf( tikzInfo->outputFile, ",anchor=base west, inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s};\n",
+		plotParams->cex, x, y, tikzString);
 
 	// Add a small red marker to indicate the point the text string is being aligned to.
 	if( DEBUG == TRUE )
