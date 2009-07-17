@@ -47,7 +47,9 @@
  * 	to write C code. Hence the comments in this file will make many
  * 	observations that may seem obvious. There also may be a generous
  * 	amount of snide comments concerning the syntax of the C language.
- *
+*/
+
+/*
  * This header also includes other header files describing functions 
  * provided by the R language.
 */
@@ -66,7 +68,7 @@ SEXP tikzDevice ( SEXP args ){
 	*/
 	R_GE_checkVersionOrDie(R_GE_version);
 
-	/* Declare local variabls for holding function arguments. */
+	/* Declare local variabls for holding the components of the args SEXP */
 	const char *fileName;
 	const char *bg, *fg;
 	double width, height;
@@ -78,7 +80,7 @@ SEXP tikzDevice ( SEXP args ){
 	 * R system. It contains one important componant of type pDevDesc
 	 * which containts information specific to the implementation of
 	 * the tikz device. The creation and initialization of this component
-	 * is one ofthe main tasks of this routine.
+	 * is one of the main tasks of this routine.
   */
 	pGEDevDesc tikzDev;
 
@@ -314,9 +316,9 @@ static Rboolean TikZ_Setup(
 	*/
 
 	/*
-	* Set canvas size. The bottom left corner is considered the origin and 
-	* assigned the value of 0pt, 0pt. The upper right corner is assigned by 
-	* converting the specified height and width of the device to points.
+	 * Set canvas size. The bottom left corner is considered the origin and 
+	 * assigned the value of 0pt, 0pt. The upper right corner is assigned by 
+	 * converting the specified height and width of the device to points.
 	*/
 	deviceInfo->bottom = 0;
 	deviceInfo->left = 0;
@@ -334,11 +336,11 @@ static Rboolean TikZ_Setup(
 	deviceInfo->startps = 10;
 
 	/* 
-	* Apparently these are supposed to center text strings over the points at
-  * which they are plotted. TikZ does this automagically.
-	*
-	* We hope.
-	*
+	 * Apparently these are supposed to center text strings over the points at
+   * which they are plotted. TikZ does this automagically.
+	 *
+	 * We hope.
+	 *
 	*/
 	deviceInfo->xCharOffset = 0;	
 	deviceInfo->yCharOffset = 0;	
@@ -397,12 +399,12 @@ static Rboolean TikZ_Setup(
 /*
  * This function is responsible for converting lengths given in page
  * dimensions (ie. inches, cm, etc.) to device dimensions (currenty
- * points- 1/72 of an inch). However, due to the flexability of TeX
+ * points- 1/72.27 of an inch). However, due to the flexability of TeX
  * and TikZ, any combination of device and user dimensions could
  * theoretically be supported.
 */
 double dim2dev( double length ){
-	return length*72;
+	return length*72.27;
 }
 
 
@@ -524,15 +526,38 @@ static void TikZ_Clip( double x0, double x1,
 	deviceInfo->clipTop = y1;
 	deviceInfo->clipRight = x1;
 	
-	if(tikzInfo->firstClip != TRUE)
+	if(tikzInfo->firstClip != TRUE){
 		fprintf(tikzInfo->outputFile, "\\end{scope}\n");
-	else
+	}else{
 		tikzInfo->firstClip = FALSE;
+	}
 	
 	fprintf(tikzInfo->outputFile, "\\begin{scope}\n");
 	fprintf(tikzInfo->outputFile,
-			"\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-			x0,y0,x1,y1);
+		"\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+		x0,y0,x1,y1);
+	
+	/*
+	 *     *** UGLY HACK ***
+	 * 
+	 * So, the device was building fine on Linux and Windows,
+	 * but when it came time to comple the output- pdflatex
+	 * barfed on both systems, complaining about fillColor or
+	 * drawColor not being defined. I'm pretty sure this is
+	 * because those color values are not preserved accross
+	 * scopes.
+	 *
+	 * I'm too tired to figure out the StyleDef code in detail
+	 * right now, so i'm tweaking the stored values here in
+	 * the hopes that it will force a reprint of style after
+	 * we begin a new scope.
+	 *
+	 * Seems to work.
+	*/
+	tikzInfo->oldFillColor = -999;
+	tikzInfo->oldDrawColor = -999;
+	tikzInfo->oldLineType = -999;
+
 	if(tikzInfo->debug == TRUE)
 		fprintf(tikzInfo->outputFile,
 				"\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
@@ -550,6 +575,7 @@ static void TikZ_Size( double *left, double *right,
 	*left = deviceInfo->left;
 	*top = deviceInfo->top;
 	*right = deviceInfo->right;
+
 }
 
 
@@ -567,9 +593,54 @@ static void TikZ_Size( double *left, double *right,
 static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 		double *ascent, double *descent, double *width, pDevDesc deviceInfo ){
 
-	*ascent = 10.0;
-	*descent = 2.0;
-	*width = 9.0;
+	/* 
+	 * Assuming we are dealing with ASCII characters, check the character
+	 * code c to see if it falls outside the range of printable characters
+	 * which are: 32-126
+	*/
+	if( c < 32 || c > 126 ){
+		// Non-printable character. Set metrics to zero and return.
+		*ascent = 0.0;
+		*descent = 0.0;
+		*width = 0.0;
+		return;
+	}
+
+	// Prepare to call back to R in order to retrieve character metrics.
+	
+	// Call out to R to retrieve the latexParseCharForMetrics function.
+	// Note: this code will eventually call a different function that provides
+	// caching of the results. Right now we're directly calling the function
+	// that activates LaTeX.
+	SEXP metricFun = findFun( install("getLatexCharMetrics"), R_GlobalEnv );
+
+	SEXP RCallBack;
+	PROTECT( RCallBack = allocVector(LANGSXP,4) );
+
+	// Place the function into the first slot of the SEXP.
+	SETCAR( RCallBack, metricFun );
+
+	// Place the character code into the second slot of the SEXP.
+	SETCADR( RCallBack, ScalarInteger( c ) );
+	SET_TAG( CDR( RCallBack ), install("charCode") );
+
+	// Pass graphics parameters cex and fontface.
+	SETCADDR( RCallBack,  ScalarReal( plotParams->cex ) );
+	SET_TAG( CDDR( RCallBack ), install("cex") );
+	SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
+	SET_TAG( CDR(CDDR( RCallBack )), install("face") );
+
+	SEXP RMetrics;
+ 	PROTECT( RMetrics = eval( RCallBack, R_GlobalEnv ) );
+
+	// Recover the metrics.
+	*ascent = REAL(RMetrics)[0];
+	*descent = REAL(RMetrics)[1];
+	*width = REAL(RMetrics)[2];
+
+	UNPROTECT(2);
+
+	return;
 
 }
 
@@ -648,14 +719,15 @@ static double TikZ_StrWidth( const char *str,
 
 	/*
 	 * Create a SEXP that will be the R function call. The SEXP will
-	 * have two components- the R function being called and the
-	 * string being passed. Therefore it is allocated as a  LANGSXP
-	 * vector of length 2. This is done inside a PROTECT() function
+	 * have four components- the R function being called, the string 
+	 * being passed and the current value of the graphics parameters
+	 * cex and fontface. Therefore it is allocated as a  LANGSXP
+	 * vector of length 4. This is done inside a PROTECT() function
 	 * to keep the R garbage collector from saying "Hmmm... what's
 	 * this? Looks like noone is using it so I guess I will nuke it."
   */
 	SEXP RCallBack;
-	PROTECT( RCallBack = allocVector(LANGSXP,2) );
+	PROTECT( RCallBack = allocVector(LANGSXP,4) );
 
 	// Place the function into the first slot of the SEXP.
 	SETCAR( RCallBack, widthFun );
@@ -665,6 +737,12 @@ static double TikZ_StrWidth( const char *str,
 	// Tag the string with a name, this name coressponds to the
 	// dummy argument of the R function getLatexStringWidth.
 	SET_TAG( CDR( RCallBack ), install("texString") );
+
+	// Pass graphics parameters cex and fontface.
+	SETCADDR( RCallBack,  ScalarReal( plotParams->cex ) );
+	SET_TAG( CDDR( RCallBack ), install("cex") );
+	SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
+	SET_TAG( CDR(CDDR( RCallBack )), install("face") );
 
 	/*
 	 * Call the R function, capture the result.
@@ -711,7 +789,11 @@ static double TikZ_StrWidth( const char *str,
 		fprintf(tikzInfo->outputFile,
 			"%% Calculated string width of %s as %f\n",str,width);
 	
-	/*Increment the number of times this function has been called*/
+	/*
+	 * Increment the number of times this function has been called
+	 * Used for debugging purposes.
+	 *
+	*/
 	tikzInfo->stringWidthCalls++;
 
 	return(width);
@@ -746,10 +828,35 @@ static void TikZ_Text( double x, double y, const char *str,
 		fprintf( tikzInfo->outputFile, "rotate=%6.2f", rot );
 
 	/* More options would go here such as scaling, color etc. */
+
+	// Append font face commands depending on which font R is using.
+	char *tikzString = (char *) calloc( strlen(str) + 20, sizeof(char) );
+
+	switch( plotParams->fontface ){
+	
+		case 2:
+			// R is requesting bold font.
+			strcat( tikzString, "\\bfseries " );
+			break;
+
+		case 3:
+			// R is requesting italic font.
+			strcat( tikzString, "\\itshape " );
+			break;
+
+		case 4:
+			// R is requesting bold italic font.
+			strcat( tikzString, "\\bfseries\\itshape " );
+			break;
+
+	} // End font face switch.
+
+	// Form final output string.
+	strcat( tikzString, str );
 	
 	/* End options, print coordinates and string. */
-	fprintf( tikzInfo->outputFile, ",anchor=base west, inner sep=0pt, outer sep=0pt] at (%6.2f,%6.2f) {%s};\n",
-		x, y, str);
+	fprintf( tikzInfo->outputFile, ",anchor=base west, inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s};\n",
+		plotParams->cex, x, y, tikzString);
 
 	// Add a small red marker to indicate the point the text string is being aligned to.
 	if( DEBUG == TRUE )
@@ -1158,93 +1265,6 @@ static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo){
 		case GE_SQUARE_CAP:
 			fprintf(tikzInfo->outputFile, "line cap=rect,");
 	}
-}
-
-/* 
- * Returns the width of a latex string in points by doing a system call to latex
- */
-
-static double GetLatexStringWidth(const char *str, tikzDevDesc *tikzInfo){
-
-	/*Increment the number of times this function has been called*/
-	tikzInfo->stringWidthCalls++;
-	
-	char *width;
-  FILE *pLatexFile = NULL;
-	FILE *pLatexOutput = NULL;
-	FILE *pLatexLogFile = NULL;
-	int lineLen = 512;
-	char line[lineLen];
-	char *latexFile = "str-width.tex";
-	char *latexLogFile = "str-width.log";
-	char *writeMode = "w";
-	char *readMode = "r";
-
-	/*
-	 * Build LaTeX command from the value passed into this function
-	 * by R or the user.
-	*/
-	char cmd[512] = "pdflatex";
-	/*Just about every output suppressing option possible.
-	 Hopefully other platforms will just ride over the unknown options*/
-	strcat(cmd," -interaction=batchmode ");
-
-	/* Open the LaTeX file */
-	pLatexFile = fopen(latexFile, writeMode);
-
-	/*Write the contents of the latex file that will return the width */
-	fprintf(pLatexFile,"\\documentclass{article}\n");
-	fprintf(pLatexFile,"\\usepackage[utf8]{inputenc}\n");
-	fprintf(pLatexFile,"\\usepackage[T1]{fontenc}\n");
-	fprintf(pLatexFile,"\\batchmode\n");
-
-	/* This is here as a reminder, add an argument that allows 
-	   the user to specify the font packages, */
-	fprintf(pLatexFile,"%%... other font setup stuff\n ");
-
-	fprintf(pLatexFile,"\\sbox0{%s}\n",str);
-	fprintf(pLatexFile,"\\typeout{width=\\the\\wd0}\n");
-
-	/*Stop before creating output*/
-	fprintf(pLatexFile,"\\makeatletter\n");
-	fprintf(pLatexFile,"\\@@end\n");
-	
-	/*Close the LaTeX file, ready to compile*/ 
-	fclose(pLatexFile);
-
-	/*Call LaTeX to calculate the string width, possible allow for 
-	  the use of XeTeX here*/
-	strcat(cmd,latexFile);
-
-	/* popen creates a pipe so we can read the output
-     	of the program we are invoking, but in this case, 
-		we are just doing it to supress output.*/
-	if (!(pLatexOutput = popen(cmd, "r"))) {
-		exit(1);
-	}
-	/*Cycle through the output*/
-	while(fgets(line, lineLen, pLatexOutput) != NULL){}
-	pclose(pLatexOutput);
-	
-	/*Now open the Log file for reading*/
-	pLatexLogFile = fopen(latexLogFile, readMode);
-	
-	/* Parse the log file to get the string width */
-	while(fgets(line, lineLen, pLatexLogFile) != NULL){
-		if(sscanf(line,"width=%spt",width) == 1){
-			//printf("\n%s",line);
-			//printf("float: %s\n",width);
-			//printf("Returning %f for %s\n",atof(width)/72.0,str);
-			
-			 /* found the width line so close the file and return width*/
-			fclose(pLatexLogFile);
-			return(atof(width));
-		}
-	}
-
-	/*Close the file and return zero in case we didn't find anything*/
-	fclose(pLatexLogFile);
-	return(0.0);
 }
 
 /* TeX Text Translations from the PixTeX Device, I thought we might be able to 

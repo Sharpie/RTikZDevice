@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+#/usr/bin/env Rscript
 
 library(tikzDevice)
 library(getopt)
@@ -12,82 +12,121 @@ opt <- getopt(optspec)
 
 prefix <- ifelse(!is.null(opt$"output-prefix"),opt$"output-prefix",'.')
 
-tests <- list()
+tests <- list(
 
-tests[[1]] <- function(main="test01"){
+function(main){
     #test a circle and some simple text
     plot(1, axes=F, xlab='', ylab='', main=main)
     text(1, 1.1, 'Some Text')
-}
+},
 
-tests[[2]] <- function(main='test02'){
+function(main){
     #test a rectangular box
     plot(1, type='n', axes=F, main=main)
     box()
-}
+},
+
+# Plotting test- with legend
+function(main){
+
+	plot(1,1, xlim=c(0,10), ylim=c(0,10), main=main)
+
+	legend( x='top', title='Legend Test', legend=c('Hello, world!'), inset=0.05 )
+
+	legend( 6, 4, title='Another Legend Test', legend=c('Test 1','Test 2'), pch=c(1,16))
+    
+},
+
+# Plotting test- pch values 0-25
+
+function(main){
+
+	# Magic stuff taken from example(points)
+	n <- floor(sqrt(26))
+	npchIndex <- 0:(25)
+
+	ix <- npchIndex %/% n
+	iy <- 3 + (n-1) - npchIndex %% n
+
+	rx <- c(-1,1)/2 + range(ix)
+	ry <- c(-1,1)/2 + range(iy)
+
+	# Set up plot area
+	plot(rx, ry, type="n", axes=F, xlab='', ylab='', main=main, sub="Standard R plotting characters")
+
+	# Plot characters.
+	for( i in 1:26 ){
+		
+		points(ix[i], iy[i], pch=i-1)
+		# Place text label so we know which character is being plotted.
+		text(ix[i]-0.3, iy[i], i-1 )
+
+	}
+
+},
 
 #tests a outline colored circle
-tests[[3]] <- function(main='test03'){
+function(main){
     plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main=main)
     points(rnorm(10), rnorm(10), col = "red")
     points(rnorm(10)/2, rnorm(10)/2, col = "blue")
-}
+},
 
 #test for filled circle color
-tests[[4]] <- function(main='test04'){
+function(main){
     plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main=main)
     points(rnorm(10), rnorm(10), pch=21, col='blue', bg='forestgreen')
-}
+},
 
 #test for a colored line
-tests[[5]] <- function(main='test05')
+function(main){
     plot(c(0,1), c(0,1), type = "l", axes=F, 
             xlab='', ylab='', col='red3', main=main)
+},
 
 
 #tests cex, there is actually nothing in the tikzDevice that handles this
-# all the work is done by the graphics engine
-tests[[6]] <- function(main='test06'){
+function(main){
     plot(1, axes=F, xlab='', ylab='', cex=10, main=main)
     points(1, cex=.5)
-}
+},
 
 #test for filled color rectangle
-tests[[7]] <- function(main='test07'){
+function(main){
     plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main=main)
     points(rnorm(10), rnorm(10), pch=22, col='red', bg='gold')
-}
+},
 
 #test for line types
-tests[[8]] <- function(main='test08'){
+function(main){
     plot(0, type='n', xlim=c(0,1), ylim=c(0,6), 
             axes=F, xlab='', ylab='', main=main)
     for(i in 0:6)
     	lines(c(0, 1), c(i, i), lty=i)
-}
+},
 
 #test for line weight
-tests[[9]] <- function(main='test09'){
+function(main){
     plot(0, type='n', xlim=c(0,1), ylim=c(0,6), 
             axes=F, xlab='', ylab='', main=main)
     for(i in 0:6)
     	lines(c(0,1), c(i,i), lwd=i)
-}
+},
 
 #test for transparency
-tests[[10]] <- function(main='test10'){
+function(main){
     plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main=main)
     points(rnorm(50), rnorm(50), pch=21, bg=rainbow(50,alpha=.5), cex=10)
-}
+},
 
 #test of many points for file size
-tests[[11]] <- function(main='test11'){
+function(main){
     plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main=main)
     points(rnorm(500), rnorm(500), pch=21, bg=rainbow(50,alpha=.5), cex=10)
-}
+},
 
 # Test with many strings and complex clipping from help(contour)
-tests[[12]] <- function(main='test12'){
+function(main){
     x <- -6:16
     op <- par(mfrow = c(2, 2))
     contour(outer(x, x), method = "edge")
@@ -97,10 +136,10 @@ tests[[12]] <- function(main='test12'){
     contour(x, x, z, ylim = c(1, 6), method = "simple", labcex = 1)
     contour(x, x, z, ylim = c(-6, 6), nlev = 20, lty = 2, method = "simple")
     par(op)
-}
+},
 
 # test for string placement, symbol should be centered on point
-tests[[13]] <- function(main='test13'){
+function(main){
 
     syms <-c('alpha','theta','tau','beta','vartheta','pi','upsilon',
     		  'gamma','gamma','varpi','phi','delta','kappa','rho','varphi',
@@ -114,26 +153,56 @@ tests[[13]] <- function(main='test13'){
     points(x, y, pch=21,  bg='black', cex=.5)
     text(x,y,paste('\\Large$\\',syms,'$',sep=''))
     
-}
+},
 
-# Plotting test- with legend
-tests[[14]] <- function(main='test14'){
+# Three dimensional plotting test- taken from a persp example.
+function(main){
 
-	plot(1,1, xlim=c(0,10), ylim=c(0,10))
+	x <- seq( -1.95, 1.95, length=30 )
+	y <- seq( -1.95, 1.95, length=35 )
 
-	legend( x='top', title='Legend Test', legend=c('Hello, world!') )
+	z <- outer( x, y, function(a,b){ a*b^2 } )
 
-	legend( 6, 4, title='Another Legend Test', legend=c('Test 1','Test 2'), pch=c(1,16))
+	nrz <- nrow(z)
+	ncz <- ncol(z)
+
+	jet.colors <- colorRampPalette( c("blue", "green") )
+
+	nbcol <- 100
+
+	color <- jet.colors(nbcol)
+
+	zfacet <- z[-1,-1] + z[-1,-ncz] + z[-nrz, -1] + z[-nrz, -ncz]
+	facetcol <- cut(zfacet, nbcol)
+
+	persp(x, y, z, col=color[facetcol], phi=30, theta=-30, ticktype='detailed', main=main )
     
+},
+
+# Neat example of image.plot using the fields package.
+function(main){
+
+	sink('/dev/null')
+	require(fields)
+	sink()
+	data(RCMexample)
+
+	image.plot( RCMexample$x, RCMexample$y, RCMexample$z[,,8], main=main )
+
 }
 
 ## ADD NEW TESTS HERE
 
+)# End of test function list
+
 #Run the tests
+
+output.list <- c()
+
 for(i in 1:length(tests)){
     cat("Running Test",sprintf('%02d',i),"... ")
     this.testfile <- file.path(prefix,
-                                paste('test',sprintf('%02d',i),'.tex',sep=''))
+      paste('test',sprintf('%02d',i),'.tex',sep=''))
     t <- system.time(
     {
         tikz(this.testfile,standAlone=T)
@@ -148,6 +217,32 @@ for(i in 1:length(tests)){
         # then debugging is turned on 
         cat(info.line,'\n\n')
     }
+
+		# Compile the resulting TeX file.
+		silence <- system( paste(Sys.getenv("R_PDFLATEXCMD"),'-output-directory',prefix,
+			this.testfile), intern=T )
+
+    this.testfile <- file.path(prefix,
+			paste('test',sprintf('%02d',i),'.pdf',sep=''))
+
+		# Reproduce the plot using pdf() as a control.
+		this.controlfile <- file.path(prefix,
+			paste('control',sprintf('%02d',i),'.pdf',sep=''))
+		pdf( this.controlfile )
+		tests[[i]](main=paste('Control',i))
+		dev.off()
+
+		# Create a diff between the two files using ImageMagick's compare utility.
+		this.diffile <- file.path(prefix,
+			paste('diff',sprintf('%02d',i),'.pdf',sep=''))
+
+		silence <- system( paste('compare',this.testfile,
+			this.controlfile,
+			this.diffile), intern=T )
+
+		# Add file names to output list.
+		output.list <- c( output.list, this.testfile, this.controlfile, this.diffile )
+
 }
 
 # calculate the file sizes of the output files
@@ -155,3 +250,11 @@ f <- 'filesizes.txt'
 texfiles <- list.files(prefix,'tex')
 newsizes <- file.info(file.path(prefix,texfiles))$size
 cat(paste(texfiles,newsizes,sep='\t'),sep='\n',file=f)
+
+# Combine the output files into summary PDFs.
+silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=compares.pdf -dBATCH',
+	paste(output.list,collapse=' ') ), intern=T, ignore.stderr=T)
+
+# Combine only the test files.
+silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH',
+	paste(output.list[seq(1,length(output.list),3)],collapse=' ') ), intern=T, ignore.stderr=T)
