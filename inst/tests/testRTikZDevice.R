@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+#/usr/bin/env Rscript
 
 library(tikzDevice)
 library(getopt)
@@ -194,10 +194,13 @@ function(main){
 )# End of test function list
 
 #Run the tests
+
+output.list <- c()
+
 for(i in 1:length(tests)){
     cat("Running Test",sprintf('%02d',i),"... ")
     this.testfile <- file.path(prefix,
-                                paste('test',sprintf('%02d',i),'.tex',sep=''))
+      paste('test',sprintf('%02d',i),'.tex',sep=''))
     t <- system.time(
     {
         tikz(this.testfile,standAlone=T)
@@ -212,6 +215,32 @@ for(i in 1:length(tests)){
         # then debugging is turned on 
         cat(info.line,'\n\n')
     }
+
+		# Compile the resulting TeX file.
+		system( paste(Sys.getenv("R_PDFLATEXCMD"),'-output-directory',prefix,
+			this.testfile), intern=T )
+
+    this.testfile <- file.path(prefix,
+			paste('test',sprintf('%02d',i),'.pdf',sep=''))
+
+		# Reproduce the plot using pdf() as a control.
+		this.controlfile <- file.path(prefix,
+			paste('control',sprintf('%02d',i),'.pdf',sep=''))
+		pdf( this.controlfile )
+		tests[[i]](main=paste('Control',i))
+		dev.off()
+
+		# Create a diff between the two files using ImageMagick's compare utility.
+		this.diffile <- file.path(prefix,
+			paste('diff',sprintf('%02d',i),'.pdf',sep=''))
+
+		system( paste('compare',this.testfile,
+			this.controlfile,
+			this.diffile), intern=T )
+
+		# Add file names to output list.
+		output.list <- c( output.list, this.testfile, this.controlfile, this.diffile )
+
 }
 
 # calculate the file sizes of the output files
@@ -219,3 +248,11 @@ f <- 'filesizes.txt'
 texfiles <- list.files(prefix,'tex')
 newsizes <- file.info(file.path(prefix,texfiles))$size
 cat(paste(texfiles,newsizes,sep='\t'),sep='\n',file=f)
+
+# Combine the output files into summary PDFs.
+system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=compares.pdf -dBATCH',
+	paste(output.list,collapse=' ') ))
+
+# Combine only the test files.
+system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH',
+	paste(output.list[seq(1,length(output.list),3)],collapse=' ') ))

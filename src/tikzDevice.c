@@ -399,12 +399,12 @@ static Rboolean TikZ_Setup(
 /*
  * This function is responsible for converting lengths given in page
  * dimensions (ie. inches, cm, etc.) to device dimensions (currenty
- * points- 1/72 of an inch). However, due to the flexability of TeX
+ * points- 1/72.27 of an inch). However, due to the flexability of TeX
  * and TikZ, any combination of device and user dimensions could
  * theoretically be supported.
 */
 double dim2dev( double length ){
-	return length*72;
+	return length*72.27;
 }
 
 
