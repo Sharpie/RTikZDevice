@@ -72,7 +72,7 @@ SEXP tikzDevice ( SEXP args ){
 	const char *fileName;
 	const char *bg, *fg;
 	double width, height;
-	Rboolean standAlone;
+	Rboolean standAlone, bareBones;
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -108,10 +108,17 @@ SEXP tikzDevice ( SEXP args ){
 	fg = CHAR(asChar(CAR(args))); args = CDR(args);
 
 	/* 
-	* Set the standalone parameter for wrapping the picture in a LaTeX 
-	* document
+	 * Set the standAlone parameter for wrapping the picture in a LaTeX 
+	 * document
 	*/
 	standAlone = asLogical(CAR(args)); args = CDR(args);
+
+	/* 
+	 * Set the bareBones parameter for direct output of TikZ code withou
+	 * wrapping it in the tikzpicture environment.
+	 * 
+	*/
+	bareBones = asLogical(CAR(args)); args = CDR(args);
 
 	/* Ensure there is an empty slot avaliable for a new device. */
 	R_CheckDeviceAvailable();
@@ -140,7 +147,7 @@ SEXP tikzDevice ( SEXP args ){
 		 * in this file.
 		*/
 		if( !TikZ_Setup( deviceInfo, fileName, 
-					width, height, bg, fg, standAlone ) ){
+					width, height, bg, fg, standAlone, bareBones ) ){
 			/* 
 			 * If setup was unsuccessful, destroy the device and return
 			 * an error message.
@@ -178,7 +185,7 @@ static Rboolean TikZ_Setup(
 	const char *fileName,
 	double width, double height,
 	const char *bg, const char *fg,
-	Rboolean standAlone ){
+	Rboolean standAlone, Rboolean bareBones ){
 
 	/* 
 	 * Create tikzInfo, this variable contains information which is
@@ -220,6 +227,7 @@ static Rboolean TikZ_Setup(
 	tikzInfo->firstPage = TRUE;
 	tikzInfo->debug = DEBUG;
 	tikzInfo->standAlone = standAlone;
+	tikzInfo->bareBones = bareBones;
 	tikzInfo->firstClip = TRUE;
 	tikzInfo->oldFillColor = 0;
 	tikzInfo->oldDrawColor = 0;
@@ -436,18 +444,23 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 			"%% Beginning tikzpicture, this file is %s\n",
 			R_ExpandFileName(tikzInfo->outFileName));
 
-	/* Start the tikz environment. */
 	fprintf(tikzInfo->outputFile,"%% Created by tikzDevice x.x.x, on DATE, at TIME\n");
-	fprintf(tikzInfo->outputFile, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
 
-	/* 
-	 * For now, print an invisible rectangle to ensure all of the plotting 
-	 * area is used. Once color options are implemented, this could be 
-	 * replaced with a call to TikZ_Rectangle, if feasible.
-	*/
-	fprintf(tikzInfo->outputFile, 
-			"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
-			deviceInfo->right,deviceInfo->top);
+	/* Start the tikz environment if we have not specified a bare bones plot. */
+	if( tikzInfo->bareBones != TRUE ){
+
+		fprintf(tikzInfo->outputFile, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
+
+		/* 
+		 * For now, print an invisible rectangle to ensure all of the plotting 
+		 * area is used. Once color options are implemented, this could be 
+		 * replaced with a call to TikZ_Rectangle, if feasible.
+		*/
+		fprintf(tikzInfo->outputFile, 
+				"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
+				deviceInfo->right,deviceInfo->top);
+
+	}
 
 	return TRUE;
 
@@ -458,9 +471,11 @@ static void TikZ_Close( pDevDesc deviceInfo){
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	/* End the tikz environment. */
 	fprintf(tikzInfo->outputFile, "\\end{scope}\n");
-	fprintf(tikzInfo->outputFile, "\\end{tikzpicture}\n");
+
+	/* End the tikz environment if we're not doing a bare bones plot. */
+	if( tikzInfo->bareBones != TRUE )
+		fprintf(tikzInfo->outputFile, "\\end{tikzpicture}\n");
 	
 	/* Close off the standalone document*/
 	if(tikzInfo->standAlone == TRUE)
@@ -486,26 +501,30 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 		tikzInfo->firstPage = FALSE;
 	}else{
 
-		/* End the current TikZ environment. */
-		fprintf(tikzInfo->outputFile, "\\end{tikzpicture}\n");
+		/* End the current TikZ environment, unless we are making bare bones code. */
+		if( tikzInfo->bareBones != TRUE ){
 
-		/*Show only for debugging*/
-		if(tikzInfo->debug == TRUE) 
-			fprintf(tikzInfo->outputFile,
-				"%% Beginning new tikzpicture 'page'\n");
+			fprintf(tikzInfo->outputFile, "\\end{tikzpicture}\n");
 
-		/* Start a new TikZ envioronment. */
-		fprintf(tikzInfo->outputFile, 
-			"\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-		
-		/* 
-		 * For now, print an invisible rectangle to ensure all of the plotting 
-		 * area is used. Once color options are implemented, this could be 
-		 * replaced with a call to TikZ_Rectangle, if feasible.
-		*/
-		fprintf(tikzInfo->outputFile, 
-			"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
-			deviceInfo->right,deviceInfo->top);
+			/*Show only for debugging*/
+			if(tikzInfo->debug == TRUE) 
+				fprintf(tikzInfo->outputFile,
+					"%% Beginning new tikzpicture 'page'\n");
+
+			/* Start a new TikZ envioronment. */
+			fprintf(tikzInfo->outputFile, 
+				"\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
+			
+			/* 
+			 * For now, print an invisible rectangle to ensure all of the plotting 
+			 * area is used. Once color options are implemented, this could be 
+			 * replaced with a call to TikZ_Rectangle, if feasible.
+			*/
+			fprintf(tikzInfo->outputFile, 
+				"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
+				deviceInfo->right,deviceInfo->top);
+
+		} // End if not bare bones.
 				
 		/*Define default colors*/
 		SetColor(plotParams->col, TRUE, deviceInfo);

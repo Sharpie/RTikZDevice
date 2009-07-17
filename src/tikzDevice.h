@@ -33,6 +33,7 @@ typedef struct{
 	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
+	Rboolean bareBones;
 	Rboolean firstClip;
 	int oldFillColor;
 	int oldDrawColor;
@@ -49,7 +50,7 @@ static Rboolean TikZ_Setup(
 		const char *fileName,
 		double width, double height,
 		const char *bg, const char *fg,
-		Rboolean standAlone );
+		Rboolean standAlone, Rboolean bareBones );
 
 double dim2dev( double length );
 
