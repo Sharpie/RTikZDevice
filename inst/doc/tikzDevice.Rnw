@@ -24,13 +24,15 @@
 \newcommand{\pkg}{\textbf}
 \newcommand{\TikZ}{Ti\textit{k}Z}
 
-<<setup,echo=F,results=tex>>=
+\usepackage{Sweave}
+
+<<setup,echo=F,results=hide>>=
 
 if( !file.exists( 'figs' ) ) dir.create( 'figs' )
 require(tikzDevice)
-cat('\\usepackage{',
-	file.path(R.home(),'share','texmf','Sweave'),'}\n',
-	sep='')
+if( !file.exists('Sweave.sty') ){
+	file.copy(file.path(R.home(),'share','texmf','Sweave'), 'Sweave.sty')
+}
 	
 @
 
