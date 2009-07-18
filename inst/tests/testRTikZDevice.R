@@ -196,6 +196,53 @@ function(main){
 
 	image.plot( RCMexample$x, RCMexample$y, RCMexample$z[,,8], main=main )
 
+},
+
+# from the ggplot2 book
+function(main){
+	
+	require(ggplot2)
+	(a <- qplot(date, unemploy, data = economics, geom = "line", main = main)) 
+	(b <- qplot(uempmed, unemploy, data = economics) + 
+	geom_smooth(se = F)) 
+	(c <- qplot(uempmed, unemploy, data = economics, geom="path")) 
+	
+	grid.newpage() 
+	pushViewport(viewport(layout = grid.layout(2, 2))) 
+	vplayout <- function(x, y) 
+	viewport(layout.pos.row = x, layout.pos.col = y) 
+	print(a, vp = vplayout(1, 1:2)) 
+	print(b, vp = vplayout(2, 1)) 
+	print(c, vp = vplayout(2, 2)) 
+	
+},
+
+# from the ggplot2 book section "Subplots"
+function(main){
+
+	require(ggplot2)
+	(b <- qplot(uempmed, unemploy, data = economics, main = main) + 
+	geom_smooth(se = F))
+	(c <- qplot(uempmed, unemploy, data = economics, geom="path")) 
+	csmall <- c + 
+	theme_gray(9) + 
+	labs(x = NULL, y = NULL) + 
+	opts(plot.margin = unit(rep(0, 4), "lines")) 
+	subvp <- viewport(width = 0.4, height = 0.4, x = 0.75, y = 0.35) 
+	
+	print(b) 
+	print(csmall, vp = subvp) 
+	
+	
+},
+
+# from the ggplot2 book section "Fitting multiple models"
+function(main){
+	
+	require(ggplot2)
+	print(qplot(carat, price, data = diamonds, geom = "smooth", 
+	colour = color, main = main))
+	
 }
 
 ## ADD NEW TESTS HERE
@@ -213,7 +260,9 @@ for(i in 1:length(tests)){
     t <- system.time(
     {
         tikz(this.testfile,standAlone=T)
-        tests[[i]](main=paste('Test',i))
+		# evaluate each test in a new environment so values do not persist 
+		# across tests, because each should be self contained
+        evalq( tests[[i]](main=paste('Test',i)), new.env() )
         dev.off()
     })
     last.line <- length(count.fields(this.testfile,blank.lines.skip=F))
@@ -225,9 +274,9 @@ for(i in 1:length(tests)){
         cat(info.line,'\n\n')
     }
 
-		# Compile the resulting TeX file.
-		silence <- system( paste(Sys.getenv("R_PDFLATEXCMD"),'-output-directory',prefix,
-			this.testfile), intern=T )
+	# Compile the resulting TeX file.
+	silence <- system( paste(Sys.getenv("R_PDFLATEXCMD"),'-output-directory',prefix,
+		this.testfile), intern=T )
 
     this.testfile <- file.path(prefix,
 			paste('test',sprintf('%02d',i),'.pdf',sep=''))
