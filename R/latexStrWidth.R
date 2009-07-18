@@ -38,6 +38,15 @@ function( charCode, cex=par('cex'), face=par('font') ){
 	# getLatexStrWidth, these two functions should be 
 	# generalized and combined.
 
+	# We must be given a valid integer character code.
+	if( !(is.numeric(charCode) && charCode > 31 && charCode < 127 ) ){
+		stop("Sorry, this function currently only accepts numbers between 32 and 126!")
+	}
+
+	# Coerce the charCode to integer in case someone was being funny
+  # and passed a float.
+	charCode <- as.integer( charCode )
+
 	# Create an object that contains the character and it's
 	# properties.
 	TeXMetrics <- list( type='char', scale=cex, face=face, value=charCode )

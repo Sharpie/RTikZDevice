@@ -4,19 +4,20 @@
 % \VignetteDepends{tikzDevice}
 % \usepackage{Sweave}
 
-\usepackage[x11names]{xcolor}
+\usepackage[T1]{fontenc}
 \usepackage{atbegshi}
 
 \usepackage{tikz}
 \usetikzlibrary{calc,positioning,shapes}
 \usetikzlibrary{decorations.shapes}
 
-
 \usepackage[parfill]{parskip}
 \usepackage{fancyvrb}
 \usepackage[letterpaper,margin=1in]{geometry}
 \usepackage[colorlinks]{hyperref}
+
 \usepackage{graphicx}
+\usepackage{float}
 
 \newcommand{\lang}{\textsf}
 \newcommand{\code}{\texttt}
@@ -42,56 +43,13 @@ cat('\\usepackage{',
 	
 	\SweaveOpts{echo=F,prefix.string=figs/fig}
 
-%------------------------------------------------------------------------------------------------------------
-
-\thispagestyle{empty}
-
-% A simple title page.
-
-% HAH! God bless the pgf manual- I've been trying to solve this for
-% ever- \vfill has no effect unless you bracket your contents in empty
-% \vboxes.
-\vbox{}
-\vspace{0.5\textheight}
-\begin{tikzpicture}[remember picture,overlay]
-
-	\node[anchor=west,scale=2, inner sep=0pt, outer sep=0pt] (title) at (-1cm,0) 
-		{\LARGE\bfseries{\color{red}\TikZ}\thinspace\Huge Device};
-	
-	\draw[line width=5pt] ([yshift=-5pt]title.base west) -- ([yshift=-5pt]title.base east);	
-
-	\coordinate (titleIn) at ($(title.base west) - (6pt,24pt)$);
-	
-	\node[color=black!80,below=24pt of title.base east,anchor=east]
-		{\bfseries\itshape\Large R Graphics for \LaTeX};
-
-\end{tikzpicture}
-\vfill	
-\vbox{}
-
-
-\begin{tikzpicture}[remember picture,overlay,>=stealth]
-
-	\node (R) at ($(current page.south west) + (18cm,2cm)$)
-		{\scalebox{0.85}{\includegraphics{img/Rlogo}}};
-
-	\tikzset{		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
-		decoration={shape backgrounds,
-			shape sep={.25cm, between borders},shape scaled,shape=circle}
-	}
-			
-	\fill[decorate,bigger, blue!25] (R) to[out=190,in=240] (titleIn);
-		
-\end{tikzpicture}
-
-\newpage
-
-%------------------------------------------------------------------------------------------------------------
-
 \thispagestyle{empty}
 
 % A more complex title page
 
+% HAH! God bless the pgf manual- I've been trying to solve this for
+% ever- \vfill has no effect unless you bracket your contents in empty
+% \vboxes.
 \vbox{}
 \vspace{0.5\textheight}
 \begin{tikzpicture}[remember picture,overlay]
@@ -118,7 +76,8 @@ cat('\\usepackage{',
 	\node (R) at ($(current page.south west) + (18cm,2cm)$)
 		{\scalebox{0.85}{\includegraphics{img/Rlogo}}};
 
-	\tikzset{		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
+	\tikzset{
+		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
 		decoration={shape backgrounds,
 			shape sep={.25cm, between borders},shape scaled,shape=circle}
 	}
@@ -172,7 +131,8 @@ cat('\\usepackage{',
 
 	\end{scope}
 
-	\tikzset{		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
+	\tikzset{
+		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
 		decoration={shape backgrounds,
 			shape sep={.25cm, between borders},shape scaled,shape=dart}
 	}
@@ -261,55 +221,187 @@ In this case, \pkg{tikzDevice} has done it's very best to locate a working compi
 \section{The \code{tikz()} Function}
 
 \subsection{Description}
-The \code{tikz()} function provides most of the functionality of the \pkg{tikzDevice} package. This function is responsible for creating new \lang{R} graphics devices translate the output of graphics functions to the \TikZ\ format.
-
+The \code{tikz()} function provides most of the functionality of the \pkg{tikzDevice} package. This function is responsible for creating new \lang{R} graphics devices that translate the output of graphics functions to the \TikZ\ format. The device supports many levels of output that range from stand-alone \LaTeX\ documents that may be compiled directly to code chunks that must be incorporated into existing \LaTeX\ documents using the \verb`\include{}` function.
 
 \subsection{Usage}
 
+The \code{tikz()} function opens a new graphics device and may be called with the following arguments:
+
+\begin{Verbatim}[frame=single]
+tikz(file = "Rplots.tex", width = 7, height = 7, 
+	bg="white", fg="black", standAlone = FALSE, bareBones = FALSE )
+\end{Verbatim}
+
+\begin{description}
+\item[\code{file}]{ A character string indicating the desired path to the output file. It is recommended, but not required, that the filename end in \code{.tex}.}
+\item[\code{width}]{ The width of the output figure, in {\bfseries inches}. }
+\item[\code{height}]{ The hegiht of the output figure, in {\bfseries inches}. }
+\item[\code{bg}]{ The starting background color for the plot. }
+\item[\code{fg}]{ The starting foreground color for the plot. }
+\item[\code{standAlone}]{ A logical value indicating whether the resulting file should be suitable for direct processing by \LaTeX .}
+\item[\code{bareBones}]{ A logical value indicating whether the resulting \TikZ code produced without being placed within a \LaTeX\ \code{tikzpicture} envirement.}
+\end{description}
+
+The first five options should be familiar to anyone who has used the default graphics devices shipped with \lang{R}. The options \code{file}, \code{width}, \code{height}, \code{bg} and \code{fg} represent the standard graphics parameters currently implemented by \pkg{tikzDevice}. The last two options, \code{standAlone} and \code{bareBones}, are specific to the \code{tikz()} graphics device and affect the structure the output file. Using these options \code{tikz()} supports three modes of output: 
+
+\begin{itemize}
+
+	\item{Graphics production as complete \LaTeX\ files suitable for compilation.}
+	
+	\item{Graphics production as complete figures suitable for inclusion in \LaTeX\ files.}
+	
+	\item{Graphics production as raw figure code suitable for inclusion in an enclosing \code{tikzpicture} environment in a \LaTeX\ file.}
+
+\end{itemize}
+
+The next section provides examples of how to use each type of output.
+
 \subsection{Examples}
-For example, in \lang{R} 
+
+\subsubsection{Basic Usage}
+
+The most common use of the \code{tikz()} function is to produce a plot that will be included in another \LaTeX\ document, such as a report. Running the following example in lang{R} will produce a very simple graphic using the \code{plot()} function.
 
 \begin{Verbatim}[frame=single]
 require(tikzDevice)
 tikz('simpleEx.tex',width=3.5,height=3.5)
-plot(1)
+plot(1,main='Hello World!')
 dev.off()
 \end{Verbatim}
 
-And then in a \LaTeX{} document
+<<simpleEx,results=hide>>=
+
+tikz('figs/simpleEx.tex',width=3.5,height=3.5)
+plot(1,main='Hello World!')
+dev.off()
+
+@
+
+
+A simple \LaTeX\ document is then required to display the output. This document must include the \TikZ\ as one of the packages that it loads. The \TikZ\ package provides several optional libraries that provide additional functionality, however none of these libraries are currently required to use the output of \code{tikz()}. Inside the \LaTeX\ document, the contents of the file \lang{simpleEx.tex} are imported using the \verb`\include{}` command.
+
+\begin{figure}[H]
+	\centering
+
+	\begin{minipage}{0.45\textwidth}
 
 \begin{Verbatim}[frame=single]
 \documentclass{article}
+
+% All LaTeX documents including tikz()
+% output must include this package!
 \usepackage{tikz}
+
 \begin{document}
 	\begin{figure}[!h]
         \centering
+        
+        % The output from tikz() is 
+        % imported here.
         \input{simpleEx.tex}
+        
         \caption{Simple Example}
     \end{figure}
 \end{document}
 \end{Verbatim}
 
-And you get
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.45\textwidth}
+		\input{figs/simpleEx.tex}
+	\end{minipage}
+	\caption{Example of basic \code{tikz()} usage.}
+\end{figure}
 
-\begin{figure}[h]
+One of the most exciting aspects of the \code{tikz()} function is that it allows the inclusion of arbitrary \LaTeX\ code in plotting commands. An important issue to note is that many \LaTeX\ commands pare prefixed by the backaslash, \textbackslash, character. This character has a special meaning as an escape charcter in many computing applications, including \lang{R}. Therefore, it is necessary to place two backslashes, \textbackslash\textbackslash, in the input to \lang{R} commands in order to cause one to appear in the output.  The next example demonstrates how to use \LaTeX\ commands in plot annotation.
+
+\begin{figure}[H]
 	\centering
-<<simpleEx,results=hide>>=
 
-tikz('figs/simpleEx.tex',width=3.5,height=3.5)
-plot(1)
+	\begin{minipage}{0.45\textwidth}
+
+\begin{Verbatim}[frame=single]
+require(tikzDevice)
+tikz('latexEx.tex',width=3.5,height=3.5)
+
+x <- rnorm(5)
+y <- x + rnorm(5,sd=0.25)
+
+model <- lm(y~x)
+coef <- coefficients( model )
+coef <- signif(coef,4)
+rsq <- summary( model )$r.squared
+rsq <- signif(rsq,4)
+
+plot(x,y,main='Hello \\LaTeX!')
+abline(model,col='red')
+
+mtext( paste("Linear model: $y=", 
+	coef[1],"x + ",coef[2],
+	"\\quad R^{2}=",rsq,"$" ),
+	line=0.5)
+
+dev.off()
+\end{Verbatim}
+
+<<latexEx,results=hide>>=
+
+tikz('figs/latexEx.tex',width=3.5,height=3.5)
+
+x <- rnorm(5)
+y <- x + rnorm(5,sd=0.25)
+
+model <- lm(y~x)
+coef <- coefficients( model )
+coef <- signif(coef,4)
+rsq <- summary( model )$r.squared
+rsq <- signif(rsq,4)
+
+plot(x,y,main='Hello \\LaTeX!')
+abline(model,col='red')
+
+mtext( paste("Linear model: $y=", 
+	coef[1],"x + ",coef[2],
+	"\\quad R^{2}=",rsq,"$" ),
+	line=0.5)
+
 dev.off()
 
 @
-\input{figs/simpleEx.tex}
-\caption{Simple Example}
+
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.45\textwidth}
+		\input{figs/latexEx.tex}
+	\end{minipage}
+	\caption{A more complicated example of \code{tikz()} usage.}
 \end{figure}
+
+
+\section{R Options that Affect \pkg{tikzDevice}}
+
+\section{The \code{getLatexCharMetrics()} and \code{getLatexStrWidth()} Functions}
+
+\subsection{Description}
+
+\subsection{Usage}
+
+\subsection{Examples}
+
 
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \part{Installation Guide}
 \label{part:two}
+
+\section{Installing \LaTeX}
+
+
+\section{Installing \TikZ}
+
+
+\section{Instaling \pkg{tikzDevice}}
 
 \newpage
 
