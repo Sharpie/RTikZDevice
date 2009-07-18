@@ -6,10 +6,14 @@
 
 \usepackage[x11names]{xcolor}
 \usepackage{atbegshi}
+
 \usepackage{tikz}
+\usetikzlibrary{calc,positioning}
+
+
 \usepackage[parfill]{parskip}
 \usepackage{fancyvrb}
-\usepackage[margin=1in]{geometry}
+\usepackage[letterpaper,margin=1in]{geometry}
 \usepackage[colorlinks]{hyperref}
 \usepackage{graphicx}
 
@@ -31,13 +35,138 @@ cat('\\usepackage{',
 \title{The \pkg{tikzDevice} Package}
 \author{Charlie Sharpsteen and Cameron Bracken}
 
+
+
 \begin{document}
 	
 	\SweaveOpts{echo=F,prefix.string=figs/fig}
 
-\maketitle
+%------------------------------------------------------------------------------------------------------------
 
+\thispagestyle{empty}
+
+% A simple title page.
+
+% HAH! God bless the pgf manual- I've been trying to solve this for
+% ever- \vfill has no effect unless you bracket your contents in empty
+% \vboxes.
+\vbox{}
+\vspace{0.5\textheight}
+\begin{tikzpicture}[remember picture,overlay]
+
+	\node[anchor=west,scale=2, inner sep=0pt, outer sep=0pt] (title) at (-1cm,0) 
+		{\LARGE\bfseries{\color{red}\TikZ}\thinspace\Huge Device};
+	
+	\draw[line width=5pt] ([yshift=-5pt]title.base west) -- ([yshift=-5pt]title.base east);	
+
+	\coordinate[below=of title.base] (titleIn);
+
+\end{tikzpicture}
+\vfill	
+\vbox{}
+
+
+\begin{tikzpicture}[remember picture,overlay,>=stealth]
+	\node (R) at ($(current page.south west) + (18cm,2cm)$)
+		{\scalebox{0.85}{\includegraphics{img/Rlogo}}}
+		edge[color=blue!25,line width=7.5pt, line cap=round,->,out=160,in=270] 
+			(titleIn);
+		
+\end{tikzpicture}
+
+\newpage
+
+%------------------------------------------------------------------------------------------------------------
+
+\thispagestyle{empty}
+
+% A more complex example
+
+\vbox{}
+\vspace{0.5\textheight}
+\begin{tikzpicture}[remember picture,overlay]
+
+	\node[anchor=west,scale=2, inner sep=0pt, outer sep=0pt] (title) at (-1cm,0) 
+		{\LARGE\bfseries{\color{red}\TikZ}\thinspace\Huge Device};
+	
+	\draw[line width=5pt] ([yshift=-5pt]title.base west) -- ([yshift=-5pt]title.base east);	
+
+	\coordinate[below=of title.base] (titleIn);
+	\coordinate[above=of title.north] (titleOut);
+
+\end{tikzpicture}
+\vfill	
+\vbox{}
+
+
+\begin{tikzpicture}[remember picture,overlay,>=stealth]
+	\node (R) at ($(current page.south west) + (18cm,2cm)$)
+		{\scalebox{0.85}{\includegraphics{img/Rlogo}}}
+		edge[color=blue!25,line width=7.5pt, line cap=round,->,out=160,in=270] 
+			(titleIn);
+		
+\end{tikzpicture}
+
+\begin{tikzpicture}[overlay,remember picture]
+
+	% Low-level PGF voodoo
+	% Something is seriously borked with current page.north east,
+	% it's not where you would expect it to be :P
+	\newdimen\overlayXoff
+	\newdimen\overlayYoff
+	\pgfextracty{\overlayXoff}{\pgfpointanchor{current page}{north east}}
+	\pgfextracty{\overlayYoff}{\pgfpointanchor{current page}{north east}}
+	
+	\pgfmathparse{\overlayYoff - 3.75in}
+	\overlayYoff = \pgfmathresult pt
+	
+	\pgfmathparse{\overlayXoff - 6.5in}
+	\overlayXoff = \pgfmathresult pt
+	
+	
+	\begin{scope}[x=1pt,y=1pt,yshift=\overlayYoff,xshift=\overlayXoff]
+
+<<tikzTest,results=hide>>=
+
+	tikz('figs/titlePlot.tex',bareBones=T,width=4,height=4)
+
+	x <- seq( -1.95, 1.95, length=30 )
+	y <- seq( -1.95, 1.95, length=35 )
+	z <- outer( x, y, function(a,b){ a*b^2 } )
+	nrz <- nrow(z)
+	ncz <- ncol(z)
+	jet.colors <- colorRampPalette( c("blue", "green") )
+	nbcol <- 100
+	color <- jet.colors(nbcol)
+	zfacet <- z[-1,-1] + z[-1,-ncz] + z[-nrz, -1] + z[-nrz, -ncz]
+	facetcol <- cut(zfacet, nbcol)
+	persp(x, y, z, col=color[facetcol], phi=30, theta=-30,axes=F )
+
+	dev.off()
+@
+
+		\input{figs/titlePlot.tex}
+		
+		\coordinate (plotIn) at (0,2in);
+
+
+	\end{scope}
+
+	\draw[color=black!25,line width=7.5pt, line cap=round,->,>=stealth]
+		(titleOut) to[out=90,in=200] (plotIn);
+
+\end{tikzpicture}
+
+\newpage
+
+\maketitle
+\tableofcontents
+
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Documentation starts here.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
