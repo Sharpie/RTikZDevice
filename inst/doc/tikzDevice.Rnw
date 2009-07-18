@@ -8,7 +8,8 @@
 \usepackage{atbegshi}
 
 \usepackage{tikz}
-\usetikzlibrary{calc,positioning}
+\usetikzlibrary{calc,positioning,shapes}
+\usetikzlibrary{decorations.shapes}
 
 
 \usepackage[parfill]{parskip}
@@ -59,7 +60,10 @@ cat('\\usepackage{',
 	
 	\draw[line width=5pt] ([yshift=-5pt]title.base west) -- ([yshift=-5pt]title.base east);	
 
-	\coordinate[below=of title.base] (titleIn);
+	\coordinate (titleIn) at ($(title.base west) - (6pt,24pt)$);
+	
+	\node[color=black!80,below=24pt of title.base east,anchor=east]
+		{\bfseries\itshape\Large R Graphics for \LaTeX};
 
 \end{tikzpicture}
 \vfill	
@@ -67,10 +71,16 @@ cat('\\usepackage{',
 
 
 \begin{tikzpicture}[remember picture,overlay,>=stealth]
+
 	\node (R) at ($(current page.south west) + (18cm,2cm)$)
-		{\scalebox{0.85}{\includegraphics{img/Rlogo}}}
-		edge[color=blue!25,line width=7.5pt, line cap=round,->,out=160,in=270] 
-			(titleIn);
+		{\scalebox{0.85}{\includegraphics{img/Rlogo}}};
+
+	\tikzset{		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
+		decoration={shape backgrounds,
+			shape sep={.25cm, between borders},shape scaled,shape=circle}
+	}
+			
+	\fill[decorate,bigger, blue!25] (R) to[out=190,in=240] (titleIn);
 		
 \end{tikzpicture}
 
@@ -80,7 +90,7 @@ cat('\\usepackage{',
 
 \thispagestyle{empty}
 
-% A more complex example
+% A more complex title page
 
 \vbox{}
 \vspace{0.5\textheight}
@@ -91,8 +101,12 @@ cat('\\usepackage{',
 	
 	\draw[line width=5pt] ([yshift=-5pt]title.base west) -- ([yshift=-5pt]title.base east);	
 
-	\coordinate[below=of title.base] (titleIn);
-	\coordinate[above=of title.north] (titleOut);
+
+	\coordinate (titleOut) at ($(title.north east) + (24pt,0pt)$);
+	\coordinate (titleIn) at ($(title.base west) - (6pt,24pt)$);
+		
+	\node[color=black!80,below=24pt of title.base east,anchor=east] (sub)
+		{\bfseries\itshape\Large R Graphics for \LaTeX};
 
 \end{tikzpicture}
 \vfill	
@@ -100,11 +114,17 @@ cat('\\usepackage{',
 
 
 \begin{tikzpicture}[remember picture,overlay,>=stealth]
+
 	\node (R) at ($(current page.south west) + (18cm,2cm)$)
-		{\scalebox{0.85}{\includegraphics{img/Rlogo}}}
-		edge[color=blue!25,line width=7.5pt, line cap=round,->,out=160,in=270] 
-			(titleIn);
-		
+		{\scalebox{0.85}{\includegraphics{img/Rlogo}}};
+
+	\tikzset{		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
+		decoration={shape backgrounds,
+			shape sep={.25cm, between borders},shape scaled,shape=circle}
+	}
+			
+	\fill[decorate,bigger, blue!25] (R) to[out=190,in=240] (titleIn);	
+	
 \end{tikzpicture}
 
 \begin{tikzpicture}[overlay,remember picture]
@@ -147,19 +167,27 @@ cat('\\usepackage{',
 
 		\input{figs/titlePlot.tex}
 		
-		\coordinate (plotIn) at (0,2in);
+		\coordinate (plotIn) at (2in,0.5in);
 
 
 	\end{scope}
 
-	\draw[color=black!25,line width=7.5pt, line cap=round,->,>=stealth]
-		(titleOut) to[out=90,in=200] (plotIn);
+	\tikzset{		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
+		decoration={shape backgrounds,
+			shape sep={.25cm, between borders},shape scaled,shape=dart}
+	}
+
+	\fill[decorate,thick,bigger,color=black!25]
+		(titleOut) to[out=20,in=260] (plotIn);
 
 \end{tikzpicture}
 
 \newpage
 
 \maketitle
+\begin{center}
+	\url{http://r-forge.r-project.org/projects/tikzdevice}
+\end{center}
 \tableofcontents
 
 \newpage
@@ -170,7 +198,76 @@ cat('\\usepackage{',
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
-The \pkg{tikzDevice} package allows for graphics output in native \LaTeX{} format.  That is, the output of the \code{tikz()} function can be directly included in \LaTeX{} documents by way of and \verb'\input{}' statement. For example, in \lang{R} 
+The \pkg{tikzDevice} package allows for R graphics output in a native \LaTeX\ format. That is, the output of the \code{tikz()} function is plain-text files that can be interpreted using \TikZ, a package for \LaTeX. These files can be directly included in \LaTeX\ documents by way of the \verb'\input{}' statement. Allowing \LaTeX\ to handle both typesetting and figure composition bestows the resulting document with a clean, unified look as there are no discontinuities in the size and selection of fonts used in the output.
+
+This document is divided into three parts. The first part describes the functions that the package makes available to the \lang{R} user and provides examples of their capabilities. Besides the \lang{R} environment, use of the \TikZ\ device device requires the user to have a working \LaTeX\ compiler along with an installed version of the \TikZ\ package. The second part of this documentation offers suggestions on how to get these tools working properly.
+
+The third part of the documentation is intended for those who are curious as to the details of how this package has been implemented. It attempts to explain how the \TikZ\ package does the things that it does and why it chooses to do them that way. The authors have attempted to write this part of the documentation in a way that is accessible to users as well as developers. This has been done in the hope that this project may serve as a case study in creating an R graphics device. This part of the documentation may also help those considering undertaking the transition from casual package-building to full-on hacking of the \lang{R} internals.
+
+
+\part{Usage and Examples}
+\label{part:one}
+
+\section{Loading the Package}
+
+The functions in the \pkg{tikzDevice} package are made accessible in the \lang{R} environment by using either the \code{library()} or \code{require()} functions like so:
+
+\begin{Verbatim}[frame=single]
+require(tikzDevice)
+\end{Verbatim}
+
+Upon loading, the package will search for a usable \LaTeX\ compiler. Access to \LaTeX\ is essential for the device to produce correct output as the compiler is queried for font metrics several times during device output. For more information on why communication between the device and \LaTeX\ is necessary, see \autoref{part:three}. If the search for a compiler is successful the package startup message should look similar to the following:
+
+\begin{Verbatim}[frame=single]
+filehash: Simple key-value database (2.0-1 2008-12-19)
+tikzDevice: A Device for R Graphics Output in PGF/TikZ Format (v0.3.5)
+Checking for a LaTeX compiler...
+
+pdfTeX 3.1415926-1.40.9-2.2 (Web2C 7.5.7)
+kpathsea version 3.5.7
+...
+
+A working LaTeX compiler was found in:
+	The R environment variable R_LATEXCMD
+
+Global option tikzLatex set to:
+	/usr/texbin/latex
+\end{Verbatim}
+
+If a working \LaTeX\ compiler cannot be found, the \pkg{tikzDevice} package will fail to load and a warning message will be displayed:
+
+\begin{Verbatim}[frame=single]
+An appropriate LaTeX compiler could not be found.
+Access to LaTeX is currently required in order for the
+TikZ device to produce output.
+
+The following places were tested for a valid LaTeX compiler:
+
+	A pre-existing value of the global option tikzLatex
+	The R environment variable R_LATEXCMD
+	The R environment variable R_PDFLATEXCMD
+	The global option latexcmd
+	The PATH using the command latex
+	The PATH using the command pdflatex
+...
+
+Error : .onLoad failed in 'loadNamespace' for 'tikzDevice'
+Error: package/namespace load failed for 'tikzDevice'
+\end{Verbatim}
+
+In this case, \pkg{tikzDevice} has done it's very best to locate a working compiler and came up empty. For information on how to deal with this situation, consult \autoref{part:two} of this documentation.
+
+
+\section{The \code{tikz()} Function}
+
+\subsection{Description}
+The \code{tikz()} function provides most of the functionality of the \pkg{tikzDevice} package. This function is responsible for creating new \lang{R} graphics devices translate the output of graphics functions to the \TikZ\ format.
+
+
+\subsection{Usage}
+
+\subsection{Examples}
+For example, in \lang{R} 
 
 \begin{Verbatim}[frame=single]
 require(tikzDevice)
@@ -211,6 +308,16 @@ dev.off()
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\part{Installation Guide}
+\label{part:two}
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\part{Package Internals}
+\label{part:three}
+
 \section{Background}
 About \TikZ{}, the Pic\TeX{} device and the story of two fortran programmers with a dream.
 
