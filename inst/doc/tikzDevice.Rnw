@@ -42,7 +42,10 @@ if( !file.exists('Sweave.sty') ){
 
 \begin{document}
 	
-	\SweaveOpts{echo=F,prefix.string=figs/fig}
+\SweaveOpts{echo=F,prefix.string=figs/fig}
+
+
+%----------------------------  Cover Page -----------------------------------------------------------
 
 \thispagestyle{empty}
 
@@ -145,24 +148,34 @@ if( !file.exists('Sweave.sty') ){
 
 \newpage
 
+%----------------------------  Table of Contents -----------------------------------------------------------
+
+\pagenumbering{roman}
+
 \maketitle
 \tableofcontents
 
 \newpage
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Documentation starts here.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\pagenumbering{arabic}
+
 % A friendly reminder that this package is currently unstable.
 \tikzDeviceWarning{Caveat Utilitor}
 {
 This is a friendly reminder that the \pkg{tikzDevice} package is currently considered by it's designers to be a {\bfseries beta work}. This package has been released in the hopes that it will help users produce exceptional graphics, leading to an increase in the quality of reports and other materials using those graphics.\\[1em]
 
-It is very likely that this package will help produce exceptional crashes, leading to an increase in the quantity of swearing by \lang{R} and users affected by those crashes.\\[1em]
+However, the package has not been tested in an extensive variety of situations beyond those that have been dreamed up by the designers. Therefore, it is very likely that this package will help produce exceptional crashes, leading to an increase in the quantity of swearing by \lang{R} and users affected by those crashes.\\[1em]
 
 We hope this package will improve with time and attain a level of usability and trustability at which it may be labeled ``stable". Until then the package, including this documentation, may undergo significant changes in form and function. During the beta period the actual implementation of the package may differ significantly from what is described in this documentation.\\[1em]
+
+In fact, the documentation may differ significantly from what is described in the documentation.\\[1em]
 
 Thanks for giving it a try!\\
 \quad{\itshape -The tikzDevice Team}
@@ -271,7 +284,7 @@ The next section provides examples of how to use each type of output.
 
 \subsection{Examples}
 
-\subsubsection{Basic Usage}
+\subsubsection{Default Mode}
 
 The most common use of the \code{tikz()} function is to produce a plot that will be included in another \LaTeX\ document, such as a report. Running the following example in lang{R} will produce a very simple graphic using the \code{plot()} function.
 
@@ -290,8 +303,9 @@ dev.off()
 
 @
 
+You may notice that when using \code{tikz()}, \lang{R} appears to ``lag" or ``hang" when you execute commands such as \code{plot()}. This is because the \code{tikz} graphics device must query the \LaTeX\ compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \lang{R} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \lang{R} is shut down. \autoref{cache:user} explains how to assign a permanent cache file that can be preserved between \lang{R} sessions. For the details of why calling the \LaTeX\ compiler is necessary, see \autoref{part:three}.
 
-A simple \LaTeX\ document is then required to display the output. This document must include the \TikZ\ as one of the packages that it loads. The \TikZ\ package provides several optional libraries that provide additional functionality, however none of these libraries are currently required to use the output of \code{tikz()}. Inside the \LaTeX\ document, the contents of the file \lang{simpleEx.tex} are imported using the \verb`\include{}` command.
+A simple \LaTeX\ document is then required to display the output of the basic \code{tikz()} command. This document must include the \TikZ\ as one of the packages that it loads. The \TikZ\ package provides several optional libraries that provide additional functionality, however none of these libraries are currently required to use the output of \code{tikz()}. Inside the \LaTeX\ document, the contents of the file \lang{simpleEx.tex} are imported using the \verb`\include{}` command.
 
 \begin{figure}[H]
 	\centering
@@ -323,7 +337,7 @@ A simple \LaTeX\ document is then required to display the output. This document 
 	\begin{minipage}{0.45\textwidth}
 		\input{figs/simpleEx.tex}
 	\end{minipage}
-	\caption{Example of basic \code{tikz()} usage.}
+	\caption{Example of simple \code{tikz()} usage.}
 \end{figure}
 
 One of the most exciting aspects of the \code{tikz()} function is that it allows the inclusion of arbitrary \LaTeX\ code in plotting commands. An important issue to note is that many \LaTeX\ commands pare prefixed by the backaslash, \textbackslash, character. This character has a special meaning as an escape charcter in many computing applications, including \lang{R}. Therefore, it is necessary to place two backslashes, \textbackslash\textbackslash, in the input to \lang{R} commands in order to cause one to appear in the output.  The next example demonstrates how to use \LaTeX\ commands in plot annotation.
@@ -383,7 +397,155 @@ dev.off()
 \end{figure}
 
 
+\subsubsection{\code{bareBones} Mode}
+
+The\code{barBones} is designed to facilitate inclusion of \code{tikz()} output as part of a larger graphic. Normally \code{tikz()} packages the commands it produces as a self-contained figure. This is done by placing the \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` commands at the beginning and end of the output file. When \code{bareBones} is invoked, the \code{tikzpicture} environment is omitted which allows the output to be embedded inside a \code{tikzpicture} of the users own construction.
+
+\begin{Verbatim}[frame=single]
+require(tikzDevice)
+tikz('bareBonesExample.tex',width=4,height=4,bareBones=T)
+
+x <- c(0,cumsum(rnorm(25)))
+y <- c(0,cumsum(rnorm(25)))
+
+plot(x, y, type="l" )
+
+title("A Brownian Motion")
+
+dev.off()
+\end{Verbatim}
+
+<<bareBonesExample,results=hide>>=
+
+tikz('figs/bareBonesExample.tex',width=4,height=4,bareBones=T)
+
+x <- c(0,cumsum(rnorm(25)))
+y <- c(0,cumsum(rnorm(25)))
+
+plot(x, y, type="l" )
+
+title("A Brownian Motion")
+
+dev.off()
+@
+
+The resulting code may then be used inside a \code{tikzpicture} environment using the \verb`\include{}` command. The included code must be wrapped in a \code{scope} environment that contains the options \code{x=1pt} and \code{y=1pt}. This informs \TikZ\ of the units being used in the coordinates of the plot output. The options \code{xshift} and \code{yshift} may also be applied to the \code{scope} in order to position the plot. The following code demonstrates how to embed \code{bareBones} output in a \code{tikzpicture}
+
+\begin{Verbatim}[frame=single]
+\begin{tikzpicture}
+
+	\draw[clip] (-0.25,-0.25) rectangle (4.25in,4.25in);
+
+	\begin{scope}[x=1pt,y=1pt,yshift=0.25in]
+		\input{figs/bareBonesExample}
+	\end{scope}
+	
+	\node[anchor=south west,draw,rounded corners] (start) at (0,0) 
+		{TikZ can draw Brownian Motions as Well!};
+	
+	\coordinate (current point) at (start.east);
+	\coordinate (old velocity) at (0,-5);
+	\coordinate (new velocity) at (rand,rand);
+	
+	\foreach \i in {25,26,...,50} {
+
+		\draw[blue!\i,ultra thick,line cap=round,x=1cm,y=1cm]
+			(current point) .. controls ++([scale=-1]old velocity)
+				and ++(new velocity) ..
+			++(rand, rand) coordinate(current point);
+		
+		\coordinate(old velocity) at (new velocity);
+		\coordinate(new velocity) at (rand,rand);	
+	}
+	
+
+	
+\end{tikzpicture}
+\end{Verbatim}
+
+
+
+\begin{figure}[H]
+	
+	\centering
+	
+	\begin{tikzpicture}
+
+		\draw[clip] (-0.25,-0.25) rectangle (4.25in,4.25in);
+
+		\begin{scope}[x=1pt,y=1pt,yshift=0.25in]
+			\input{figs/bareBonesExample}
+		\end{scope}
+		
+		\node[anchor=south west,draw,rounded corners] (start) at (0,0) 
+			{TikZ can draw Brownian Motions as Well!};
+		
+		\coordinate (current point) at (start.east);
+		\coordinate (old velocity) at (0,-5);
+		\coordinate (new velocity) at (rand,rand);
+		
+		\foreach \i in {25,26,...,50} {
+
+			\draw[blue!\i,ultra thick,line cap=round,x=1cm,y=1cm]
+				(current point) .. controls ++([scale=-1]old velocity)
+					and ++(new velocity) ..
+				++(rand, rand) coordinate(current point);
+			
+			\coordinate(old velocity) at (new velocity);
+			\coordinate(new velocity) at (rand,rand);	
+		}
+		
+
+		
+	\end{tikzpicture}
+
+	\caption{A \TikZ\ drawing with embedded output from \code{tikz(bareBones=T)}.}
+\end{figure}
+
+\subsubsection{\code{standAlone} Mode}
+
+When the \code{standAlone} option is passed to \code{tikz()}, the resulting \code{.tex} file will be a complete \LaTeX document designed to be compiled on it's own. This means that in addition to \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` the file will also contain \verb`\begin{document}`, \verb`\end{document}` and a \LaTeX\ preamble. The \code{preview} package is also used in files produced by \code{standAlone} and is used to crop the pages in the resulting document to the bounding boxes of the figures that it contains. Stand-alone output may be produced in the following manner:
+
+\begin{Verbatim}[frame=single]
+require(tikzDevice)
+tikz('standAloneExample.tex',standAlone=T)
+plot(sin,-pi,2*pi,main="A Stand Alone TikZ Plot")
+dev.off()
+\end{Verbatim}
+
+<<standAloneExample, results=hide>>=
+
+	tikz('figs/standAloneExample.tex',standAlone=T)
+	plot(sin,-pi,2*pi,main="A Stand Alone TikZ Plot")
+	dev.off()
+	
+	require(tools)
+	
+	catch <- system(paste(Sys.which('pdflatex'),
+		'-interaction=batchmode -output-directory figs/ figs/standAloneExample.tex'),
+		ignore.stderr=T)
+	
+	# If compiling the example failed, we don't want to include a broken link.	
+	if( catch == 0 ){
+		pdfLink <- "The file \\\\code{standAloneExample.tex} may then be compiled to produce
+			\\\\href{./figs/standAloneExample.pdf}{standAloneExample.pdf}. "
+	}else{
+		pdfLink <- ""
+	}
+
+
+@
+
+\hyperbaseurl{.}
+
+\Sexpr{print(pdfLink)}Note that files produced using the \code{standAlone} option cannot be included in \LaTeX documents using \verb`\input{}`! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
+
+
+
+
+
 \section{R Options that Affect \pkg{tikzDevice}}
+\label{cache:user}
 
 \section{The \code{getLatexCharMetrics()} and \code{getLatexStrWidth()} Functions}
 
