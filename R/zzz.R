@@ -12,6 +12,20 @@ function(libname, pkgname) {
 		stop("tikzDevice requires the filehash package to be available.") 
 	}
 	
+	# Set Header and Footer options
+	options( tikzDocumentDeclaration = "\\documentclass{article}" )	
+	options( tikzLatexPackages = c(
+		"\\usepackage{tikz}",
+		"\\usepackage[active,tightpage]{preview}",
+		"\\PreviewEnvironment{pgfpicture}",
+		"\\setlength\\PreviewBorder{0pt}") )
+	options( tikzHeaderDefault = c( 
+		getOption('tikzDocumentDeclaration') ), 
+		getOption('tikzLatexPackages') )
+	options( tikzHeader = getOption('tikzHeaderDefault') )
+	options( tikzFooterDefault = c( "\\end{document}" ) )
+	options( tikzFooter = getOption('tikzFooterDefault') )
+	
 	foundLatex <- FALSE
 	checked <- c()
 
@@ -80,19 +94,3 @@ function(libname, pkgname) {
 # Any variables defined in here will be hidden
 # from normal users.
 .tikzInternal <- new.env()
-
-# Set Header and Footer options
-assign( '.tikzOptions', list(), envir = .tikzInternal)
-
-tikzOptions( documentDeclaration = "\\documentclass{article}" )	
-tikzOptions( latexPackages = c(
-	"\\usepackage{tikz}",
-	"\\usepackage[active,tightpage]{preview}",
-	"\\PreviewEnvironment{pgfpicture}",
-	"\\setlength\\PreviewBorder{0pt}") )
-tikzOptions( headerDefault = c( 
-	tikzOptions$documentDeclaration ), 
-	tikzOptions$latexPackages )
-tikzOptions( header = tikzOptions()$headerDefault )
-tikzOptions( footerDefault = c( "\\end{document}" ) )
-tikzOptions( footer = tikzOptions()$footerDefault )
