@@ -261,7 +261,7 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
 \begin{description}
 \item[\code{file}]{ A character string indicating the desired path to the output file. It is recommended, but not required, that the filename end in \code{.tex}.}
 \item[\code{width}]{ The width of the output figure, in {\bfseries inches}. }
-\item[\code{height}]{ The hegiht of the output figure, in {\bfseries inches}. }
+\item[\code{height}]{ The height of the output figure, in {\bfseries inches}. }
 \item[\code{bg}]{ The starting background color for the plot. }
 \item[\code{fg}]{ The starting foreground color for the plot. }
 \item[\code{standAlone}]{ A logical value indicating whether the resulting file should be suitable for direct processing by \LaTeX .}
@@ -538,10 +538,7 @@ dev.off()
 
 \hyperbaseurl{.}
 
-\Sexpr{print(pdfLink)}Note that files produced using the \code{standAlone} option cannot be included in \LaTeX documents using \verb`\input{}`! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
-
-
-
+\Sexpr{print(pdfLink)}Note that files produced using the \code{standAlone} option should not be included in \LaTeX documents using the \verb`\input{}` command! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
 
 
 \section{R Options that Affect \pkg{tikzDevice}}
@@ -551,9 +548,76 @@ dev.off()
 
 \subsection{Description}
 
+These two functions may be used to retrieve font metrics through the interface provided by the \pkg{tikzDevice} package. Cached values of the metrics are returned if they have been calculated by the \pkg{tikzDevice} before. If no cached values exist, the \LaTeX\ compiler will be invoked to generate them.
+
 \subsection{Usage}
 
+The font metric functions are called as follows:
+
+\begin{Verbatim}[frame=single]
+getLatexStrWidth( texString, cex = 1, face= 1)
+
+getLatexCharMetrics( charCode, cex = 1, face = 1 )
+\end{Verbatim}
+
+\begin{description}
+\item[\code{texString}]{ A string for which to compute the width. \LaTeX\ commands may be used in the string, however all backslashes will need to be doubled.}
+\item[\code{charCode}]{ An integer between 32 and 126 which indicates a printable character in the ASCII symbol table using the T1 font encoding. }
+\item[\code{cex}]{ The character expansion factor to be used when determining metrics. }
+\item[\code{face}]{ An integer specifying the \lang{R} font face to use during metric calculations. The accepted values are as follows: 
+	\begin{description}
+		\item[1:]{Text should be set in normal font face.}
+		\item[2:]{Text should be set in {\bfseries bold font face}.}
+		\item[3:]{Text should be set in {\itshape italic font face}.}
+		\item[4:]{Text should be set in {\bfseries\itshape bold italic font face}.}
+		\item[5:]{Text should be interpreted as \code{plotmath} symbol characters. Requests for font face 5 are currently ignored.}
+	\end{description}
+	}
+\end{description}
+
 \subsection{Examples}
+
+The \code{getLatexStrWidth()} function may be used to calculate the width of strings containing fairly arbitrary \LaTeX\ commands. For example, consider the following calculations:
+
+<<strWidthDemo,echo=T>>=
+getLatexStrWidth( "The symbol: alpha" )
+getLatexStrWidth( "The symbol: $\\alpha$" )
+@
+
+For the first calculation, the word ``alpha" was interpreted as just a word and the widths of the characters `a', `l', `p', `h' and `a' were included in the string width. For the second string, \verb`\alpha` was interpreted as a mathematical symbol and only the width of the symbol `$\alpha$' was included in the string width.
+
+The \code{getLatexCharWidth()} function must be passed an integer corresponding to an ASCII character code and returns three values:
+
+	\begin{itemize}
+		
+		\item{The \code{ascent} of the character- the distance between the baseline and the highest point of the character's glyph.}
+		
+		\item{The \code{descent} of the character- the distance between the baseline and the lowest point of the character's glyph.}
+		
+		\item{The width of the character.}
+
+	\end{itemize}
+	
+The character `y' has an \code{ASCII} symbol code of 121 and possesses a tail that descends below the text line. Therefore a non-zero value will be returned for the descent of `y'. The character `x', \code{ASCII} code 120, has no descenders, so its descent will be returned as zero.
+
+<<charMetricDemo,echo=T,keep.source=T>>=
+# Get metrics for 'y'
+getLatexCharMetrics(121)
+
+# Get metrics for 'x' - the second value is the descent
+# and should be zero or very close to zero.
+getLatexCharMetrics(120)
+@
+
+Note that characters, along with numbers outside the range of [32-126], may not be passed to the \code{getLatexCharMetrics()} function. If for some reason a floating point number is passed, it is converted by \code{as.integer()}.
+
+<<charMetricErrors,echo=T,keep.source=T>>=
+getLatexCharMetrics('y')
+getLatexCharMetrics(20)
+
+# Will return metrics for 'y'
+getLatexCharMetrics(121.25)
+@
 
 
 \newpage
