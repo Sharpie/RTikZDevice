@@ -2,11 +2,13 @@
 
 % Font macros
 \newcommand{\lang}{\textsf}
-\newcommand{\code}{\texttt}
+% Mbox it to prevent hyphenation of code
+\newcommand{\code}[1]{\mbox{\ttfamily #1}}
 \newcommand{\pkg}{\textbf}
 
-% LaTeX macros
+% Other LaTeX macros
 \renewcommand{\sectionautorefname}{Section}
+\renewcommand{\subsectionautorefname}{Subsection}
 
 % Text macros
 \newcommand{\TikZ}{Ti\textit{k}Z}

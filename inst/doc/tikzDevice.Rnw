@@ -25,11 +25,8 @@
 
 <<setup,echo=F,results=hide>>=
 
-if( !file.exists( 'figs' ) ) dir.create( 'figs' )
-require(tikzDevice)
-if( !file.exists('Sweave.sty') ){
-	file.copy(file.path(R.home(),'share','texmf','Sweave'), 'Sweave.sty')
-}
+	if( !file.exists( 'figs' ) ) dir.create( 'figs' )
+	require(tikzDevice)
 	
 @
 
@@ -194,6 +191,9 @@ The third part of the documentation is intended for those who are curious as to 
 \part{Usage and Examples}
 \label{part:one}
 
+
+%----------------------------  Package Loading -----------------------------------------------------------
+
 \section{Loading the Package}
 
 The functions in the \pkg{tikzDevice} package are made accessible in the \lang{R} environment by using either the \code{library()} or \code{require()} functions like so:
@@ -241,8 +241,29 @@ Error : .onLoad failed in 'loadNamespace' for 'tikzDevice'
 Error: package/namespace load failed for 'tikzDevice'
 \end{Verbatim}
 
-In this case, \pkg{tikzDevice} has done it's very best to locate a working compiler and came up empty. For information on how to deal with this situation, consult \autoref{part:two} of this documentation.
+In this case, \pkg{tikzDevice} has done it's very best to locate a working compiler and came up empty. If you have a working \LaTeX\ compiler, the next section describes how to inform the \pkg{tikzDevice} package of its location. For suggestions on how to obtain a \LaTeX\ compiler, see \autoref{part:two}.
 
+
+\subsection{\lang{R} Options That Affect Package Behavior}
+The \pkg{tikzDevice} package is currently influenced by two global options that may be set in a \code{.Rprofile} file. The first is called \code{tikzLatex} and specifies the location of the \LaTeX\ compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. This option may be set in \code{.Rprofile} as follows:
+
+\begin{Verbatim}[frame=single]
+options( tikzLatex = '/path/to/latex/compiler' )
+\end{Verbatim}
+
+
+The second, and perhaps most important, global options that affects \pkg{tikzDevice} is the option \code{tikzMetricsDictionary}. When using the graphics device provided by \pkg{tikzDevice}, you may notice that \lang{R} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the \LaTeX\ compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \lang{R} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \lang{R} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile}:
+
+\begin{Verbatim}[frame=single]
+options( tikzMetricsDictionary = '/path/to/dictionary/location' )
+\end{Verbatim}
+
+The proper placement of a \code{.Rprofile} file is explained in \code{?Startup}. For the details of why calling the \LaTeX\ compiler is necessary, see \autoref{part:three}.
+
+
+\label{cache:user}
+
+%----------------------------  tikz() function documentation -------------------------------------------------
 
 \section{The \code{tikz()} Function}
 
@@ -302,8 +323,6 @@ plot(1,main='Hello World!')
 dev.off()
 
 @
-
-You may notice that when using \code{tikz()}, \lang{R} appears to ``lag" or ``hang" when you execute commands such as \code{plot()}. This is because the \code{tikz} graphics device must query the \LaTeX\ compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \lang{R} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \lang{R} is shut down. \autoref{cache:user} explains how to assign a permanent cache file that can be preserved between \lang{R} sessions. For the details of why calling the \LaTeX\ compiler is necessary, see \autoref{part:three}.
 
 A simple \LaTeX\ document is then required to display the output of the basic \code{tikz()} command. This document must include the \TikZ\ as one of the packages that it loads. The \TikZ\ package provides several optional libraries that provide additional functionality, however none of these libraries are currently required to use the output of \code{tikz()}. Inside the \LaTeX\ document, the contents of the file \lang{simpleEx.tex} are imported using the \verb`\include{}` command.
 
@@ -536,13 +555,11 @@ dev.off()
 
 @
 
-\hyperbaseurl{.}
-
 \Sexpr{print(pdfLink)}Note that files produced using the \code{standAlone} option should not be included in \LaTeX documents using the \verb`\input{}` command! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
 
 
-\section{R Options that Affect \pkg{tikzDevice}}
-\label{cache:user}
+
+%----------------------------  text metrics function documentation ---------------------------------------
 
 \section{The \code{getLatexCharMetrics()} and \code{getLatexStrWidth()} Functions}
 
@@ -609,14 +626,14 @@ getLatexCharMetrics(121)
 getLatexCharMetrics(120)
 @
 
-Note that characters, along with numbers outside the range of [32-126], may not be passed to the \code{getLatexCharMetrics()} function. If for some reason a floating point number is passed, it is converted by \code{as.integer()}.
+Note that characters, along with numbers outside the range of [32-126], may not be passed to the \nolinebreak\code{getLatexCharMetrics()}  function. If for some reason a floating point number is passed, it will be floored through conversion by \code{as.integer()}.
 
 <<charMetricErrors,echo=T,keep.source=T>>=
 getLatexCharMetrics('y')
 getLatexCharMetrics(20)
 
 # Will return metrics for 'y'
-getLatexCharMetrics(121.25)
+getLatexCharMetrics(121.99)
 @
 
 
