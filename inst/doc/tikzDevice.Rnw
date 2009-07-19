@@ -19,12 +19,9 @@
 \usepackage{graphicx}
 \usepackage{float}
 
-\newcommand{\lang}{\textsf}
-\newcommand{\code}{\texttt}
-\newcommand{\pkg}{\textbf}
-\newcommand{\TikZ}{Ti\textit{k}Z}
 
 \usepackage{Sweave}
+\input{tikzDeviceMacros}
 
 <<setup,echo=F,results=hide>>=
 
@@ -36,9 +33,11 @@ if( !file.exists('Sweave.sty') ){
 	
 @
 
-\title{The \pkg{tikzDevice} Package}
+\title{The \pkg{tikzDevice} Package\\
+	{\large\url{http://r-forge.r-project.org/projects/tikzdevice}}
+}
 \author{Charlie Sharpsteen and Cameron Bracken}
-
+\date{Version \tikzDeviceVersion\qquad\today}
 
 
 \begin{document}
@@ -107,7 +106,7 @@ if( !file.exists('Sweave.sty') ){
 	
 	\begin{scope}[x=1pt,y=1pt,yshift=\overlayYoff,xshift=\overlayXoff]
 
-<<tikzTest,results=hide>>=
+<<tikzTitlePlot,results=hide>>=
 
 	tikz('figs/titlePlot.tex',bareBones=T,width=4,height=4)
 
@@ -147,9 +146,6 @@ if( !file.exists('Sweave.sty') ){
 \newpage
 
 \maketitle
-\begin{center}
-	\url{http://r-forge.r-project.org/projects/tikzdevice}
-\end{center}
 \tableofcontents
 
 \newpage
@@ -158,6 +154,21 @@ if( !file.exists('Sweave.sty') ){
 % Documentation starts here.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% A friendly reminder that this package is currently unstable.
+\tikzDeviceWarning{Caveat Utilitor}
+{
+This is a friendly reminder that the \pkg{tikzDevice} package is currently considered by it's designers to be a {\bfseries beta work}. This package has been released in the hopes that it will help users produce exceptional graphics, leading to an increase in the quality of reports and other materials using those graphics.\\[1em]
+
+It is very likely that this package will help produce exceptional crashes, leading to an increase in the quantity of swearing by \lang{R} and users affected by those crashes.\\[1em]
+
+We hope this package will improve with time and attain a level of usability and trustability at which it may be labeled ``stable". Until then the package, including this documentation, may undergo significant changes in form and function. During the beta period the actual implementation of the package may differ significantly from what is described in this documentation.\\[1em]
+
+Thanks for giving it a try!\\
+\quad{\itshape -The tikzDevice Team}
+}
+
+
 \section{Introduction}
 
 The \pkg{tikzDevice} package allows for R graphics output in a native \LaTeX\ format. That is, the output of the \code{tikz()} function is plain-text files that can be interpreted using \TikZ, a package for \LaTeX. These files can be directly included in \LaTeX\ documents by way of the \verb'\input{}' statement. Allowing \LaTeX\ to handle both typesetting and figure composition bestows the resulting document with a clean, unified look as there are no discontinuities in the size and selection of fonts used in the output.
@@ -330,18 +341,14 @@ x <- rnorm(5)
 y <- x + rnorm(5,sd=0.25)
 
 model <- lm(y~x)
-coef <- coefficients( model )
-coef <- signif(coef,4)
 rsq <- summary( model )$r.squared
 rsq <- signif(rsq,4)
 
 plot(x,y,main='Hello \\LaTeX!')
 abline(model,col='red')
 
-mtext( paste("Linear model: $y=", 
-	coef[1],"x + ",coef[2],
-	"\\quad R^{2}=",rsq,"$" ),
-	line=0.5)
+mtext( paste("Linear model: $R^{2}=",
+	rsq,"$" ),line=0.5)
 
 dev.off()
 \end{Verbatim}
@@ -354,17 +361,13 @@ x <- rnorm(5)
 y <- x + rnorm(5,sd=0.25)
 
 model <- lm(y~x)
-coef <- coefficients( model )
-coef <- signif(coef,4)
 rsq <- summary( model )$r.squared
 rsq <- signif(rsq,4)
 
 plot(x,y,main='Hello \\LaTeX!')
 abline(model,col='red')
 
-mtext( paste("Linear model: $y=", 
-	coef[1],"x + ",coef[2],
-	"\\quad R^{2}=",rsq,"$" ),
+mtext( paste("Linear model: $R^{2}=",rsq,"$" ),
 	line=0.5)
 
 dev.off()
@@ -376,7 +379,7 @@ dev.off()
 	\begin{minipage}{0.45\textwidth}
 		\input{figs/latexEx.tex}
 	\end{minipage}
-	\caption{A more complicated example of \code{tikz()} usage.}
+	\caption{A more complicated example of \code{tikz()} usage incorporating natively rendered \LaTeX\ commands.}
 \end{figure}
 
 

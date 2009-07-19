@@ -1,0 +1,47 @@
+% !TEX root = tikzDevice.Rnw
+
+% Font macros
+\newcommand{\lang}{\textsf}
+\newcommand{\code}{\texttt}
+\newcommand{\pkg}{\textbf}
+
+% Text macros
+\newcommand{\TikZ}{Ti\textit{k}Z}
+\newcommand{\tikzDeviceVersion}{0.4-{\bfseries\color{red}Beta}}
+
+% TikZ Style definitions.
+\tikzset{
+	% Taken from one of the first examples in the PGF manuel.
+	package warning/.style={
+		rectangle split,
+		rectangle split parts=2,
+		rectangle split draw splits=false,
+		rounded corners,
+		draw=red!50,
+		thick,
+		fill=red!10, 
+		inner sep= 1ex,
+		text width= \textwidth
+	}
+}
+
+
+
+% New environments.
+
+\newcommand{\tikzDeviceWarning}[2]{
+
+	\begin{tikzpicture}
+		
+		\node[package warning]{
+			\begin{center}
+				\large\bfseries
+				#1	
+			\end{center}	
+			\nodepart{second}		
+				#2	
+		};
+
+	\end{tikzpicture}
+
+}

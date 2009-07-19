@@ -57,7 +57,7 @@
 
 // We are writing to files so we need stdio.h
 #include <stdio.h>
-#define DEBUG TRUE
+#define DEBUG FALSE
 
 SEXP tikzDevice ( SEXP args ){
 
