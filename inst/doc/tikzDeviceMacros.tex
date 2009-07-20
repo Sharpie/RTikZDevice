@@ -19,22 +19,36 @@
 	% Taken from one of the first examples in the PGF manuel.
 	package warning/.style={
 		rectangle split,
-		rectangle split parts=2,
-		rectangle split draw splits=false,
+		rectangle split parts = 2,
 		rounded corners,
-		draw=red!50,
+		draw = red!50,
 		thick,
-		fill=red!10, 
-		inner sep= 1ex,
-		text width= \textwidth
+		fill = red!10, 
+		inner sep = 1ex,
+		text width = \textwidth
+	},	
+	code body/.style={
+		rounded corners,
+		draw = blue!50,
+		thick, 
+		fill = blue!10,
+		inner sep = 1ex,
+		text width =\textwidth
+	},
+	code title/.style={
+		rounded corners,
+		draw = blue!50,
+		fill = white,
+		text centered,
+		inner sep = 1ex
 	}
 }
 
 
 
-% New environments.
+% TikZ Macros.
 
-\newcommand{\tikzDeviceWarning}[2]{
+\newcommand{\tikzDocDisclaim}[2]{
 
 	\begin{tikzpicture}
 		
@@ -47,6 +61,20 @@
 				#2	
 		};
 
+	\end{tikzpicture}
+
+}
+
+
+\newcommand{\tikzCodeTest}[1]{
+
+	\begin{tikzpicture}
+	
+		\node[code body]{
+		
+			#1
+		
+		};
 	\end{tikzpicture}
 
 }

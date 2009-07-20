@@ -6,28 +6,71 @@
 
 \usepackage[T1]{fontenc}
 \usepackage{atbegshi}
+\usepackage[colorlinks]{hyperref}
 
+% Sexyness
 \usepackage{tikz}
 \usetikzlibrary{calc,positioning,shapes}
 \usetikzlibrary{decorations.shapes}
 
+% Page layout
 \usepackage[parfill]{parskip}
-\usepackage{fancyvrb}
 \usepackage[letterpaper,margin=1in]{geometry}
-\usepackage[colorlinks]{hyperref}
 
+
+% Graphics control.
 \usepackage{graphicx}
 \usepackage{float}
 
+% Source code markup
+\usepackage{listings}
+\usepackage{verbatim}
 
-\usepackage{Sweave}
 \input{tikzDeviceMacros}
+
+% Make sure you input tikzDeviceMacros first- or
+% LaTeX will smite you!
+\usepackage{Sweave}
+
 
 <<setup,echo=F,results=hide>>=
 
 	if( !file.exists( 'figs' ) ) dir.create( 'figs' )
 	require(tikzDevice)
 	
+	# Ok... I've had it with some of Sweave's design
+	# choices. This is it. I'm declaring war.
+	
+	# Begin Mother of All R Hacks
+	
+	# We load a new Sweave function that has had some
+	# sanity beaten into it's output routines.
+	source('castrateSweave.R')
+	
+	# Then, we find out where the bastard lives.
+	env <- as.environment('package:utils')
+	
+	# Then we break into it's house.
+	unlockBinding('makeRweaveLatexCodeRunner',env)
+	
+	# And rearrange it's furniture....
+	assignInNamespace('makeRweaveLatexCodeRunner',patchedCodeRunner,ns='utils')
+	assign('makeRweaveLatexCodeRunner',patchedCodeRunner,envir=env)
+	lockBinding('makeRweaveLatexCodeRunner',env)
+	
+	#  ...we take something with us when we leave...
+	newCodeRunner <- utils:::makeRweaveLatexCodeRunner()
+	
+	# ...to stalk it down on the street...
+	env <- grep('driver', lapply(sys.frames(),
+		function(frame){ ls(envir=frame) }
+	))
+	env <- sys.frames()[[env]]
+	
+	# ...and beat it over the head with some common sense.
+	evalq( driver$runcode <- newCodeRunner, envir=env)
+	
+	# End Mother of All R Hacks
 @
 
 \title{The \pkg{tikzDevice} Package\\
@@ -164,7 +207,7 @@
 \pagenumbering{arabic}
 
 % A friendly reminder that this package is currently unstable.
-\tikzDeviceWarning{Caveat Utilitor}
+\tikzDocDisclaim{Caveat Utilitor}
 {
 This is a friendly reminder that the \pkg{tikzDevice} package is currently considered by it's designers to be a {\bfseries beta work}. This package has been released in the hopes that it will help users produce exceptional graphics, leading to an increase in the quality of reports and other materials using those graphics.\\[1em]
 
@@ -596,9 +639,11 @@ getLatexCharMetrics( charCode, cex = 1, face = 1 )
 
 The \code{getLatexStrWidth()} function may be used to calculate the width of strings containing fairly arbitrary \LaTeX\ commands. For example, consider the following calculations:
 
+
 <<strWidthDemo,echo=T>>=
 getLatexStrWidth( "The symbol: alpha" )
 getLatexStrWidth( "The symbol: $\\alpha$" )
+sys.nframe()
 @
 
 For the first calculation, the word ``alpha" was interpreted as just a word and the widths of the characters `a', `l', `p', `h' and `a' were included in the string width. For the second string, \verb`\alpha` was interpreted as a mathematical symbol and only the width of the symbol `$\alpha$' was included in the string width.
@@ -645,11 +690,24 @@ getLatexCharMetrics(121.99)
 
 \section{Installing \LaTeX}
 
+\newsavebox{\tikzCodeBody}
 
-\section{Installing \TikZ}
+%\lstset{language=R,
+%	moredelim=[is][\color{gray}]{\\begin\{Soutput\}}{\\end\{Soutput\}}
+%}
+%\begin{lrbox}{\tikzCodeBody}
+%\begin{lstlisting}
+%# Get metrics for 'y'
+%getLatexCharMetrics(121)
 
-
-\section{Instaling \pkg{tikzDevice}}
+%# Get metrics for 'x' - the second value is the descent
+%# and should be zero or very close to zero.
+%getLatexCharMetrics(120)
+%\begin{Soutput}
+%hrm
+%\end{Soutput}
+%\end{lstlisting}
+%\end{lrbox}
 
 \newpage
 
