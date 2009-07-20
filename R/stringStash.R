@@ -19,10 +19,10 @@ function( key ){
 	# the variable before we exit in order to keep .tikzInternal
 	# clean.
 	assign('key', key, envir=.tikzInternal)
-
+	
 	# Check for the string.
 	if( evalq( dbExists(dictionary, sha1(key) ), .tikzInternal) ){
-
+		
 		# Yay! The width exists! Recover and return it.
 		metrics <- evalq( dictionary[[ sha1(key) ]], .tikzInternal)
 		# Clean up .tikzOptions.

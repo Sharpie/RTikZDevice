@@ -27,6 +27,7 @@ function (file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black",
 
 setTikzDefaults <- function(){
 	
+	options( tikzLatex = getOption('tikzLatexDefault') )
 	options( tikzDocumentDeclaration = getOption("tikzDocumentDeclarationDefault") )
 	options( tikzLatexPackages = getOption("tikzLatexPackagesDefault"))
 	options( tikzFooter = getOption('tikzFooterDefault') )

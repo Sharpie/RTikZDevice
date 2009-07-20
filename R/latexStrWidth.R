@@ -6,6 +6,7 @@ function( texString, cex = 1, face= 1){
 	TeXMetrics <- list( type='string', scale=cex, face=face, value=texString,
 	 	documentDeclaration = getOption("tikzDocumentDeclaration"),
 		packages = getOption("tikzLatexPackages"))
+		
 
 	# Check to see if we have a width stored in
 	# our dictionary for this string.
@@ -115,24 +116,14 @@ function( TeXMetrics ){
 	# some wacky macros that could screw stuff up but lets pretend 
 	# that cant happen for now. 
 	#
-	# Also, we load the user packages first so that we can override 
-	# crucial things.
+	# Also, we load the user packages last so the user can override 
+	# things if they need to.
+	#
+	#The user MUST load the tikz package here
 	writeLines(getOption("tikzLatexPackages"), texIn)
 	
-	writeLines("\\usepackage[utf8]{inputenc}", texIn)
-	# The fontenc package is very important here! 
-	# R assumes the output device is uing T1 encoding.
-	# LaTeX defaults to OT1. This package makes the
-	# symbol codes consistant for both systems.
-	writeLines("\\usepackage[T1]{fontenc}", texIn)
-
-	# We will use the TikZ pack to determine our
-	# metrics by setting the character(s) in question
-	# inside a TikZ node and then extracting various
-	# widths from the node. The TikZ calc library
-	# will be used to calculate the distances.
-	writeLines("\\usepackage{tikz}", texIn)
-	writeLines("\\usetikzlibrary{calc}", texIn)
+	# Load important packages for calculating metrics
+	writeLines(getOption("tikzMetricPackages"), texIn)
 
 	writeLines("\\batchmode", texIn)
 
@@ -262,9 +253,17 @@ function( TeXMetrics ){
 	# number.
 	width <- gsub('[=A-Za-z]','',match)
 
+	if( length(width) == 0 ){
+		cat(readLines(texFile),sep='\n')
+		cat(readLines(texLog),sep='\n')
+		stop('******** There was a problem calculating string metrics, 
+  ******** likely there was a problem with your custom packages.
+  ******** See the LaTeX log file above for details.')
+	}
+
 	# If we're dealing with a string, we're done.
 	if( TeXMetrics$type == 'string' ){
-
+		
 		return( as.double( width ) )
 
 	}else{
