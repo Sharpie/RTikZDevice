@@ -99,11 +99,18 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
                             linesout[thisline + 1] <- srcline
                             thisline <- thisline + 1
                             openSchunk <- TRUE
+														firstChunkLine <- TRUE
                         }
                         openSinput <- TRUE
                     }
-		    cat("\n", paste('\n',dce[1L:leading], sep="", collapse="\n"),
-		    	file=chunkout, append=TRUE, sep="")
+		    if( firstChunkLine ) {
+					cat(paste(dce[1L:leading], sep="", collapse="\n"),
+		    		file=chunkout, append=TRUE, sep="")
+					firstChunkLine <- FALSE
+				}else{
+					cat("\n", paste(dce[1L:leading], sep="", collapse="\n"),
+		    		file=chunkout, append=TRUE, sep="")
+				}
                     if (length(dce) > leading)
                     	cat("\n", paste(getOption("continue"), dce[-(1L:leading)], sep="", collapse="\n"),
                     	    file=chunkout, append=TRUE, sep="")
@@ -155,7 +162,7 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
                         if(options$strip.white=="all")
                           output <- sub("\n[[:space:]]*\n", "\n", output)
                     }
-                    cat('\nswe@veSt@rtH@ck',output,'swe@veEndH@ck', file=chunkout, append=TRUE)
+                    cat('\nswe@veSt@rtOutput',output,'swe@veEndOutput\n', file=chunkout, append=TRUE)
                     count <- sum(strsplit(output, NULL)[[1L]] == "\n")
                     if (count > 0L) {
                     	linesout[thisline + 1L:count] <- srcline

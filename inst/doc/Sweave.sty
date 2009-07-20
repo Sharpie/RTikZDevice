@@ -5,18 +5,43 @@
 \RequirePackage{graphicx,fancyvrb}
 \IfFileExists{upquote.sty}{\RequirePackage{upquote}}{}
 
-\definecolor{gris90}{gray}{0.90} 
-\definecolor{gris10}{gray}{0.10} 
-
-\lstloadlanguages{R} 
 \DefineVerbatimEnvironment{Scode}{Verbatim}{fontshape=sl}
 
-\lstnewenvironment{Schunk}{%
-\lstset{
-	language=R,
-	moredelim=[is][\color{gray}]{swe@veSt@rtH@ck}{swe@veEndH@ck}
-}
-}{}
+% Magic happening here- avert your eyes!
+
+% Ugly hack to make listings work "the way *I* want it to work" :p
+% Basically what is happening is that you *CANNOT* embed listings,
+% or fancyvrb for that matter, inside another macro. But I *really* *really*
+% want to. Sooooooo.... all the makeatletter voodoo basically captures
+% the output inside this environment and saves it to a temporary file
+% without mangling it. \lstinputlisting is then used to read that output
+% back in since it is perfectly happy with being embedded inside other
+% environments.
+\makeatletter 
+\newwrite\lstvrb@out 
+\newenvironment{Schunk}{% 
+  \begingroup 
+  \@bsphack 
+  \immediate\openout\lstvrb@out\jobname.lst 
+  \let\do\@makeother\dospecials\catcode`\^^M\active 
+  \def\verbatim@processline{% 
+    \immediate\write\lstvrb@out{\the\verbatim@line}}% 
+  \verbatim@start}{% 
+  \immediate\closeout\lstvrb@out 
+  \@esphack 
+  \endgroup 
+  
+  % Normal, sane, LaTeX code resumes here.
+  \begin{tikzpicture}
+  	\node[code body]{
+		% Okay... so we've hijacked Sweave's main output
+		% environment, Schunk. We can now play with the
+		% results as we see fit.
+	    \lstinputlisting[style = sweaveChunk]{\jobname.lst} 
+	 };
+  \end{tikzpicture}}
+\makeatother 
+
 
 
 \newcommand{\Sconcordance}[1]{%
