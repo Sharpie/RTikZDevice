@@ -8,7 +8,7 @@ function(libname, pkgname) {
 	# this package will be aborted as a LaTeX compiler is
 	# required in order to determine string metrics.
 
-	if( !require( filehash ) ){ 
+	if( !require( filehash, quietly=TRUE ) ){ 
 		stop("tikzDevice requires the filehash package to be available.") 
 	}
 	
@@ -26,19 +26,28 @@ function(libname, pkgname) {
 	options( tikzFooterDefault = c( "\\end{document}" ) )
 	options( tikzFooter = getOption('tikzFooterDefault') )
 	
+
+	versionInfo <- read.dcf(file.path( libname, pkgname, "DESCRIPTION"))
+
+	versionInfo <- gettextf("%s: %s (v%s)", versionInfo[, "Package"], versionInfo[, "Title"],
+		as.character(versionInfo[, "Version"]))
+
+	versionInfo <- c( paste(strwrap(versionInfo),collapse='\n'), "Checking for a LaTeX compiler...\n")
+
+	packageStartupMessage( paste(versionInfo,collapse='\n') )
+
 	foundLatex <- FALSE
 	checked <- c()
 
 	latexTest <- function( pathToTeX, pathDesc ){
 
-		tf <- tempfile()
 		latexCheck <- suppressWarnings(
-			system( paste( pathToTeX,'--version >', tf ), ignore.stderr=T) )
+			system( paste( pathToTeX,'--version' ), ignore.stderr=T) )
 
 		if( latexCheck == 0 ){
 			options( tikzLatex=pathToTeX )
 			foundLatex <<- TRUE
-			checked <<- paste( "A working LaTeX compiler was found in:\n\t",pathDesc,
+			checked <<- paste( "\nA working LaTeX compiler was found in:\n\t",pathDesc,
 				"\n\nGlobal option tikzLatex set to:\n\t",pathToTeX,'\n',sep='' )
 			return( TRUE )
 		}else{
@@ -71,8 +80,8 @@ function(libname, pkgname) {
 		message( checked )
 	}else{
 		stop("\n\nAn appropriate LaTeX compiler could not be found.\n",
-				"Access to LaTeX is currently required in order for the\n",
-				"TikZ device to produce output.\n\n",
+				"Access to LaTeX is required in order for the TikZ device\n",
+				"to produce output.\n\n",
 				"The following places were tested for a valid LaTeX compiler:\n\n\t",
 				paste( checked,collapse='\n\t'),
 				"\n\nIf you have a working LaTeX compiler, try one of the\n",

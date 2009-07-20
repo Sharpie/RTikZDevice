@@ -74,7 +74,8 @@ function(){
 		# Check for a user specified dictionary.
 		if( !is.null( getOption('tikzMetricsDictionary') ) ){
 
-			dbFile <- getOption('tikzMetricsDictionary')
+			dbFile <- path.expand(
+				getOption('tikzMetricsDictionary') )
 
 			# Create the database file if it does not exist.
 			if( !file.exists( dbFile ) ){

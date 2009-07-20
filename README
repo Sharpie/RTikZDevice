@@ -1,4 +1,4 @@
-Version 0.3.5: Alpha
+Version 0.4: Beta
 
 STATUS:
 	The tikzDevice implements the tikz() graphics driver in R. This driver
@@ -27,8 +27,6 @@ TODO:
     * Add an option to allow for custom packages to be included when 
       calculating string widths or character metrics, default to computer
       modern
-
-		* Add support for text foreground and background colors.
 
 FIXED:
     * Shapes are plotted with a default color border of black when it should 
@@ -94,8 +92,3 @@ FIXED:
 				And the width as:
 
 					A.east - A.west
-   
-TODO:
-    * Clipping
-    
-    * Line mitre

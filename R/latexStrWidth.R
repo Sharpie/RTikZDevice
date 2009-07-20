@@ -1,5 +1,5 @@
 getLatexStrWidth <-
-function( texString, cex=par('cex'), face=par('font') ){
+function( texString, cex = 1, face= 1){
 
 	# Create an object that contains the string and it's
 	# properties.
@@ -32,11 +32,21 @@ function( texString, cex=par('cex'), face=par('font') ){
 }
 
 getLatexCharMetrics <-
-function( charCode, cex=par('cex'), face=par('font') ){
+function( charCode, cex = 1, face = 1 ){
 
 	# This function is pretty much an exact duplicate of
 	# getLatexStrWidth, these two functions should be 
 	# generalized and combined.
+
+	# We must be given a valid integer character code.
+	if( !(is.numeric(charCode) && charCode > 31 && charCode < 127 ) ){
+		warning("Sorry, this function currently only accepts numbers between 32 and 126!")
+		return(NULL)
+	}
+
+	# Coerce the charCode to integer in case someone was being funny
+  # and passed a float.
+	charCode <- as.integer( charCode )
 
 	# Create an object that contains the character and it's
 	# properties.

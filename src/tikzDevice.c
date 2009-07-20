@@ -57,7 +57,7 @@
 
 // We are writing to files so we need stdio.h
 #include <stdio.h>
-#define DEBUG TRUE
+#define DEBUG FALSE
 
 SEXP tikzDevice ( SEXP args ){
 
@@ -881,6 +881,9 @@ static void TikZ_Text( double x, double y, const char *str,
 	/* End options, print coordinates and string. */
 	fprintf( tikzInfo->outputFile, "anchor=base west, inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s};\n",
 		plotParams->cex, x, y, tikzString);
+
+	// Since we no longer neexd tikzString, we should free the memory that it is being stored in.
+	free( tikzString );
 
 	// Add a small red marker to indicate the point the text string is being aligned to.
 	if( DEBUG == TRUE )
