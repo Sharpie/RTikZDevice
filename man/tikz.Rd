@@ -84,7 +84,7 @@ Charlie can wax poetic here about string widths, font metrics, encodings, metric
 ## Example 1 ###################################
 #Set up temporary work directory
 td <- tempdir()
-tf <- file.path(td,'example2.tex')
+tf <- file.path(td,'example1.tex')
 oldwd <- getwd()
 setwd(td)
 

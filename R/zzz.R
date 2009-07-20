@@ -13,16 +13,14 @@ function(libname, pkgname) {
 	}
 	
 	# Set Header and Footer options
-	options( tikzDocumentDeclaration = "\\documentclass{article}" )	
-	options( tikzLatexPackages = c(
+	options( tikzDocumentDeclarationDefault = "\\documentclass{article}" )
+	options( tikzDocumentDeclaration = getOption("tikzDocumentDeclarationDefault") )
+	options( tikzLatexPackagesDefault = c(
 		"\\usepackage{tikz}",
 		"\\usepackage[active,tightpage]{preview}",
 		"\\PreviewEnvironment{pgfpicture}",
 		"\\setlength\\PreviewBorder{0pt}") )
-	options( tikzHeaderDefault = c( 
-		getOption('tikzDocumentDeclaration') ), 
-		getOption('tikzLatexPackages') )
-	options( tikzHeader = getOption('tikzHeaderDefault') )
+	options( tikzLatexPackages = getOption("tikzLatexPackagesDefault"))
 	options( tikzFooterDefault = c( "\\end{document}" ) )
 	options( tikzFooter = getOption('tikzFooterDefault') )
 	

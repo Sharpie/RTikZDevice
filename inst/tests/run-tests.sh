@@ -2,8 +2,9 @@
 
 OUTDIR=output
 
-# wipe the output directory
+# wipe the output directory and old builds
 rm -rf $OUTDIR
+rm -rf tikzDevice_*
 mkdir $OUTDIR
 
 # Install the package so changes update

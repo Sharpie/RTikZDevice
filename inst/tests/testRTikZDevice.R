@@ -190,7 +190,8 @@ function(main){
 function(main){
 
 	sink('/dev/null')
-	require(fields)
+	suppressPackageStartupMessages(require(spam))
+	suppressPackageStartupMessages(require(fields))
 	sink()
 	data(RCMexample)
 
@@ -198,50 +199,67 @@ function(main){
 
 },
 
-# from the ggplot2 book
-function(main){
-	
-	require(ggplot2)
-	(a <- qplot(date, unemploy, data = economics, geom = "line", main = main)) 
-	(b <- qplot(uempmed, unemploy, data = economics) + 
-	geom_smooth(se = F)) 
-	(c <- qplot(uempmed, unemploy, data = economics, geom="path")) 
-	
-	grid.newpage() 
-	pushViewport(viewport(layout = grid.layout(2, 2))) 
-	vplayout <- function(x, y) 
-	viewport(layout.pos.row = x, layout.pos.col = y) 
-	print(a, vp = vplayout(1, 1:2)) 
-	print(b, vp = vplayout(2, 1)) 
-	print(c, vp = vplayout(2, 2)) 
-	
-},
-
-# from the ggplot2 book section "Subplots"
-function(main){
-
-	require(ggplot2)
-	(b <- qplot(uempmed, unemploy, data = economics, main = main) + 
-	geom_smooth(se = F))
-	(c <- qplot(uempmed, unemploy, data = economics, geom="path")) 
-	csmall <- c + 
-	theme_gray(9) + 
-	labs(x = NULL, y = NULL) + 
-	opts(plot.margin = unit(rep(0, 4), "lines")) 
-	subvp <- viewport(width = 0.4, height = 0.4, x = 0.75, y = 0.35) 
-	
-	print(b) 
-	print(csmall, vp = subvp) 
-	
-	
-},
-
 # from the ggplot2 book section "Fitting multiple models"
 function(main){
 	
-	require(ggplot2)
+	sink('/dev/null')
+	suppressPackageStartupMessages(require(mgcv))
+	suppressPackageStartupMessages(require(ggplot2))
+	sink()
 	print(qplot(carat, price, data = diamonds, geom = "smooth", 
 	colour = color, main = main))
+	
+},
+
+#XeLaTeX test
+function(main){
+
+	setTikzDefaults()
+	options( tikzLatexPackages = c( getOption('tikzLatexPackages'), c(
+	"\\usepackage{fontspec}"                                                                                                                                                                                            
+	,"\\usepackage[dvipdfm, colorlinks, breaklinks, pdftitle={The Beauty of LaTeX},pdfauthor={Taraborelli, Dario}]{hyperref}"                                                                                            
+	,"\\usepackage[usenames]{color}"                                                                                                                                                                                     
+	,"\\definecolor{Gray}{rgb}{.7,.7,.7}"                                                                                                                                                                                
+	,"\\definecolor{lightblue}{rgb}{.2,.5,1}"                                                                                                                                                                            
+	,"\\newcommand{\\red}[1]{\\color{red} #1}"                                                                                                                                                                           
+	,"\\newcommand{\\reda}[1]{\\color{red}\\fontspec[Variant=2]{Zapfino}#1}"                                                                                                                                             
+	,"\\newcommand{\\redb}[1]{\\color{red}\\fontspec[Variant=3]{Zapfino}#1}"                                                                                                                                             
+	,"\\newcommand{\\redc}[1]{\\color{red}\\fontspec[Variant=4]{Zapfino}#1}"                                                                                                                                             
+	,"\\newcommand{\\redd}[1]{\\color{red}\\fontspec[Variant=5]{Zapfino}#1}"                                                                                                                                             
+	,"\\newcommand{\\rede}[1]{\\color{red}\\fontspec[Variant=6]{Zapfino}#1}"                                                                                                                                             
+	,"\\newcommand{\\redf}[1]{\\color{red}\\fontspec[Variant=7]{Zapfino}#1}"                                                                                                                                             
+	,"\\newcommand{\\redg}[1]{\\color{red}\\fontspec[Variant=8]{Zapfino}#1}"                                                                                                                                             
+	,"\\newcommand{\\lbl}[1]{\\color{lightblue} #1}"                                                                                                                                                                     
+	,"\\newcommand{\\lbla}[1]{\\color{lightblue}\\fontspec[Variant=2]{Zapfino}#1}"                                                                                                                                       
+	,"\\newcommand{\\lblb}[1]{\\color{lightblue}\\fontspec[Variant=3]{Zapfino}#1}"                                                                                                                                       
+	,"\\newcommand{\\lblc}[1]{\\color{lightblue}\\fontspec[Variant=4]{Zapfino}#1}"                                                                                                                                       
+	,"\\newcommand{\\lbld}[1]{\\color{lightblue}\\fontspec[Variant=5]{Zapfino}#1}"                                                                                                                                       
+	,"\\newcommand{\\lble}[1]{\\color{lightblue}\\fontspec[Variant=6]{Zapfino}#1}"                                                                                                                                       
+	,"\\newcommand{\\lblf}[1]{\\color{lightblue}\\fontspec[Variant=7]{Zapfino}#1}"                                                                                                                                       
+	,"\\newcommand{\\lblg}[1]{\\color{lightblue}\\fontspec[Variant=8]{Zapfino}#1}"                                                                                                                                       
+	,"\\newcommand{\\old}[1]{"                                                                                                                                                                                           
+	,"\\fontspec[Ligatures={Common, Rare},Variant=1,Swashes={LineInitial, LineFinal}]{Zapfino}"                                                                                                                          
+	,"\\fontsize{25pt}{30pt}\\selectfont #1}%"                                                                                                                                                                           
+	,"\\newcommand{\\smallprint}[1]{\\fontspec{Hoefler Text}\\fontsize{10pt}{13pt}\\color{Gray}\\selectfont #1}%"                                                                                                                                             
+	,"\\end{document}")))
+	
+	label <- c(
+		"\\old"                                                                                                                                                                                                             
+		,"\\noindent{\\red d}roo{\\lbl g}"                                                                                                                                                                                   
+		,"\\noindent{\\reda d}roo{\\lbla g}"                                                                                                                                                                                 
+		,"\\noindent{\\redb d}roo{\\lblb g}"                                                                                                                                                                                 
+		,"\\noindent{\\redf d}roo{\\lblf g}\\\\[.3cm]"                                                                                                                                                                       
+		,"\\noindent{\\redc d}roo{\\lblc g}"                                                                                                                                                                                 
+		,"\\noindent{\\redd d}roo{\\lbld g}"                                                                                                                                                                                 
+		,"\\noindent{\\rede d}roo{\\lble g}"                                                                                                                                                                                 
+		,"\\noindent{\\redg d}roo{\\lblg g}\\\\[.2cm]"                                                                                                                                                                       
+		,"\\smallprint{D. Taraborelli (2008), \\href{http://nitens.org/taraborelli/latex}{The Beauty of \\LaTeX}"
+		,"\\\\\\emph{Some rights reserved}. \\href{http://creativecommons.org/licenses/by-sa/3.0/}{\\textsc{cc-by-sa}}}"
+		)
+	
+	plot(1,main = main)
+	text(1,1,label)
+	setTikzDefaults()
 	
 }
 
@@ -254,7 +272,7 @@ function(main){
 output.list <- c()
 
 for(i in 1:length(tests)){
-    cat("Running Test",sprintf('%02d',i),"... ")
+    cat("  Running Test",sprintf('%02d',i),"... ")
     this.testfile <- file.path(prefix,
       paste('test',sprintf('%02d',i),'.tex',sep=''))
     t <- system.time(
@@ -273,10 +291,15 @@ for(i in 1:length(tests)){
         # then debugging is turned on 
         cat(info.line,'\n\n')
     }
-
+	
 	# Compile the resulting TeX file.
-	silence <- system( paste(Sys.getenv("R_PDFLATEXCMD"),'-output-directory',prefix,
-		this.testfile), intern=T )
+	cat("Compiling Test",sprintf('%02d',i),"... ")
+	t <- system.time(
+    {
+		silence <- system( paste(Sys.getenv("R_PDFLATEXCMD"),
+			'-output-directory', prefix, this.testfile), intern =T)
+	})
+	cat("Done, took ",t[['elapsed']],"seconds.\n")
 
     this.testfile <- file.path(prefix,
 			paste('test',sprintf('%02d',i),'.pdf',sep=''))
