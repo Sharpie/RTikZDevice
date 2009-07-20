@@ -123,7 +123,7 @@
 \begin{tikzpicture}[remember picture,overlay,>=stealth]
 
 	\node (R) at ($(current page.south west) + (18cm,2cm)$)
-		{\scalebox{0.85}{\includegraphics{img/Rlogo}}};
+		{\scalebox{0.85}{\includegraphics[width=0.8\textwidth]{img/Rlogo}}};
 
 	\tikzset{
 		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
