@@ -8,6 +8,7 @@
 \usepackage{atbegshi}
 \usepackage[colorlinks]{hyperref}
 
+
 % Sexyness
 \usepackage{tikz}
 \usetikzlibrary{calc,positioning}
@@ -113,7 +114,7 @@
 	\coordinate (titleIn) at ($(title.base west) - (6pt,24pt)$);
 		
 	\node[color=black!80,below=24pt of title.base east,anchor=east] (sub)
-		{\bfseries\itshape\Large R Graphics for \LaTeX};
+		{\bfseries\itshape\Large \LaTeX Graphics for R};
 
 \end{tikzpicture}
 \vfill	
@@ -375,13 +376,13 @@ A simple \LaTeX\ document is then required to display the output of the basic \c
 \begin{figure}[H]
 	\centering
 
-	\begin{minipage}{0.45\textwidth}
+	\begin{minipage}{0.5\textwidth}
 
 \begin{tikzDocExample}
 \documentclass{article}
 
 % All LaTeX documents including 
-% tikz() output must include this 
+% tikz() output must use this 
 % package!
 \usepackage{tikz}
 
@@ -609,7 +610,6 @@ The \code{getLatexStrWidth()} function may be used to calculate the width of str
 <<strWidthDemo,echo=T>>=
 getLatexStrWidth( "The symbol: alpha" )
 getLatexStrWidth( "The symbol: $\\alpha$" )
-sys.nframe()
 @
 
 For the first calculation, the word ``alpha" was interpreted as just a word and the widths of the characters `a', `l', `p', `h' and `a' were included in the string width. For the second string, \verb`\alpha` was interpreted as a mathematical symbol and only the width of the symbol `$\alpha$' was included in the string width.

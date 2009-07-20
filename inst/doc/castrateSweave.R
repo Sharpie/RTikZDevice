@@ -112,7 +112,7 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
 		    		file=chunkout, append=TRUE, sep="")
 				}
                     if (length(dce) > leading)
-                    	cat("\n", paste(getOption("continue"), dce[-(1L:leading)], sep="", collapse="\n"),
+                    	cat("\n", paste( dce[-(1L:leading)], sep="", collapse="\n"),
                     	    file=chunkout, append=TRUE, sep="")
 		    linesout[thisline + 1L:length(dce)] <- srcline
 		    thisline <- thisline + length(dce)

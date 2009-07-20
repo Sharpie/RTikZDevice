@@ -15,7 +15,11 @@
 \newcommand{\tikzDeviceVersion}{0.4-{\bfseries\color{red}Beta}}
 
 % Source code formatting macros
-\lstloadlanguages{R} 
+\lstloadlanguages{R}
+% I think by default, listings sets source code using \ttfamily. It looks horrid.
+% In my opinion.
+\lstset{ basicstyle = {\sffamily} }
+
 \lstdefinestyle{sweaveChunk}{
 	language = R,
 	% The hacked version of the Sweave output function inserts these tags
@@ -174,7 +178,8 @@
 	code body/.style={
 		% The code node is a homebrewed shape- several things can
 		% possibly go pear shaped with it- for example, adding rounded
-		% corners causes things to go whacky.
+		% corners causes things to go whacky. Also- don't use the fill
+		% command :P
 		shape = code node,
 		draw = blue!50,
 		thick, 
@@ -233,4 +238,4 @@
 	    \lstinputlisting[style = latexSource]{\jobname.lst} 
 	 };
   \end{tikzpicture}}
-\makeatother 
+\makeatother
