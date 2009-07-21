@@ -246,6 +246,7 @@ static Rboolean TikZ_Setup(
 	tikzInfo->documentDeclaration = documentDeclaration;
 	tikzInfo->packages = packages;
 	tikzInfo->footer = footer;
+	tikzInfo->polyLine = FALSE;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -1014,7 +1015,10 @@ static void TikZ_Polyline( int n, double *x, double *y,
 
 	/* More options would go here such as line thickness, style and color */
 	/*Define the draw styles*/
+	//Setting polyline is a quick hack so that the fill color is not set for poylines
+	tikzInfo->polyLine = TRUE;
 	StyleDef(FALSE, plotParams, deviceInfo);
+	tikzInfo->polyLine = FALSE;
 
 	/* End options, print first set of coordinates. */
 	fprintf( tikzInfo->outputFile, "] (%6.2f,%6.2f) --\n",
@@ -1149,7 +1153,9 @@ static void SetFill(int color, Rboolean def, pDevDesc deviceInfo){
 				R_BLUE(color)/255.0);
 		}
 	}else{
-		fprintf( tikzInfo->outputFile, "fill=fillColor,");
+		//Quick hack to not show fill colors with polylines
+		if(tikzInfo->polyLine == FALSE)
+			fprintf( tikzInfo->outputFile, "fill=fillColor,");
 	}
 	
 }

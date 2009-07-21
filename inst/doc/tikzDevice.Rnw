@@ -4,29 +4,93 @@
 % \VignetteDepends{tikzDevice}
 % \usepackage{Sweave}
 
-\usepackage[T1]{fontenc}
+%\usepackage[T1]{fontenc}
 \usepackage{atbegshi}
-
-\usepackage{tikz}
-\usetikzlibrary{calc,positioning,shapes}
-\usetikzlibrary{decorations.shapes}
-
-\usepackage[parfill]{parskip}
-\usepackage{fancyvrb}
-\usepackage[letterpaper,margin=1in]{geometry}
 \usepackage[colorlinks]{hyperref}
 
+
+% Sexyness
+\usepackage{tikz}
+\usetikzlibrary{calc,positioning}
+\usetikzlibrary{shapes.multipart,shapes.geometric}
+\usetikzlibrary{decorations.shapes,decorations.text}
+
+% Page layout
+\usepackage[parfill]{parskip}
+\usepackage[letterpaper,margin=1in]{geometry}
+
+
+% Graphics control.
 \usepackage{graphicx}
 \usepackage{float}
 
+% Source code markup
+\usepackage{verbatim}
+\usepackage{listings}
 
-\usepackage{Sweave}
+% Macros created for this document
 \input{tikzDeviceMacros}
+
+% Make sure you input tikzDeviceMacros first- or
+% LaTeX will smite you!
+\usepackage{Sweave}
+
+
 
 <<setup,echo=F,results=hide>>=
 
 	if( !file.exists( 'figs' ) ) dir.create( 'figs' )
 	require(tikzDevice)
+	
+	# We need some extra options for controlling
+	# Sweave output. Therefore we're going to bust
+	# out and overwrite some core code with more
+	# flexible alternatives.
+	
+	# *** Begin Mother of All R Hacks ****
+	
+	# We load a new Sweave function that contains a
+	# more flexible set of output routines.
+	source('patchSweave.R')
+	
+	# First, we find out where Sweave lives.
+	env <- as.environment('package:utils')
+	
+	# And we break into it's house.
+	unlockBinding('makeRweaveLatexCodeRunner',env)
+	
+	# And rearrange it's furniture....
+	assignInNamespace('makeRweaveLatexCodeRunner',patchedCodeRunner,ns='utils')
+	
+	# ...and lock the door on the way out.
+	lockBinding('makeRweaveLatexCodeRunner',env)
+	
+	#  But we take something with us when we leave...
+	newCodeRunner <- utils:::makeRweaveLatexCodeRunner()
+	
+	# ...to stalk it down on the street...
+	env <- grep('driver', lapply(sys.frames(),
+		function(frame){ ls(envir=frame) }
+	))
+	env <- sys.frames()[[env]]
+	
+	# ...and give it a facelift.
+	evalq( driver$runcode <- newCodeRunner, envir=env)
+	
+	# *** End Mother of All R Hacks ***
+	
+	# Now we have some extra code chunk options to play
+	# with:
+	#
+	#   wrapoutput: a vector of two character strings that will be used
+	#                       to surround R output chunks. Were formally hardwired
+	#                       to '\n\begin{Soutput}\n' and '\n\end{Soutput}\n'.
+	#
+	#   wrapinput:  Same idea as wrapoutput- both of these options must be
+	#                      set using options() as they are difficult to pass directly to
+	#                      Sweave
+	
+	options( wrapoutput = c('\nswe@veSt@rtOutput','swe@veEndOutput\n') )
 	
 @
 
@@ -65,7 +129,7 @@
 	\coordinate (titleIn) at ($(title.base west) - (6pt,24pt)$);
 		
 	\node[color=black!80,below=24pt of title.base east,anchor=east] (sub)
-		{\bfseries\itshape\Large R Graphics for \LaTeX};
+		{\bfseries\itshape\Large \LaTeX Graphics for R};
 
 \end{tikzpicture}
 \vfill	
@@ -75,7 +139,7 @@
 \begin{tikzpicture}[remember picture,overlay,>=stealth]
 
 	\node (R) at ($(current page.south west) + (18cm,2cm)$)
-		{\scalebox{0.85}{\includegraphics{img/Rlogo}}};
+		{\scalebox{0.85}{\includegraphics[width=0.8\textwidth]{img/Rlogo}}};
 
 	\tikzset{
 		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
@@ -97,10 +161,10 @@
 	\pgfextracty{\overlayXoff}{\pgfpointanchor{current page}{north east}}
 	\pgfextracty{\overlayYoff}{\pgfpointanchor{current page}{north east}}
 	
-	\pgfmathparse{\overlayYoff - 3.75in}
+	\pgfmathparse{\overlayYoff - 5in}
 	\overlayYoff = \pgfmathresult pt
 	
-	\pgfmathparse{\overlayXoff - 6.5in}
+	\pgfmathparse{\overlayXoff - 7in}
 	\overlayXoff = \pgfmathresult pt
 	
 	
@@ -110,17 +174,20 @@
 
 	tikz('figs/titlePlot.tex',bareBones=T,width=4,height=4)
 
-	x <- seq( -1.95, 1.95, length=30 )
-	y <- seq( -1.95, 1.95, length=35 )
-	z <- outer( x, y, function(a,b){ a*b^2 } )
-	nrz <- nrow(z)
-	ncz <- ncol(z)
-	jet.colors <- colorRampPalette( c("blue", "green") )
-	nbcol <- 100
-	color <- jet.colors(nbcol)
-	zfacet <- z[-1,-1] + z[-1,-ncz] + z[-nrz, -1] + z[-nrz, -ncz]
-	facetcol <- cut(zfacet, nbcol)
-	persp(x, y, z, col=color[facetcol], phi=30, theta=-30,axes=F )
+	x <- seq(-4.5,4.5,length.out=100)
+	y <- dnorm(x)
+
+	xi <- seq(-2,2,length.out=30)
+	yi <- dnorm(xi)
+
+	plot(x,y,type='l',col='blue',ylab='$p(x)$',xlab='$x$')
+	lines(xi,yi,type='s')
+	lines(range(xi),c(0,0))
+	lines(xi,yi,type='h')
+	title(main="$p(x)=\\frac{1}{\\sqrt{2\\pi}}e^{-\\frac{1}{2-x^2}}$")
+	int <- integrate(dnorm,min(xi),max(xi),subdivisions=length(xi))
+	text(2.8,0.3,paste("\\small$\\displaystyle\\int_{",min(xi),"}^{",max(xi),"}p(x)dx\\approx",round(int[['value']],3),'$',sep=''))
+
 
 	dev.off()
 @
@@ -164,7 +231,7 @@
 \pagenumbering{arabic}
 
 % A friendly reminder that this package is currently unstable.
-\tikzDeviceWarning{Caveat Utilitor}
+\tikzDocDisclaim{Caveat Utilitor}
 {
 This is a friendly reminder that the \pkg{tikzDevice} package is currently considered by it's designers to be a {\bfseries beta work}. This package has been released in the hopes that it will help users produce exceptional graphics, leading to an increase in the quality of reports and other materials using those graphics.\\[1em]
 
@@ -258,7 +325,47 @@ The second, and perhaps most important, global options that affects \pkg{tikzDev
 options( tikzMetricsDictionary = '/path/to/dictionary/location' )
 \end{Verbatim}
 
+A number of global options are provided by \pkg{tikzDevice}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The global options are:
+\begin{description}
+\item[\code{tikzDocumentDeclaration}]{ The documentclass declaration}
+\begin{tikzDocExample}[title={Default}]
+options( tikzDocumentDeclaration = "\\documentclass{article}" )
+\end{tikzDocExample}
+
+\item[\code{tikzFooter}]{ The footer to be used only when \code{standAlone==TRUE} }
+\begin{tikzDocExample}[title={Default}]
+options( tikzFooterDefault = c( "\\end{document}" ) )
+\end{tikzDocExample}
+
+\item[\code{tikzLatex}]{  }
+The default is searched for when the package is loaded, otherwise it can be set manually. 
+
+\item[\code{tikzLatexPackages}]{ These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. }
+\begin{tikzDocExample}[title={Default}]
+	options( tikzLatexPackagesDefault = c(
+		"\\usepackage{tikz}",
+		"\\usepackage[active,tightpage]{preview}",
+		"\\PreviewEnvironment{pgfpicture}",
+		"\\setlength\\PreviewBorder{0pt}") )
+\end{tikzDocExample}
+\item[\code{tikzMetricPackages}]{ A character vector. These are the packages which are additionally loaded when doing font metric calculations }
+\begin{tikzDocExample}[title={Default}]
+options( tikzMetricPackages = c(
+		"\\usepackage[utf8]{inputenc}",
+		"\\usepackage[T1]{fontenc}",
+		"\\usetikzlibrary{calc}"))
+\end{tikzDocExample}
+
+\item[\code{tikzMetricsDictionary}]{ The path to the global \TikZ{} font metric dictionary, we recommend setting this your \code{.Rprofile} file }
+\end{description}
+
+All of the options can be set by using \code{options(<option> = <value>)}.
+
+
+For convenience the function \code{setTikzDefaults()} is provided which sets all the global options back to their original values.
+
 The proper placement of a \code{.Rprofile} file is explained in \code{?Startup}. For the details of why calling the \LaTeX\ compiler is necessary, see \autoref{part:three}.
+
 
 
 \label{cache:user}
@@ -305,23 +412,21 @@ The next section provides examples of how to use each type of output.
 
 \subsection{Examples}
 
+% We will shift into the figs directory here so that we don't have
+% to have separate Sweave code chunks with the 'figs/' path in
+% them.
+<<pathStepIn,results=hide>>=
+	setwd('figs')
+@
 \subsubsection{Default Mode}
 
 The most common use of the \code{tikz()} function is to produce a plot that will be included in another \LaTeX\ document, such as a report. Running the following example in lang{R} will produce a very simple graphic using the \code{plot()} function.
 
-\begin{Verbatim}[frame=single]
+<<simpleEx,echo=T,results=hide>>=
 require(tikzDevice)
 tikz('simpleEx.tex',width=3.5,height=3.5)
 plot(1,main='Hello World!')
 dev.off()
-\end{Verbatim}
-
-<<simpleEx,results=hide>>=
-
-tikz('figs/simpleEx.tex',width=3.5,height=3.5)
-plot(1,main='Hello World!')
-dev.off()
-
 @
 
 A simple \LaTeX\ document is then required to display the output of the basic \code{tikz()} command. This document must include the \TikZ\ as one of the packages that it loads. The \TikZ\ package provides several optional libraries that provide additional functionality, however none of these libraries are currently required to use the output of \code{tikz()}. Inside the \LaTeX\ document, the contents of the file \lang{simpleEx.tex} are imported using the \verb`\include{}` command.
@@ -329,27 +434,28 @@ A simple \LaTeX\ document is then required to display the output of the basic \c
 \begin{figure}[H]
 	\centering
 
-	\begin{minipage}{0.45\textwidth}
+	\begin{minipage}{0.5\textwidth}
 
-\begin{Verbatim}[frame=single]
+\begin{tikzDocExample}[title={Example \LaTeX\ Document}]
 \documentclass{article}
 
-% All LaTeX documents including tikz()
-% output must include this package!
+% All LaTeX documents including 
+% tikz() output must use this 
+% package!
 \usepackage{tikz}
 
 \begin{document}
-	\begin{figure}[!h]
-        \centering
+  \begin{figure}[!h]
+    \centering
         
-        % The output from tikz() is 
-        % imported here.
-        \input{simpleEx.tex}
+    % The output from tikz()
+    % is imported here.
+    \input{simpleEx.tex}
         
-        \caption{Simple Example}
-    \end{figure}
+    \caption{Simple Example}
+  \end{figure}
 \end{document}
-\end{Verbatim}
+\end{tikzDocExample}
 
 	\end{minipage}
 	\hfill
@@ -364,49 +470,28 @@ One of the most exciting aspects of the \code{tikz()} function is that it allows
 \begin{figure}[H]
 	\centering
 
-	\begin{minipage}{0.45\textwidth}
+	\begin{minipage}{0.5\textwidth}
 
-\begin{Verbatim}[frame=single]
+<<latexEx,echo=T,results=hide,keep.source=T>>=
 require(tikzDevice)
-tikz('latexEx.tex',width=3.5,height=3.5)
+tikz('latexEx.tex',
+  width=3.5,height=3.5)
 
 x <- rnorm(5)
 y <- x + rnorm(5,sd=0.25)
 
-model <- lm(y~x)
+model <- lm(y ~ x)
 rsq <- summary( model )$r.squared
 rsq <- signif(rsq,4)
 
 plot(x,y,main='Hello \\LaTeX!')
 abline(model,col='red')
 
-mtext( paste("Linear model: $R^{2}=",
-	rsq,"$" ),line=0.5)
+mtext(paste("Linear model: $R^{2}=",
+  rsq,"$" ),line=0.5)
 
 dev.off()
-\end{Verbatim}
-
-<<latexEx,results=hide>>=
-
-tikz('figs/latexEx.tex',width=3.5,height=3.5)
-
-x <- rnorm(5)
-y <- x + rnorm(5,sd=0.25)
-
-model <- lm(y~x)
-rsq <- summary( model )$r.squared
-rsq <- signif(rsq,4)
-
-plot(x,y,main='Hello \\LaTeX!')
-abline(model,col='red')
-
-mtext( paste("Linear model: $R^{2}=",rsq,"$" ),
-	line=0.5)
-
-dev.off()
-
 @
-
 	\end{minipage}
 	\hfill
 	\begin{minipage}{0.45\textwidth}
@@ -415,28 +500,13 @@ dev.off()
 	\caption{A more complicated example of \code{tikz()} usage incorporating natively rendered \LaTeX\ commands.}
 \end{figure}
 
-
 \subsubsection{\code{bareBones} Mode}
 
 The\code{barBones} is designed to facilitate inclusion of \code{tikz()} output as part of a larger graphic. Normally \code{tikz()} packages the commands it produces as a self-contained figure. This is done by placing the \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` commands at the beginning and end of the output file. When \code{bareBones} is invoked, the \code{tikzpicture} environment is omitted which allows the output to be embedded inside a \code{tikzpicture} of the users own construction.
 
-\begin{Verbatim}[frame=single]
+<<bareBonesExample,echo=T,results=hide,keep.source=T>>=
 require(tikzDevice)
 tikz('bareBonesExample.tex',width=4,height=4,bareBones=T)
-
-x <- c(0,cumsum(rnorm(25)))
-y <- c(0,cumsum(rnorm(25)))
-
-plot(x, y, type="l" )
-
-title("A Brownian Motion")
-
-dev.off()
-\end{Verbatim}
-
-<<bareBonesExample,results=hide>>=
-
-tikz('figs/bareBonesExample.tex',width=4,height=4,bareBones=T)
 
 x <- c(0,cumsum(rnorm(25)))
 y <- c(0,cumsum(rnorm(25)))
@@ -450,37 +520,39 @@ dev.off()
 
 The resulting code may then be used inside a \code{tikzpicture} environment using the \verb`\include{}` command. The included code must be wrapped in a \code{scope} environment that contains the options \code{x=1pt} and \code{y=1pt}. This informs \TikZ\ of the units being used in the coordinates of the plot output. The options \code{xshift} and \code{yshift} may also be applied to the \code{scope} in order to position the plot. The following code demonstrates how to embed \code{bareBones} output in a \code{tikzpicture}
 
-\begin{Verbatim}[frame=single]
+\begin{tikzDocExample}[title={
+	Example of a \TikZ\ environment with included \code{bareBones} output},
+	footer={this is the footer.}
+]
 \begin{tikzpicture}
 
-	\draw[clip] (-0.25,-0.25) rectangle (4.25in,4.25in);
+  \draw[clip] (-0.25,-0.25) rectangle (4.25in,4.25in);
 
-	\begin{scope}[x=1pt,y=1pt,yshift=0.25in]
-		\input{figs/bareBonesExample}
-	\end{scope}
-	
-	\node[anchor=south west,draw,rounded corners] (start) at (0,0) 
-		{TikZ can draw Brownian Motions as Well!};
-	
-	\coordinate (current point) at (start.east);
-	\coordinate (old velocity) at (0,-5);
-	\coordinate (new velocity) at (rand,rand);
-	
-	\foreach \i in {25,26,...,50} {
+  \begin{scope}[x=1pt,y=1pt,yshift=0.25in]
+    \input{figs/bareBonesExample}
+  \end{scope}
 
-		\draw[blue!\i,ultra thick,line cap=round,x=1cm,y=1cm]
-			(current point) .. controls ++([scale=-1]old velocity)
-				and ++(new velocity) ..
-			++(rand, rand) coordinate(current point);
-		
-		\coordinate(old velocity) at (new velocity);
-		\coordinate(new velocity) at (rand,rand);	
-	}
-	
+  \node[anchor=south west,draw,rounded corners] (start) at (0,0) 
+    {TikZ can draw Brownian Motions as Well!};
 
+  \coordinate (current point) at (start.east);
+  \coordinate (old velocity) at (0,-5);
+  \coordinate (new velocity) at (rand,rand);
+
+  \foreach \i in {25,26,...,50} {
+
+    \draw[blue!\i,ultra thick,line cap=round,x=1cm,y=1cm]
+      (current point) .. controls ++([scale=-1]old velocity)
+        and ++(new velocity) ..
+      ++(rand, rand) coordinate(current point);
+	
+    \coordinate(old velocity) at (new velocity);
+    \coordinate(new velocity) at (rand,rand);	
+    
+  }
 	
 \end{tikzpicture}
-\end{Verbatim}
+\end{tikzDocExample}
 
 
 
@@ -525,19 +597,16 @@ The resulting code may then be used inside a \code{tikzpicture} environment usin
 
 When the \code{standAlone} option is passed to \code{tikz()}, the resulting \code{.tex} file will be a complete \LaTeX document designed to be compiled on it's own. This means that in addition to \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` the file will also contain \verb`\begin{document}`, \verb`\end{document}` and a \LaTeX\ preamble. The \code{preview} package is also used in files produced by \code{standAlone} and is used to crop the pages in the resulting document to the bounding boxes of the figures that it contains. Stand-alone output may be produced in the following manner:
 
-\begin{Verbatim}[frame=single]
+<<standAloneExample,echo=T,results=hide,keep.source=T>>=
 require(tikzDevice)
 tikz('standAloneExample.tex',standAlone=T)
 plot(sin,-pi,2*pi,main="A Stand Alone TikZ Plot")
 dev.off()
-\end{Verbatim}
+@
 
-<<standAloneExample, results=hide>>=
 
-	tikz('figs/standAloneExample.tex',standAlone=T)
-	plot(sin,-pi,2*pi,main="A Stand Alone TikZ Plot")
-	dev.off()
-	
+<<standAloneCompileExample, results=hide>>=
+
 	require(tools)
 	
 	catch <- system(paste(Sys.which('pdflatex'),
@@ -552,12 +621,14 @@ dev.off()
 		pdfLink <- ""
 	}
 
-
 @
 
 \Sexpr{print(pdfLink)}Note that files produced using the \code{standAlone} option should not be included in \LaTeX documents using the \verb`\input{}` command! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
 
-
+% Return to the normal working directory
+<<pathStepOut,results=hide>>=
+	setwd('../')
+@
 
 %----------------------------  text metrics function documentation ---------------------------------------
 
@@ -595,6 +666,7 @@ getLatexCharMetrics( charCode, cex = 1, face = 1 )
 \subsection{Examples}
 
 The \code{getLatexStrWidth()} function may be used to calculate the width of strings containing fairly arbitrary \LaTeX\ commands. For example, consider the following calculations:
+
 
 <<strWidthDemo,echo=T>>=
 getLatexStrWidth( "The symbol: alpha" )
@@ -645,11 +717,7 @@ getLatexCharMetrics(121.99)
 
 \section{Installing \LaTeX}
 
-
 \section{Installing \TikZ}
-
-
-\section{Instaling \pkg{tikzDevice}}
 
 \newpage
 

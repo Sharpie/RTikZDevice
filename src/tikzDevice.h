@@ -43,6 +43,7 @@ typedef struct{
 	const char *documentDeclaration;
 	const char *packages;
 	const char *footer;
+	Rboolean polyLine;
 } tikzDevDesc;
 
 
