@@ -28,6 +28,9 @@
 	moredelim=[is][\color{gray}]
 		{swe@veSt@rtOutput}
 		{swe@veEndOutput},
+	% Normal TeX tildes are kind of ugly- let's substitute a math symbol instead.
+	% Shit, why not replace <- as well? *Mad typographic scientist cackle*
+	literate={~}{{$\sim$}}1 {<-}{$\leftarrow$}1,
 	xleftmargin = 4ex,
 	numbers = left,
 	numberstyle = {\tiny},
@@ -46,7 +49,6 @@
 	numberblanklines = false,
 	numbersep = 5ex,
 	showstringspaces = false,
-	tabsize = 2,
 	upquote = true,
 	commentstyle = {\color{red!80}\itshape}
 }
@@ -102,7 +104,7 @@
     \inheritbehindforegroundpath[from=rectangle]
     \inheritforegroundpath[from=rectangle]
     \inheritbeforeforegroundpath[from=rectangle]
-
+    
    % Now do the background filling.
     \behindbackgroundpath{%
         % \southwest and \northeast defined by rectangle, but
@@ -118,12 +120,12 @@
 		% are 7 ex to the left of the southwest and northwest corners.
 		\def\pgf@numberstripe@southwest{%
 			\pgfpointadd{\southwest}%
-			{\pgfpoint{4ex}{0}}%
+			{\pgfpoint{\pgf@codestripe@width}{0}}%
 		}
 		\def\pgf@numberstripe@northwest{%
 			\pgfpointadd{\pgfpoint{\pgf@xa}{\pgf@yb}}%
-			{\pgfpoint{4ex}{0}}%
-		}	
+			{\pgfpoint{\pgf@codestripe@width}{0}}%
+		}
 		% Now we draw the code bar.
 		\pgfpathmoveto{\southwest}%
 		\pgfpathlineto{\pgf@numberstripe@southwest}%
@@ -145,16 +147,21 @@
     }
 }
 
+% Default widths.
+\def\pgf@codestripe@width{4ex}
+
 % Default color values
 \def\pgf@codebody@color{white}
 \def\pgf@codestripe@color{gray!30}
 
 % Use these with PGF
 \def\pgfsetcodestripecolor#1{\def\pgf@codestripe@color{#1}}%
+\def\pgfsetcodestripewidth#1{\def\pgf@codestripe@width{#1}}%
 \def\pgfsetcodebodycolor#1{\def\pgf@codebody@color{#1}}%
 
 % Use these with TikZ
 \tikzoption{codestripe color}{\pgfsetcodestripecolor{#1}}
+\tikzoption{codestripe width}{\pgfsetcodestripewidth{#1}}
 \tikzoption{codebody color}{\pgfsetcodebodycolor{#1}}
 
 \makeatother
@@ -185,14 +192,27 @@
 		thick, 
 		codebody color = blue!10,
 		inner sep = 1ex,
+		outer sep = 0pt,
 		text width =\textwidth
 	},
-	code title/.style={
-		rounded corners,
-		draw = blue!50,
+	code title body/.style={
 		fill = white,
-		text centered,
-		inner sep = 1ex
+		inner sep = 1ex,
+		outer sep = 0pt,
+		above = -1ex of code node body.north west,
+		anchor = south west
+	},
+	code title outline/.style={
+		draw = blue!50,
+		thick
+	},
+	code footer/.style={
+		draw = blue!50,
+		thick,
+		rounded corners,
+		fill = white,
+		inner sep = 1ex,
+		outer sep = 0pt,
 	}
 }
 
@@ -220,7 +240,24 @@
 % The following voodoo is discussed in Sweave.sty
 \makeatletter 
 \newwrite\lstvrb@out 
-\newenvironment{tikzDocExample}{% 
+\newenvironment{tikzDocExample}[1][]{% 
+
+  % Set up some pgfKeys to save input into this enviornment
+  \pgfkeys{/code nodes/title/.store in=\@codeNodeTitle}
+  \pgfkeys{/code nodes/footer/.store in=\@codeNodeFooter}
+  
+  % Now, store the arguments.
+  % pgfKeys uses a unix-like path system.
+  % Therefore we "cd" into the "directory" code nodes
+  % so that users may specify options as:
+  %  title = blah.
+  %  footer = blah.
+  %
+  %  instead of:
+  %    /code nodes/title = blah.
+  %    /code nodes/footer = blah.
+  \pgfkeys{ /code nodes/.cd, #1 }
+
   \begingroup 
   \@bsphack 
   \immediate\openout\lstvrb@out\jobname.lst 
@@ -234,8 +271,35 @@
   
   % Normal, sane, LaTeX code resumes here.
   \begin{tikzpicture}
-  	\node[code body,codebody color=white]{
-	    \lstinputlisting[style = latexSource]{\jobname.lst} 
+  	\node[code body,codebody color=white] (code node body) {
+	    \lstinputlisting[style = latexSource]{\jobname.lst}%
 	 };
+	 
+	 % Basically, \relax does jack squat if the macro \@codeNodeTitle
+	 % is not defined. It's sole purpose in life is to allow us to get to the 
+	 % \else statement without LaTeX freaking out.
+
+	 \ifx \@codeNodeTitle \undefined
+	   \relax
+	 \else
+	 	\node[code title body] (code node title) {
+			\@codeNodeTitle
+		};
+		\draw[code title outline] (code node title.south west) --
+			(code node title.south east) [rounded corners] --
+			(code node title.north east) --
+			(code node title.north west) [sharp corners] --
+			cycle;
+	 \fi
+	 
+	 % And the footer
+	  \ifx \@codeNodeFooter \undefined
+	   \relax
+	 \else
+	 	\node[code footer] at (code node body.south) {
+			\@codeNodeFooter
+		};
+	 \fi
+	 
   \end{tikzpicture}}
 \makeatother

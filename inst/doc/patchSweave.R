@@ -40,6 +40,9 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
           }
           else
             chunkout <- object$output
+		
+		# Pull in non-standard opts.
+		options <- c( options, options('wrapinput','wrapoutput') )	
 
 	  saveopts <- options(keep.source=options$keep.source)
 	  on.exit(options(saveopts))
@@ -94,13 +97,48 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
                 if(options$echo && length(dce)){
                     if(!openSinput){
                         if(!openSchunk){
-                            cat("\\begin{Schunk}\n",
+														if( is.null( options$chunktitle ) && 
+															is.null(options$chunkfooter) ){
+                             cat("\\begin{Schunk}[]\n",
                                 file=chunkout, append=TRUE)
+														}else{
+															
+															tikzOpts <- '\\begin{Schunk}['
+
+															if( !is.null( options$chunktitle ) ){
+																tikzOpts <- paste(tikzOpts,'title={',
+																	options$chunktitle,'}',sep='')
+															}[]
+
+															if( !is.null( options$chunktitle )  &&
+																!is.null( options$chunkfooter ) ){
+																
+																tikzOpts <- paste(tikzOpts,',',sep='')
+
+															}
+
+															if( !is.null( options$chunkfooter ) ){
+																
+																tikzOpts <- paste(tikzOpts,'footer={',
+																	options$chunkfooter,'}',sep='')
+
+															}
+
+															tikzOpts <- paste(tikzOpts,']\n',sep='')
+
+															cat(tikzOpts,file=chunkout,append=T)
+
+														}	
+
                             linesout[thisline + 1] <- srcline
                             thisline <- thisline + 1
                             openSchunk <- TRUE
 														firstChunkLine <- TRUE
                         }
+												if( !is.null(options$wrapinput) ){
+                        	cat( options$wrapinput[1],
+                            file=chunkout, append=TRUE)
+												}
                         openSinput <- TRUE
                     }
 		    if( firstChunkLine ) {
@@ -139,18 +177,57 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
                 if(length(output) & (options$results != "hide")){
 
                     if(openSinput){
+												if( !is.null(options$wrapinput) ){
+                          cat(options$wrapinput[2], file=chunkout, append=TRUE)
+												}
                         linesout[thisline + 1L:2L] <- srcline
                         thisline <- thisline + 2L
                         openSinput <- FALSE
                     }
                     if(options$results=="verbatim"){
                         if(!openSchunk){
-                            cat("\\begin{Schunk}\n",
+														if( is.null( options$chunktitle ) && 
+															is.null(options$chunkfooter) ){
+                             cat("\\begin{Schunk}[]\n",
                                 file=chunkout, append=TRUE)
+														}else{
+															
+															tikzOpts <- '\\begin{Schunk}['
+
+															if( !is.null( options$chunktitle ) ){
+																tikzOpts <- paste(tikzOpts,'title={',
+																	options$chunktitle,'}',sep='')
+															}
+
+															if( !is.null( options$chunktitle )  &&
+																!is.null( options$chunkfooter ) ){
+																
+																tikzOpts <- paste(tikzOpts,',',sep='')
+
+															}
+
+															if( !is.null( options$chunkfooter ) ){
+																
+																tikzOpts <- paste(tikzOpts,'footer={',
+																	option$chunkfooter,'}',sep='')
+
+															}
+
+															tikzOpts <- paste(tikzOpts,']\n',sep='')
+
+															cat(tikzOpts,file=chunkout,append=T)
+
+														}	
+		
                             linesout[thisline + 1L] <- srcline
                             thisline <- thisline + 1L
                             openSchunk <- TRUE
+														firstChunkLine <- TRUE
                         }
+												if( !is.null(options$wrapoutput) ){
+                        	cat(options$wrapoutput[1],
+                            file=chunkout, append=TRUE)
+												}
                         linesout[thisline + 1L] <- srcline
                         thisline <- thisline + 1L
                     }
@@ -162,7 +239,7 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
                         if(options$strip.white=="all")
                           output <- sub("\n[[:space:]]*\n", "\n", output)
                     }
-                    cat('\nswe@veSt@rtOutput',output,'swe@veEndOutput\n', file=chunkout, append=TRUE)
+                    cat(output, file=chunkout, append=TRUE)
                     count <- sum(strsplit(output, NULL)[[1L]] == "\n")
                     if (count > 0L) {
                     	linesout[thisline + 1L:count] <- srcline
@@ -172,6 +249,9 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
                     remove(output)
 
                     if(options$results=="verbatim"){
+												if( !is.null(options$wrapoutput) ){
+                        	cat(options$wrapoutput[2], file=chunkout, append=TRUE)
+												}
                         linesout[thisline + 1L:2] <- srcline
                         thisline <- thisline + 2L
                     }
@@ -179,6 +259,9 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
             }
 
           if(openSinput){
+							if( !is.null(options$wrapinput) ){
+              	cat(options$wrapinput[2], file=chunkout, append=TRUE)
+							}
               linesout[thisline + 1L:2L] <- srcline
               thisline <- thisline + 2L
           }
@@ -234,3 +317,48 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
     RweaveLatexRuncode
 }
 
+patchedOptionsChecker <- function(options)
+{
+
+    ## ATTENTION: Changes in this function have to be reflected in the
+    ## defaults in the init function!
+
+    ## convert a character string to logical
+    c2l <- function(x){
+        if(is.null(x)) return(FALSE)
+        else return(as.logical(toupper(as.character(x))))
+    }
+
+    NUMOPTS <- c("width", "height")
+    NOLOGOPTS <- c(NUMOPTS, "results", "prefix.string",
+                   "engine", "label", "strip.white",
+                   "pdf.version", "pdf.encoding",
+									 "chunktitle", "chunkfooter")
+
+    for(opt in names(options)){
+        if(! (opt %in% NOLOGOPTS)){
+            oldval <- options[[opt]]
+            if(!is.logical(options[[opt]])){
+                options[[opt]] <- c2l(options[[opt]])
+            }
+            if(is.na(options[[opt]]))
+                stop(gettextf("invalid value for '%s' : %s", opt, oldval),
+                     domain = NA)
+        }
+        else if(opt %in% NUMOPTS){
+            options[[opt]] <- as.numeric(options[[opt]])
+        }
+    }
+
+    if(!is.null(options$results))
+        options$results <- tolower(as.character(options$results))
+    options$results <- match.arg(options$results,
+                                 c("verbatim", "tex", "hide"))
+
+    if(!is.null(options$strip.white))
+        options$strip.white <- tolower(as.character(options$strip.white))
+    options$strip.white <- match.arg(options$strip.white,
+                                     c("true", "false", "all"))
+
+    options
+}
