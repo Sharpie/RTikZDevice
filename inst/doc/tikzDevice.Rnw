@@ -671,9 +671,22 @@ getLatexCharMetrics(121.99)
 \part{Installation Guide}
 \label{part:two}
 
-\section{Installing \LaTeX}
+This section is intended to offer pointers on how to obtain a \LaTeX\ distribution if there is not one already installed on your system. The distributions detailed in this section are favorites of the \pkg{tikzDevice} developers as they integrated package managers which greatly simplify the process of installing additional \LaTeX\ packages. Currently this section is not, and may never be, a troubleshooting guide for \LaTeX\ installation. For those unfortunate situations we refer the user to the documentation of each distribution.
+
+\section{Obtaining a \LaTeX\ Distribution}
+
+A \LaTeX\ distribution provides the packages and support programs required by the \pkg{tikzDevice} and the documents that use its output. In addition a \LaTeX\ compiler, a few extension packaged are required. \autoref{tikz:required} describes how to obtain and install these packages.
+
+\subsection{Windows}
+
+For Windows users we 
+
+\subsection{Mac OS X}
+
+\subsection{UNIX/Linux}
 
 \section{Installing \TikZ}
+\label{tikz:required}
 
 \newpage
 
