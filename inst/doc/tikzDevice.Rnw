@@ -57,15 +57,12 @@
 	
 	# And we break into it's house.
 	unlockBinding('makeRweaveLatexCodeRunner',env)
-	unlockBinding('RweaveLatexOptions',env)
 	
 	# And rearrange it's furniture....
 	assignInNamespace('makeRweaveLatexCodeRunner',patchedCodeRunner,ns='utils')
-	assignInNamespace('RweaveLatexOptions',patchedOptionsChecker,ns='utils')
 	
 	# ...and lock the door on the way out.
 	lockBinding('makeRweaveLatexCodeRunner',env)
-	lockBinding('RweaveLatexOptions',env)
 	
 	#  But we take something with us when we leave...
 	newCodeRunner <- utils:::makeRweaveLatexCodeRunner()
@@ -78,7 +75,6 @@
 	
 	# ...and give it a facelift.
 	evalq( driver$runcode <- newCodeRunner, envir=env)
-	evalq( driver$checkopts <- patchedOptionsChecker, envir=env)
 	
 	# *** End Mother of All R Hacks ***
 	
