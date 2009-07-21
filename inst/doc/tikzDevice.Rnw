@@ -92,16 +92,6 @@
 	#   wrapinput:  Same idea as wrapoutput- both of these options must be
 	#                      set using options() as they are difficult to pass directly to
 	#                      Sweave
-	#
-	#   chunktitle:  A straight TeX string that will be used to title the code chunk
-	#                     if present. Do not escape backslashes or the output will look
-	#                     funny. Also, there are a few characters you cannot use with this
-	#                     option, namely '=' and ',' as Sweave uses them to separate other
-	#                     options in the code chunk option line.
-	#
-	# chunkfooter: Same as chunktitle except the message appears centered at the
-	#                      bottom of the code block. Both chunktitle and chunkfooter must
-	#                      be set in the code chunk header and should probably be set last.
 	
 	options( wrapoutput = c('\nswe@veSt@rtOutput','swe@veEndOutput\n') )
 	
@@ -392,7 +382,7 @@ The next section provides examples of how to use each type of output.
 
 The most common use of the \code{tikz()} function is to produce a plot that will be included in another \LaTeX\ document, such as a report. Running the following example in lang{R} will produce a very simple graphic using the \code{plot()} function.
 
-<<simpleEx,echo=T,results=hide,chunktitle=Simple usage of \code{tikz()}>>=
+<<simpleEx,echo=T,results=hide>>=
 require(tikzDevice)
 tikz('simpleEx.tex',width=3.5,height=3.5)
 plot(1,main='Hello World!')
@@ -442,7 +432,7 @@ One of the most exciting aspects of the \code{tikz()} function is that it allows
 
 	\begin{minipage}{0.5\textwidth}
 
-<<latexEx,echo=T,results=hide,keep.source=T,chunktitle=Using \LaTeX\ in plots>>=
+<<latexEx,echo=T,results=hide,keep.source=T>>=
 require(tikzDevice)
 tikz('latexEx.tex',
   width=3.5,height=3.5)
@@ -474,7 +464,7 @@ dev.off()
 
 The\code{barBones} is designed to facilitate inclusion of \code{tikz()} output as part of a larger graphic. Normally \code{tikz()} packages the commands it produces as a self-contained figure. This is done by placing the \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` commands at the beginning and end of the output file. When \code{bareBones} is invoked, the \code{tikzpicture} environment is omitted which allows the output to be embedded inside a \code{tikzpicture} of the users own construction.
 
-<<bareBonesExample,echo=T,results=hide,keep.source=T,chunktitle=Preparing raw output using \code{bareBones}>>=
+<<bareBonesExample,echo=T,results=hide,keep.source=T>>=
 require(tikzDevice)
 tikz('bareBonesExample.tex',width=4,height=4,bareBones=T)
 
@@ -567,7 +557,7 @@ The resulting code may then be used inside a \code{tikzpicture} environment usin
 
 When the \code{standAlone} option is passed to \code{tikz()}, the resulting \code{.tex} file will be a complete \LaTeX document designed to be compiled on it's own. This means that in addition to \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` the file will also contain \verb`\begin{document}`, \verb`\end{document}` and a \LaTeX\ preamble. The \code{preview} package is also used in files produced by \code{standAlone} and is used to crop the pages in the resulting document to the bounding boxes of the figures that it contains. Stand-alone output may be produced in the following manner:
 
-<<standAloneExample,echo=T,results=hide,keep.source=T,chunktitle=Generation of self contained output>>=
+<<standAloneExample,echo=T,results=hide,keep.source=T>>=
 require(tikzDevice)
 tikz('standAloneExample.tex',standAlone=T)
 plot(sin,-pi,2*pi,main="A Stand Alone TikZ Plot")
@@ -638,7 +628,7 @@ getLatexCharMetrics( charCode, cex = 1, face = 1 )
 The \code{getLatexStrWidth()} function may be used to calculate the width of strings containing fairly arbitrary \LaTeX\ commands. For example, consider the following calculations:
 
 
-<<strWidthDemo,echo=T,chunktitle=How to calculate string widths with \code{getLatexStringWidth()}>>=
+<<strWidthDemo,echo=T>>=
 getLatexStrWidth( "The symbol: alpha" )
 getLatexStrWidth( "The symbol: $\\alpha$" )
 @
@@ -659,7 +649,7 @@ The \code{getLatexCharWidth()} function must be passed an integer corresponding 
 	
 The character `y' has an \code{ASCII} symbol code of 121 and possesses a tail that descends below the text line. Therefore a non-zero value will be returned for the descent of `y'. The character `x', \code{ASCII} code 120, has no descenders, so its descent will be returned as zero.
 
-<<charMetricDemo,echo=T,keep.source=T,chunktitle=How to calculate character metrics>>=
+<<charMetricDemo,echo=T,keep.source=T>>=
 # Get metrics for 'y'
 getLatexCharMetrics(121)
 
@@ -670,7 +660,7 @@ getLatexCharMetrics(120)
 
 Note that characters, along with numbers outside the range of [32-126], may not be passed to the \nolinebreak\code{getLatexCharMetrics()}  function. If for some reason a floating point number is passed, it will be floored through conversion by \code{as.integer()}.
 
-<<charMetricErrors,echo=T,keep.source=T,chunktitle=How {\bfseries\color{red}not} to calculate character metrics>>=
+<<charMetricErrors,echo=T,keep.source=T>>=
 getLatexCharMetrics('y')
 getLatexCharMetrics(20)
 
