@@ -3,7 +3,10 @@ function( texString, cex = 1, face= 1){
 
 	# Create an object that contains the string and it's
 	# properties.
-	TeXMetrics <- list( type='string', scale=cex, face=face, value=texString )
+	TeXMetrics <- list( type='string', scale=cex, face=face, value=texString,
+	 	documentDeclaration = getOption("tikzDocumentDeclaration"),
+		packages = getOption("tikzLatexPackages"))
+		
 
 	# Check to see if we have a width stored in
 	# our dictionary for this string.
@@ -50,7 +53,9 @@ function( charCode, cex = 1, face = 1 ){
 
 	# Create an object that contains the character and it's
 	# properties.
-	TeXMetrics <- list( type='char', scale=cex, face=face, value=charCode )
+	TeXMetrics <- list( type='char', scale=cex, face=face, value=charCode,
+		documentDeclaration = getOption("tikzDocumentDeclaration"),
+		packages = getOption("tikzLatexPackages"))
 
 	# Check to see if we have metrics stored in
 	# our dictionary for this character.
@@ -81,7 +86,7 @@ getMetricsFromLatex <-
 function( TeXMetrics ){
 	
 	# Reimplementation of the origonal C function since
-	# the C function causes all kings of gibberish to
+	# the C function causes all kinds of gibberish to
 	# hit the screen when called under Windows and
 	# Linux. 
 	#
@@ -102,27 +107,25 @@ function( TeXMetrics ){
 	# Open the TeX file for writing.
 	texIn <- file( texFile, 'w')
 
-	writeLines("\\documentclass{article}", texIn)
-	writeLines("\\usepackage[utf8]{inputenc}", texIn)
-	# The fontenc package is very important here! 
-	# R assumes the output device is uing T1 encoding.
-	# LaTeX defaults to OT1. This package makes the
-	# symbol codes consistant for both systems.
-	writeLines("\\usepackage[T1]{fontenc}", texIn)
-
-	# We will use the TikZ pack to determine our
-	# metrics by setting the character(s) in question
-	# inside a TikZ node and then extracting various
-	# widths from the node. The TikZ calc library
-	# will be used to calculate the distances.
-	writeLines("\\usepackage{tikz}", texIn)
-	writeLines("\\usetikzlibrary{calc}", texIn)
+	writeLines(getOption("tikzDocumentDeclaration"), texIn)
+	
+	# Add extra packages, it wont really matter if the user puts 
+	# in duplicate packages or many irrelevant packages since they 
+	# mostly wont be used. The packages we do care about are the 
+	# font ones. I suppose it is possible that the user could add 
+	# some wacky macros that could screw stuff up but lets pretend 
+	# that cant happen for now. 
+	#
+	# Also, we load the user packages last so the user can override 
+	# things if they need to.
+	#
+	#The user MUST load the tikz package here
+	writeLines(getOption("tikzLatexPackages"), texIn)
+	
+	# Load important packages for calculating metrics
+	writeLines(getOption("tikzMetricPackages"), texIn)
 
 	writeLines("\\batchmode", texIn)
-
-	# This is here as a reminder, add an argument 
-	# that allows the user to specify the font packages
-	writeLines("%%... other font setup stuff", texIn)
 
 	# Begin a tikz picture.
 	writeLines("\\begin{tikzpicture}", texIn)
@@ -140,14 +143,14 @@ function( TeXMetrics ){
 	#
 	# font
 	#
-  #		An integer which specifies which font to use for text. If possible, 
+	#		An integer which specifies which font to use for text. If possible, 
 	#		device drivers arrange so that 1 corresponds to plain text (the default), 
 	#		2 to bold face, 3 to italic and 4 to bold italic. Also, font 5 is expected 
 	#		to be the symbol font, in Adobe symbol encoding. On some devices font families 
 	#		can be selected by family to choose different sets of 5 fonts.
 
 	nodeContent <- ''
-  switch( TeXMetrics$face,
+	switch( TeXMetrics$face,
 
 		normal = {
 			# We do nothing for font face 1, normal font.
@@ -250,9 +253,17 @@ function( TeXMetrics ){
 	# number.
 	width <- gsub('[=A-Za-z]','',match)
 
+	if( length(width) == 0 ){
+		cat(readLines(texFile),sep='\n')
+		cat(readLines(texLog),sep='\n')
+		stop('******** There was a problem calculating string metrics, 
+  ******** likely there was a problem with your custom packages.
+  ******** See the LaTeX log file above for details.')
+	}
+
 	# If we're dealing with a string, we're done.
 	if( TeXMetrics$type == 'string' ){
-
+		
 		return( as.double( width ) )
 
 	}else{

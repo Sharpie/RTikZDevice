@@ -40,6 +40,10 @@ typedef struct{
 	int oldLineType;
 	pGEcontext plotParams;
 	int stringWidthCalls;
+	const char *documentDeclaration;
+	const char *packages;
+	const char *footer;
+	Rboolean polyLine;
 } tikzDevDesc;
 
 
@@ -50,7 +54,9 @@ static Rboolean TikZ_Setup(
 		const char *fileName,
 		double width, double height,
 		const char *bg, const char *fg,
-		Rboolean standAlone, Rboolean bareBones );
+		Rboolean standAlone, Rboolean bareBones,
+		const char *documentDeclaration,
+		const char *packages, const char *footer );
 
 double dim2dev( double length );
 

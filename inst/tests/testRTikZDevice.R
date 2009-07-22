@@ -3,6 +3,10 @@
 library(tikzDevice)
 library(getopt)
 
+#Run separate XeLaTeX test
+source('testXeLaTeX.R')
+setTikzDefaults()
+
 #Column 3: Argument mask of the flag. An integer. Possible values: 
 # 0=no argument, 1=required argument, 2=optional argument. 
 optspec <- matrix(c('output-prefix', 'p', 2, "character"),ncol=4,byrow=T)
@@ -190,12 +194,25 @@ function(main){
 function(main){
 
 	sink('/dev/null')
-	require(fields)
+	suppressPackageStartupMessages(require(spam))
+	suppressPackageStartupMessages(require(fields))
 	sink()
 	data(RCMexample)
 
 	image.plot( RCMexample$x, RCMexample$y, RCMexample$z[,,8], main=main )
 
+},
+
+# from the ggplot2 book section "Fitting multiple models"
+function(main){
+	
+	sink('/dev/null')
+	suppressPackageStartupMessages(require(mgcv))
+	suppressPackageStartupMessages(require(ggplot2))
+	sink()
+	print(qplot(carat, price, data = diamonds, geom = "smooth", 
+	colour = color, main = main))
+	
 }
 
 ## ADD NEW TESTS HERE
@@ -207,13 +224,15 @@ function(main){
 output.list <- c()
 
 for(i in 1:length(tests)){
-    cat("Running Test",sprintf('%02d',i),"... ")
+    cat("  Running Test",sprintf('%02d',i),"... ")
     this.testfile <- file.path(prefix,
       paste('test',sprintf('%02d',i),'.tex',sep=''))
     t <- system.time(
     {
         tikz(this.testfile,standAlone=T)
-        tests[[i]](main=paste('Test',i))
+		# evaluate each test in a new environment so values do not persist 
+		# across tests, because each should be self contained
+        evalq( tests[[i]](main=paste('Test',i)), new.env() )
         dev.off()
     })
     last.line <- length(count.fields(this.testfile,blank.lines.skip=F))
@@ -224,10 +243,15 @@ for(i in 1:length(tests)){
         # then debugging is turned on 
         cat(info.line,'\n\n')
     }
-
-		# Compile the resulting TeX file.
-		silence <- system( paste(Sys.getenv("R_PDFLATEXCMD"),'-output-directory',prefix,
-			this.testfile), intern=T )
+	
+	# Compile the resulting TeX file.
+	cat("Compiling Test",sprintf('%02d',i),"... ")
+	t <- system.time(
+    {
+		silence <- system( paste(Sys.getenv("R_PDFLATEXCMD"),
+			'-output-directory', prefix, this.testfile), intern =T)
+	})
+	cat("Done, took ",t[['elapsed']],"seconds.\n")
 
     this.testfile <- file.path(prefix,
 			paste('test',sprintf('%02d',i),'.pdf',sep=''))
@@ -268,4 +292,4 @@ silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=compares.p
 
 # Combine only the test files.
 silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH',
-	paste(output.list[seq(1,length(output.list),2)],collapse=' ') ), intern=T, ignore.stderr=T)
+	paste(output.list[seq(1,length(output.list),2)],collapse=' ')), intern=T, ignore.stderr=T)

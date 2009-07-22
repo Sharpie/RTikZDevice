@@ -4,7 +4,7 @@
 % \VignetteDepends{tikzDevice}
 % \usepackage{Sweave}
 
-\usepackage[T1]{fontenc}
+%\usepackage[T1]{fontenc}
 \usepackage{atbegshi}
 \usepackage[colorlinks]{hyperref}
 
@@ -34,6 +34,7 @@
 % Make sure you input tikzDeviceMacros first- or
 % LaTeX will smite you!
 \usepackage{Sweave}
+
 
 
 <<setup,echo=F,results=hide>>=
@@ -160,10 +161,10 @@
 	\pgfextracty{\overlayXoff}{\pgfpointanchor{current page}{north east}}
 	\pgfextracty{\overlayYoff}{\pgfpointanchor{current page}{north east}}
 	
-	\pgfmathparse{\overlayYoff - 3.75in}
+	\pgfmathparse{\overlayYoff - 5in}
 	\overlayYoff = \pgfmathresult pt
 	
-	\pgfmathparse{\overlayXoff - 6.5in}
+	\pgfmathparse{\overlayXoff - 7in}
 	\overlayXoff = \pgfmathresult pt
 	
 	
@@ -173,17 +174,20 @@
 
 	tikz('figs/titlePlot.tex',bareBones=T,width=4,height=4)
 
-	x <- seq( -1.95, 1.95, length=30 )
-	y <- seq( -1.95, 1.95, length=35 )
-	z <- outer( x, y, function(a,b){ a*b^2 } )
-	nrz <- nrow(z)
-	ncz <- ncol(z)
-	jet.colors <- colorRampPalette( c("blue", "green") )
-	nbcol <- 100
-	color <- jet.colors(nbcol)
-	zfacet <- z[-1,-1] + z[-1,-ncz] + z[-nrz, -1] + z[-nrz, -ncz]
-	facetcol <- cut(zfacet, nbcol)
-	persp(x, y, z, col=color[facetcol], phi=30, theta=-30,axes=F )
+	x <- seq(-4.5,4.5,length.out=100)
+	y <- dnorm(x)
+
+	xi <- seq(-2,2,length.out=30)
+	yi <- dnorm(xi)
+
+	plot(x,y,type='l',col='blue',ylab='$p(x)$',xlab='$x$')
+	lines(xi,yi,type='s')
+	lines(range(xi),c(0,0))
+	lines(xi,yi,type='h')
+	title(main="$p(x)=\\frac{1}{\\sqrt{2\\pi}}e^{-\\frac{1}{2-x^2}}$")
+	int <- integrate(dnorm,min(xi),max(xi),subdivisions=length(xi))
+	text(2.8,0.3,paste("\\small$\\displaystyle\\int_{",min(xi),"}^{",max(xi),"}p(x)dx\\approx",round(int[['value']],3),'$',sep=''))
+
 
 	dev.off()
 @
@@ -321,7 +325,47 @@ The second, and perhaps most important, global options that affects \pkg{tikzDev
 options( tikzMetricsDictionary = '/path/to/dictionary/location' )
 \end{Verbatim}
 
+A number of global options are provided by \pkg{tikzDevice}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The global options are:
+\begin{description}
+\item[\code{tikzDocumentDeclaration}]{ The documentclass declaration}
+\begin{tikzDocExample}[title={Default}]
+options( tikzDocumentDeclaration = "\\documentclass{article}" )
+\end{tikzDocExample}
+
+\item[\code{tikzFooter}]{ The footer to be used only when \code{standAlone==TRUE} }
+\begin{tikzDocExample}[title={Default}]
+options( tikzFooterDefault = c( "\\end{document}" ) )
+\end{tikzDocExample}
+
+\item[\code{tikzLatex}]{  }
+The default is searched for when the package is loaded, otherwise it can be set manually. 
+
+\item[\code{tikzLatexPackages}]{ These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. }
+\begin{tikzDocExample}[title={Default}]
+	options( tikzLatexPackagesDefault = c(
+		"\\usepackage{tikz}",
+		"\\usepackage[active,tightpage]{preview}",
+		"\\PreviewEnvironment{pgfpicture}",
+		"\\setlength\\PreviewBorder{0pt}") )
+\end{tikzDocExample}
+\item[\code{tikzMetricPackages}]{ A character vector. These are the packages which are additionally loaded when doing font metric calculations }
+\begin{tikzDocExample}[title={Default}]
+options( tikzMetricPackages = c(
+		"\\usepackage[utf8]{inputenc}",
+		"\\usepackage[T1]{fontenc}",
+		"\\usetikzlibrary{calc}"))
+\end{tikzDocExample}
+
+\item[\code{tikzMetricsDictionary}]{ The path to the global \TikZ{} font metric dictionary, we recommend setting this your \code{.Rprofile} file }
+\end{description}
+
+All of the options can be set by using \code{options(<option> = <value>)}.
+
+
+For convenience the function \code{setTikzDefaults()} is provided which sets all the global options back to their original values.
+
 The proper placement of a \code{.Rprofile} file is explained in \code{?Startup}. For the details of why calling the \LaTeX\ compiler is necessary, see \autoref{part:three}.
+
 
 
 \label{cache:user}

@@ -73,6 +73,7 @@ SEXP tikzDevice ( SEXP args ){
 	const char *bg, *fg;
 	double width, height;
 	Rboolean standAlone, bareBones;
+	const char *documentDeclaration, *packages, *footer;
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -119,6 +120,11 @@ SEXP tikzDevice ( SEXP args ){
 	 * 
 	*/
 	bareBones = asLogical(CAR(args)); args = CDR(args);
+	
+	/* Grab the latex header and footers*/
+	documentDeclaration = CHAR(asChar(CAR(args))); args = CDR(args);
+	packages = CHAR(asChar(CAR(args))); args = CDR(args);
+	footer = CHAR(asChar(CAR(args))); args = CDR(args);
 
 	/* Ensure there is an empty slot avaliable for a new device. */
 	R_CheckDeviceAvailable();
@@ -128,7 +134,7 @@ SEXP tikzDevice ( SEXP args ){
 		/* 
 		 * The pDevDesc variable specifies which funtions and components 
 		 * which describe the specifics of this graphics device. After
-     * setup, this information will be incorporated into the pGEDevDesc
+		 * setup, this information will be incorporated into the pGEDevDesc
 		 * variable tikzDev.
 		*/ 
 		pDevDesc deviceInfo;
@@ -146,8 +152,9 @@ SEXP tikzDevice ( SEXP args ){
 		 * R graphics function hooks with the appropriate C routines
 		 * in this file.
 		*/
-		if( !TikZ_Setup( deviceInfo, fileName, 
-					width, height, bg, fg, standAlone, bareBones ) ){
+		if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, 
+				standAlone, bareBones, documentDeclaration, packages, 
+				footer) ){
 			/* 
 			 * If setup was unsuccessful, destroy the device and return
 			 * an error message.
@@ -185,7 +192,9 @@ static Rboolean TikZ_Setup(
 	const char *fileName,
 	double width, double height,
 	const char *bg, const char *fg,
-	Rboolean standAlone, Rboolean bareBones ){
+	Rboolean standAlone, Rboolean bareBones,
+	const char *documentDeclaration,
+	const char *packages, const char *footer ){
 
 	/* 
 	 * Create tikzInfo, this variable contains information which is
@@ -234,6 +243,10 @@ static Rboolean TikZ_Setup(
 	tikzInfo->oldLineType = 0;
 	tikzInfo->plotParams = plotParams;
 	tikzInfo->stringWidthCalls = 0;
+	tikzInfo->documentDeclaration = documentDeclaration;
+	tikzInfo->packages = packages;
+	tikzInfo->footer = footer;
+	tikzInfo->polyLine = FALSE;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -345,7 +358,7 @@ static Rboolean TikZ_Setup(
 
 	/* 
 	 * Apparently these are supposed to center text strings over the points at
-   * which they are plotted. TikZ does this automagically.
+	 * which they are plotted. TikZ does this automagically.
 	 *
 	 * We hope.
 	 *
@@ -430,11 +443,8 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/* Header for a standalone LaTeX document*/
 	if(tikzInfo->standAlone == TRUE){
-		fprintf(tikzInfo->outputFile,"\\documentclass{article}\n");
-		fprintf(tikzInfo->outputFile,"\\usepackage{tikz}\n");
-		fprintf(tikzInfo->outputFile,"\\usepackage[active,tightpage]{preview}\n");
-		fprintf(tikzInfo->outputFile,"\\PreviewEnvironment{pgfpicture}\n");
-		fprintf(tikzInfo->outputFile,"\\setlength\\PreviewBorder{0pt}\n\n");
+		fprintf(tikzInfo->outputFile,tikzInfo->documentDeclaration);
+		fprintf(tikzInfo->outputFile,tikzInfo->packages);
 		fprintf(tikzInfo->outputFile,"\\begin{document}\n\n");
 	}
 
@@ -444,7 +454,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 			"%% Beginning tikzpicture, this file is %s\n",
 			R_ExpandFileName(tikzInfo->outFileName));
 
-	fprintf(tikzInfo->outputFile,"%% Created by tikzDevice x.x.x, on DATE, at TIME\n");
+	fprintf(tikzInfo->outputFile,"%% Created by tikzDevice\n");
 
 	/* Start the tikz environment if we have not specified a bare bones plot. */
 	if( tikzInfo->bareBones != TRUE ){
@@ -1005,7 +1015,10 @@ static void TikZ_Polyline( int n, double *x, double *y,
 
 	/* More options would go here such as line thickness, style and color */
 	/*Define the draw styles*/
+	//Setting polyline is a quick hack so that the fill color is not set for poylines
+	tikzInfo->polyLine = TRUE;
 	StyleDef(FALSE, plotParams, deviceInfo);
+	tikzInfo->polyLine = FALSE;
 
 	/* End options, print first set of coordinates. */
 	fprintf( tikzInfo->outputFile, "] (%6.2f,%6.2f) --\n",
@@ -1140,7 +1153,9 @@ static void SetFill(int color, Rboolean def, pDevDesc deviceInfo){
 				R_BLUE(color)/255.0);
 		}
 	}else{
-		fprintf( tikzInfo->outputFile, "fill=fillColor,");
+		//Quick hack to not show fill colors with polylines
+		if(tikzInfo->polyLine == FALSE)
+			fprintf( tikzInfo->outputFile, "fill=fillColor,");
 	}
 	
 }

@@ -11,6 +11,27 @@ function(libname, pkgname) {
 	if( !require( filehash, quietly=TRUE ) ){ 
 		stop("tikzDevice requires the filehash package to be available.") 
 	}
+	
+	# Set Header and Footer options
+	options( tikzDocumentDeclarationDefault = "\\documentclass{article}" )
+	options( tikzDocumentDeclaration = getOption("tikzDocumentDeclarationDefault") )
+	options( tikzLatexPackagesDefault = c(
+		"\\usepackage{tikz}",
+		"\\usepackage[active,tightpage]{preview}",
+		"\\PreviewEnvironment{pgfpicture}",
+		"\\setlength\\PreviewBorder{0pt}") )
+	options( tikzLatexPackages = getOption("tikzLatexPackagesDefault"))
+	options( tikzFooterDefault = c( "\\end{document}" ) )
+	options( tikzFooter = getOption('tikzFooterDefault') )
+	options( tikzMetricPackages = c(
+		"\\usepackage[utf8]{inputenc}",
+		# The fontenc package is very important here! 
+		# R assumes the output device is uing T1 encoding.
+		# LaTeX defaults to OT1. This package makes the
+		# symbol codes consistant for both systems.
+		"\\usepackage[T1]{fontenc}",
+		"\\usetikzlibrary{calc}"))
+	
 
 	versionInfo <- read.dcf(file.path( libname, pkgname, "DESCRIPTION"))
 
@@ -31,6 +52,7 @@ function(libname, pkgname) {
 
 		if( latexCheck == 0 ){
 			options( tikzLatex=pathToTeX )
+			options( tikzLatexDefault=pathToTeX )
 			foundLatex <<- TRUE
 			checked <<- paste( "\nA working LaTeX compiler was found in:\n\t",pathDesc,
 				"\n\nGlobal option tikzLatex set to:\n\t",pathToTeX,'\n',sep='' )
