@@ -53,6 +53,22 @@
 	commentstyle = {\color{red!80}\itshape}
 }
 
+\lstdefinestyle{bashSource}{
+	language = bash,
+	literate={~}{{$\sim$}}1,
+	moredelim=[is][\color{gray}]
+		{!out}
+		{!/out},
+	xleftmargin = 4ex,
+	numbers = left,
+	numberstyle = {\tiny},
+	numberblanklines = false,
+	numbersep = 5ex,
+	showstringspaces = false,
+	upquote = false,
+	commentstyle = {\color{blue!80}\itshape}
+}
+
 
 % Looking to make a nice code container- similar to that found
 % at http://code.google.com/p/syntaxhighlighter/
@@ -273,6 +289,65 @@
   \begin{tikzpicture}
   	\node[code body,codebody color=white] (code node body) {
 	    \lstinputlisting[style = latexSource]{\jobname.lst}%
+	 };
+	 
+	 % Basically, \relax does jack squat if the macro \@codeNodeTitle
+	 % is not defined. It's sole purpose in life is to allow us to get to the 
+	 % \else statement without LaTeX freaking out.
+
+	 \ifx \@codeNodeTitle \undefined
+	   \relax
+	 \else
+	 	\node[code title body] (code node title) {
+			\@codeNodeTitle
+		};
+		\draw[code title outline] (code node title.south west) --
+			(code node title.south east) [rounded corners] --
+			(code node title.north east) --
+			(code node title.north west) [sharp corners] --
+			cycle;
+	 \fi
+	 
+	 % And the footer
+	  \ifx \@codeNodeFooter \undefined
+	   \relax
+	 \else
+	 	\node[code footer] at (code node body.south) {
+			\@codeNodeFooter
+		};
+	 \fi
+	 
+  \end{tikzpicture}}
+\makeatother
+
+% Sigh... I hate having 50,000 copies of this environment..
+% but for some $&%^ing reason listings won't take a macro
+% as an argument to style=
+\makeatletter 
+\newwrite\lstvrb@out 
+\newenvironment{tikzShellExample}[1][]{% 
+
+  % Set up some pgfKeys to save input into this enviornment
+  \pgfkeys{/code nodes/title/.store in=\@codeNodeTitle}
+  \pgfkeys{/code nodes/footer/.store in=\@codeNodeFooter}
+  
+  \pgfkeys{ /code nodes/.cd, #1 }
+
+  \begingroup 
+  \@bsphack 
+  \immediate\openout\lstvrb@out\jobname.lst 
+  \let\do\@makeother\dospecials\catcode`\^^M\active 
+  \def\verbatim@processline{% 
+    \immediate\write\lstvrb@out{\the\verbatim@line}}% 
+  \verbatim@start}{% 
+  \immediate\closeout\lstvrb@out 
+  \@esphack 
+  \endgroup 
+  
+  % Normal, sane, LaTeX code resumes here.
+  \begin{tikzpicture}
+  	\node[code body,codebody color=white] (code node body) {
+	    \lstinputlisting[style = bashSource]{\jobname.lst}%
 	 };
 	 
 	 % Basically, \relax does jack squat if the macro \@codeNodeTitle
