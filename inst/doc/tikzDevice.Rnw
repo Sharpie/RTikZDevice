@@ -7,6 +7,7 @@
 %\usepackage[T1]{fontenc}
 \usepackage{atbegshi}
 \usepackage[colorlinks]{hyperref}
+\usepackage{courier}
 
 
 % Sexyness
@@ -161,7 +162,7 @@
 	\pgfextracty{\overlayXoff}{\pgfpointanchor{current page}{north east}}
 	\pgfextracty{\overlayYoff}{\pgfpointanchor{current page}{north east}}
 	
-	\pgfmathparse{\overlayYoff - 5in}
+	\pgfmathparse{\overlayYoff - 4.5in}
 	\overlayYoff = \pgfmathresult pt
 	
 	\pgfmathparse{\overlayXoff - 7in}
@@ -237,7 +238,7 @@ This is a friendly reminder that the \pkg{tikzDevice} package is currently consi
 
 However, the package has not been tested in an extensive variety of situations beyond those that have been dreamed up by the designers. Therefore, it is very likely that this package will help produce exceptional crashes, leading to an increase in the quantity of swearing by \lang{R} and users affected by those crashes.\\[1em]
 
-We hope this package will improve with time and attain a level of usability and trustability at which it may be labeled ``stable". Until then the package, including this documentation, may undergo significant changes in form and function. During the beta period the actual implementation of the package may differ significantly from what is described in this documentation.\\[1em]
+We hope this package will improve with time and attain a level of usability and trustability at which point it may be labeled ``stable". Until then the package, including this documentation, may undergo significant changes in form and function. During the beta period the actual implementation of the package may differ significantly from what is described in this documentation.\\[1em]
 
 In fact, the documentation may differ significantly from what is described in the documentation.\\[1em]
 
@@ -312,54 +313,42 @@ In this case, \pkg{tikzDevice} has done it's very best to locate a working compi
 
 
 \subsection{\lang{R} Options That Affect Package Behavior}
-The \pkg{tikzDevice} package is currently influenced by two global options that may be set in a \code{.Rprofile} file. The first is called \code{tikzLatex} and specifies the location of the \LaTeX\ compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. This option may be set in \code{.Rprofile} as follows:
-
-\begin{Verbatim}[frame=single]
-options( tikzLatex = '/path/to/latex/compiler' )
-\end{Verbatim}
+The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \lang{R} scripts, in the \lang{R} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
 
 
-The second, and perhaps most important, global options that affects \pkg{tikzDevice} is the option \code{tikzMetricsDictionary}. When using the graphics device provided by \pkg{tikzDevice}, you may notice that \lang{R} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the \LaTeX\ compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \lang{R} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \lang{R} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile}:
-
-\begin{Verbatim}[frame=single]
-options( tikzMetricsDictionary = '/path/to/dictionary/location' )
-\end{Verbatim}
-
-A number of global options are provided by \pkg{tikzDevice}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The global options are:
 \begin{description}
-\item[\code{tikzDocumentDeclaration}]{ The documentclass declaration}
-\begin{tikzDocExample}[title={Default}]
+
+\item[\code{tikzLatex}]{ Specifies the location of the \LaTeX\ compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. The default is searched for when the package is loaded, otherwise it can be set manually.   This option may be set as follows: \code{options( tikzLatex = '/path/to/latex/compiler' )}.}
+
+\item[\code{tikzMetricsDictionary}]{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \lang{R} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the \LaTeX\ compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \lang{R} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \lang{R} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}}.
+
+\item[\code{tikzDocumentDeclaration}]{A string. The documentclass declaration when \code{standAlone == TRUE} as wel as when font metrics are calculated}
+\begin{Schunk}[title={Default}]
 options( tikzDocumentDeclaration = "\\documentclass{article}" )
-\end{tikzDocExample}
+\end{Schunk}
 
-\item[\code{tikzFooter}]{ The footer to be used only when \code{standAlone==TRUE} }
-\begin{tikzDocExample}[title={Default}]
-options( tikzFooterDefault = c( "\\end{document}" ) )
-\end{tikzDocExample}
+\item[\code{tikzFooter}]{A character vector. The footer to be used only when \code{standAlone==TRUE} }
+\begin{Schunk}[title={Default}]
+options( tikzFooter = c( "\\end{document}" ) )
+\end{Schunk} 
 
-\item[\code{tikzLatex}]{  }
-The default is searched for when the package is loaded, otherwise it can be set manually. 
-
-\item[\code{tikzLatexPackages}]{ These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. }
-\begin{tikzDocExample}[title={Default}]
+\item[\code{tikzLatexPackages}]{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. }
+\begin{Schunk}[title={Default}]
 	options( tikzLatexPackagesDefault = c(
 		"\\usepackage{tikz}",
 		"\\usepackage[active,tightpage]{preview}",
 		"\\PreviewEnvironment{pgfpicture}",
 		"\\setlength\\PreviewBorder{0pt}") )
-\end{tikzDocExample}
-\item[\code{tikzMetricPackages}]{ A character vector. These are the packages which are additionally loaded when doing font metric calculations }
-\begin{tikzDocExample}[title={Default}]
+\end{Schunk}
+
+\item[\code{tikzMetricPackages}]{ A character vector. These are the packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of \LaTeX{} and \lang{R} match up.}
+\begin{Schunk}[title={Default}]
 options( tikzMetricPackages = c(
 		"\\usepackage[utf8]{inputenc}",
 		"\\usepackage[T1]{fontenc}",
 		"\\usetikzlibrary{calc}"))
-\end{tikzDocExample}
-
-\item[\code{tikzMetricsDictionary}]{ The path to the global \TikZ{} font metric dictionary, we recommend setting this your \code{.Rprofile} file }
+\end{Schunk}
 \end{description}
-
-All of the options can be set by using \code{options(<option> = <value>)}.
 
 
 For convenience the function \code{setTikzDefaults()} is provided which sets all the global options back to their original values.
@@ -420,7 +409,7 @@ The next section provides examples of how to use each type of output.
 @
 \subsubsection{Default Mode}
 
-The most common use of the \code{tikz()} function is to produce a plot that will be included in another \LaTeX\ document, such as a report. Running the following example in lang{R} will produce a very simple graphic using the \code{plot()} function.
+The most common use of the \code{tikz()} function is to produce a plot that will be included in another \LaTeX\ document, such as a report. Running the following example in \lang{R} will produce a very simple graphic using the \code{plot()} function.
 
 <<simpleEx,echo=T,results=hide>>=
 require(tikzDevice)

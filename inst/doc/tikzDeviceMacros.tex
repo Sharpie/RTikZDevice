@@ -30,26 +30,32 @@
 		{swe@veEndOutput},
 	% Normal TeX tildes are kind of ugly- let's substitute a math symbol instead.
 	% Shit, why not replace <- as well? *Mad typographic scientist cackle*
-	literate={~}{{$\sim$}}1 {<-}{$\leftarrow$}1,
-	xleftmargin = 4ex,
-	numbers = left,
-	numberstyle = {\tiny},
-	numberblanklines = false,
-	numbersep = 5ex,
+	% literate={~}{{$\sim$}}1 {<-}{$\leftarrow$}1,
+	% xleftmargin = 4ex,
+	% numbers = left,
+	% numberstyle = {\tiny},
+	% numberblanklines = false,
+	% numbersep = 5ex,
+	basicstyle = \small\ttfamily,
+	keywordstyle= ,
+	identifierstyle= ,
 	showstringspaces = false,
-	upquote = true,
-	commentstyle = {\color{blue!80}\itshape}
+	upquote = false,
+	commentstyle = {\color{blue!70}\itshape}
 }
 
 \lstdefinestyle{latexSource}{
 	language = [LaTeX]TeX,
-	xleftmargin = 4ex,
-	numbers = left,
-	numberstyle = {\tiny},
-	numberblanklines = false,
-	numbersep = 5ex,
+	% xleftmargin = 4ex,
+	% numbers = left,
+	% numberstyle = {\tiny},
+	% numberblanklines = false,
+	% numbersep = 5ex,
+	basicstyle = \small\ttfamily,
+	keywordstyle= ,
+	identifierstyle= ,
 	showstringspaces = false,
-	upquote = true,
+	upquote = false,
 	commentstyle = {\color{red!80}\itshape}
 }
 
@@ -191,6 +197,7 @@
 		draw = blue!50,
 		thick, 
 		codebody color = blue!10,
+		codestripe width = 0pt,
 		inner sep = 1ex,
 		outer sep = 0pt,
 		text width =\textwidth
