@@ -97,7 +97,7 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
                 if(options$echo && length(dce)){
                     if(!openSinput){
                         if(!openSchunk){
-                             cat("\\begin{Schunk}[]\n",
+                             cat("\\begin{tikzCodeBlock}[listing style=sweavechunk]\n",
                                 file=chunkout, append=TRUE)
                             linesout[thisline + 1] <- srcline
                             thisline <- thisline + 1
@@ -155,7 +155,7 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
                     }
                     if(options$results=="verbatim"){
                         if(!openSchunk){
-                             cat("\\begin{Schunk}[]\n",
+                             cat("\\begin{tikzCodeBlock}[listing style=sweavechunk]\n",
                                 file=chunkout, append=TRUE)
                             linesout[thisline + 1L] <- srcline
                             thisline <- thisline + 1L
@@ -205,7 +205,7 @@ patchedCodeRunner <- function(evalFunc=RweaveEvalWithOpt)
           }
 
           if(openSchunk){
-              cat("\\end{Schunk}\n", file=chunkout, append=TRUE)
+              cat("\\end{tikzCodeBlock}\n", file=chunkout, append=TRUE)
               linesout[thisline + 1L] <- srcline
               thisline <- thisline + 1L
           }
