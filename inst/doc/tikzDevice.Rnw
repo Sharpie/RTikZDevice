@@ -7,7 +7,7 @@
 %\usepackage[T1]{fontenc}
 \usepackage{atbegshi}
 \usepackage[colorlinks]{hyperref}
-\usepackage{courier}
+\usepackage[scaled=.9]{couriers}
 
 
 % Sexyness
@@ -312,17 +312,17 @@ Error: package/namespace load failed for 'tikzDevice'
 In this case, \pkg{tikzDevice} has done it's very best to locate a working compiler and came up empty. If you have a working \LaTeX\ compiler, the next section describes how to inform the \pkg{tikzDevice} package of its location. For suggestions on how to obtain a \LaTeX\ compiler, see \autoref{part:two}.
 
 
-\subsection{\lang{R} Options That Affect Package Behavior}
+\subsection{\lang{R} Options That Affect Package Behavior}\label{sec:options}
 The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \lang{R} scripts, in the \lang{R} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
 
 
 \begin{description}
 
-\item[\code{tikzLatex}]{ Specifies the location of the \LaTeX\ compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. The default is searched for when the package is loaded, otherwise it can be set manually.   This option may be set as follows: \code{options( tikzLatex = '/path/to/latex/compiler' )}.}
+\item[\code{tikzLatex}]{ Specifies the location of the \LaTeX\ compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. The default is searched for when the package is loaded, otherwise it can be set manually.   This option may be set as follows: \\\code{options( tikzLatex = '/path/to/latex/compiler' )}.}
 
-\item[\code{tikzMetricsDictionary}]{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \lang{R} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the \LaTeX\ compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \lang{R} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \lang{R} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}}.
+\item[\code{tikzMetricsDictionary}]{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \lang{R} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the \LaTeX\ compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \lang{R} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \lang{R} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \\\code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}}.
 
-\item[\code{tikzDocumentDeclaration}]{A string. The documentclass declaration when \code{standAlone == TRUE} as wel as when font metrics are calculated}
+\item[\code{tikzDocumentDeclaration}]{A string. The documentclass declaration when \code{standAlone == TRUE} as well as when font metrics are calculated}
 \begin{Schunk}[title={Default}]
 options( tikzDocumentDeclaration = "\\documentclass{article}" )
 \end{Schunk}
@@ -334,19 +334,19 @@ options( tikzFooter = c( "\\end{document}" ) )
 
 \item[\code{tikzLatexPackages}]{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. }
 \begin{Schunk}[title={Default}]
-	options( tikzLatexPackages = c(
-		"\\usepackage{tikz}",
-		"\\usepackage[active,tightpage]{preview}",
-		"\\PreviewEnvironment{pgfpicture}",
-		"\\setlength\\PreviewBorder{0pt}") )
+options( tikzLatexPackages = c(
+    "\\usepackage{tikz}",
+    "\\usepackage[active,tightpage]{preview}",
+    "\\PreviewEnvironment{pgfpicture}",
+    "\\setlength\\PreviewBorder{0pt}") )
 \end{Schunk}
 
 \item[\code{tikzMetricPackages}]{ A character vector. These are the extra packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of \LaTeX{} and \lang{R} match up.}
 \begin{Schunk}[title={Default}]
 options( tikzMetricPackages = c(
-		"\\usepackage[utf8]{inputenc}",
-		"\\usepackage[T1]{fontenc}",
-		"\\usetikzlibrary{calc}"))
+    "\\usepackage[utf8]{inputenc}", 
+    "\\usepackage[T1]{fontenc}",
+    "\\usetikzlibrary{calc}"))
 \end{Schunk}
 \end{description}
 
@@ -356,7 +356,7 @@ For convenience the function \code{setTikzDefaults()} is provided which sets all
 The proper placement of a \code{.Rprofile} file is explained in \code{?Startup}. For the details of why calling the \LaTeX\ compiler is necessary, see \autoref{part:three}.
 
 \tikzDocDisclaim{A Word of Caution About Setting Options.}
-{A lot of power is given to you through these global options, and with great power comes great responsibility.  For example, if you do not include the \TikZ{} package in the \code{tikzLatexPackages} option then all of the string metric calculations will fail.  There are innumerable ways for packages to clash in \LaTeX{} so just be aware. 
+{A lot of power is given to you through these global options, and with great power comes great responsibility.  For example, if you do not include the \TikZ{} package in the \code{tikzLatexPackages} option then all of the string metric calculations will fail.  Or if you use a different font when compiling than you used for calculating metrics, strings may be placed incorrectly.  Also, there are innumerable ways for packages to clash in \LaTeX{} so just be aware. 
 }
 
 
@@ -375,7 +375,10 @@ The \code{tikz()} function opens a new graphics device and may be called with th
 
 \begin{Verbatim}[frame=single]
 tikz(file = "Rplots.tex", width = 7, height = 7, 
-	bg="white", fg="black", standAlone = FALSE, bareBones = FALSE )
+    bg="white", fg="black", standAlone = FALSE, bareBones = FALSE, 
+    documentDeclaration = getOption("tikzDocumentDeclaration"),
+    packages = getOption("tikzLatexPackages"),
+    footer = getOption("tikzFooter")))
 \end{Verbatim}
 
 \begin{description}
@@ -385,7 +388,10 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
 \item[\code{bg}]{ The starting background color for the plot. }
 \item[\code{fg}]{ The starting foreground color for the plot. }
 \item[\code{standAlone}]{ A logical value indicating whether the resulting file should be suitable for direct processing by \LaTeX .}
-\item[\code{bareBones}]{ A logical value indicating whether the resulting \TikZ code produced without being placed within a \LaTeX\ \code{tikzpicture} envirement.}
+\item[\code{bareBones}]{ A logical value indicating whether the resulting \TikZ code produced without being placed within a \LaTeX\ \code{tikzpicture} environment.}
+\item[\code{documentDeclaration}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
+\item[\code{packages}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
+\item[\code{footer}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
 \end{description}
 
 The first five options should be familiar to anyone who has used the default graphics devices shipped with \lang{R}. The options \code{file}, \code{width}, \code{height}, \code{bg} and \code{fg} represent the standard graphics parameters currently implemented by \pkg{tikzDevice}. The last two options, \code{standAlone} and \code{bareBones}, are specific to the \code{tikz()} graphics device and affect the structure the output file. Using these options \code{tikz()} supports three modes of output: 
@@ -469,7 +475,7 @@ require(tikzDevice)
 tikz('latexEx.tex',
   width=3.5,height=3.5)
 
-x <- rnorm(5)
+x <- rnorm(10)
 y <- x + rnorm(5,sd=0.25)
 
 model <- lm(y ~ x)
@@ -481,6 +487,12 @@ abline(model,col='red')
 
 mtext(paste("Linear model: $R^{2}=",
   rsq,"$" ),line=0.5)
+  
+legend('bottomright', legend = 
+  paste("$y = ",
+    round(coef(model)[2],3), 'x +',
+    round(coef(model)[1],3), '$',
+    sep=''), bty= 'n')
 
 dev.off()
 @
@@ -619,61 +631,55 @@ dev.off()
 
 \subsubsection{An Xe\LaTeX{} example}
 
-It is also possible to use Xe\LaTeX{} with \pkg{tikzDevice} that introduces some interesting possibilities.  The following example was taken inspired by Dario Taraborelli and his article \textit{The Beauty of LaTeX}.
+It is also possible to use Xe\LaTeX{} with \pkg{tikzDevice} that introduces some interesting possibilities.  The following example was inspired by Dario Taraborelli and his article \textit{The Beauty of LaTeX}.
 
 \begin{Schunk}[title=Xe\LaTeX{} Example]
 options(tikzLatex = 'xelatex')
 options(tikzDocumentDeclaration = '\\documentclass{article}')
 options( tikzLatexPackages = c(
-    "\\usepackage{fontspec}"
-    ,"\\usepackage{tikz}"
-    ,"\\usepackage{color}"
-    ,"\\definecolor{Gray}{rgb}{.7,.7,.7}"
-    ,"\\definecolor{lightblue}{rgb}{.2,.5,1}"
-    ,"\\definecolor{myred}{rgb}{1,0,0}"
-    ,"\\newcommand{\\red}[1]{\\color{myred} #1}"
-    ,"\\newcommand{\\reda}[1]{\\color{myred}\\fontspec[Variant=2]{Zapfino}#1}"
-    ,"\\newcommand{\\redb}[1]{\\color{myred}\\fontspec[Variant=3]{Zapfino}#1}"
-    ,"\\newcommand{\\redc}[1]{\\color{myred}\\fontspec[Variant=4]{Zapfino}#1}"
-    ,"\\newcommand{\\redd}[1]{\\color{myred}\\fontspec[Variant=5]{Zapfino}#1}"
-    ,"\\newcommand{\\rede}[1]{\\color{myred}\\fontspec[Variant=6]{Zapfino}#1}"
-    ,"\\newcommand{\\redf}[1]{\\color{myred}\\fontspec[Variant=7]{Zapfino}#1}"
-    ,"\\newcommand{\\redg}[1]{\\color{myred}\\fontspec[Variant=8]{Zapfino}#1}"
-    ,"\\newcommand{\\lbl}[1]{\\color{lightblue} #1}"
-    ,"\\newcommand{\\lbla}[1]{\\color{lightblue}\\fontspec[Variant=2]{Zapfino}#1}"
-    ,"\\newcommand{\\lblb}[1]{\\color{lightblue}\\fontspec[Variant=3]{Zapfino}#1}"
-    ,"\\newcommand{\\lblc}[1]{\\color{lightblue}\\fontspec[Variant=4]{Zapfino}#1}"
-    ,"\\newcommand{\\lbld}[1]{\\color{lightblue}\\fontspec[Variant=5]{Zapfino}#1}"
-    ,"\\newcommand{\\lble}[1]{\\color{lightblue}\\fontspec[Variant=6]{Zapfino}#1}"
-    ,"\\newcommand{\\lblf}[1]{\\color{lightblue}\\fontspec[Variant=7]{Zapfino}#1}"
-    ,"\\newcommand{\\lblg}[1]{\\color{lightblue}\\fontspec[Variant=8]{Zapfino}#1}"
-    ,"\\newcommand{\\old}[1]{"
-    ,"\\fontspec[Ligatures={Common, Rare},%"
-    ,"Variant=1,Swashes={LineInitial, LineFinal}]{Zapfino}"
-    ,"\\fontsize{25pt}{30pt}\\selectfont #1}%"
-    ,"\\newcommand{\\smallprint}[1]{\\fontspec{Hoefler Text}%"
-    ,"\\fontsize{10pt}{13pt}\\color{Gray}\\selectfont #1}%"
-))
-		
+  "\\usepackage{fontspec}"
+  ,"\\usepackage{tikz}"
+  ,"\\usepackage{color}"
+  ,"\\definecolor{Gray}{rgb}{.7,.7,.7}"
+  ,"\\definecolor{lightblue}{rgb}{.2,.5,1}"
+  ,"\\definecolor{myred}{rgb}{1,0,0}"
+  ,"\\newcommand{\\red}[1]{\\color{myred} #1}"
+  ,"\\newcommand{\\reda}[1]{\\color{myred}\\fontspec[Variant=2]{Zapfino}#1}"
+  ,"\\newcommand{\\redb}[1]{\\color{myred}\\fontspec[Variant=3]{Zapfino}#1}"
+  ,"\\newcommand{\\redc}[1]{\\color{myred}\\fontspec[Variant=4]{Zapfino}#1}"
+  ,"\\newcommand{\\redd}[1]{\\color{myred}\\fontspec[Variant=5]{Zapfino}#1}"
+  ,"\\newcommand{\\rede}[1]{\\color{myred}\\fontspec[Variant=6]{Zapfino}#1}"
+  ,"\\newcommand{\\redf}[1]{\\color{myred}\\fontspec[Variant=7]{Zapfino}#1}"
+  ,"\\newcommand{\\redg}[1]{\\color{myred}\\fontspec[Variant=8]{Zapfino}#1}"
+  ,"\\newcommand{\\lbl}[1]{\\color{lightblue} #1}"
+  ,"\\newcommand{\\lbla}[1]{\\color{lightblue}\\fontspec[Variant=2]{Zapfino}#1}"
+  ,"\\newcommand{\\lblb}[1]{\\color{lightblue}\\fontspec[Variant=3]{Zapfino}#1}"
+  ,"\\newcommand{\\lblc}[1]{\\color{lightblue}\\fontspec[Variant=4]{Zapfino}#1}"
+  ,"\\newcommand{\\lbld}[1]{\\color{lightblue}\\fontspec[Variant=5]{Zapfino}#1}"
+  ,"\\newcommand{\\lble}[1]{\\color{lightblue}\\fontspec[Variant=6]{Zapfino}#1}"
+  ,"\\newcommand{\\lblf}[1]{\\color{lightblue}\\fontspec[Variant=7]{Zapfino}#1}"
+  ,"\\newcommand{\\lblg}[1]{\\color{lightblue}\\fontspec[Variant=8]{Zapfino}#1}"
+  ,"\\newcommand{\\old}[1]{"
+  ,"\\fontspec[Ligatures={Common, Rare},%"
+  ,"Variant=1,Swashes={LineInitial, LineFinal}]{Zapfino}"
+  ,"\\fontsize{25pt}{30pt}\\selectfont #1}%"
+  ,"\\newcommand{\\smallprint}[1]{\\fontspec{Hoefler Text}%"
+  ,"\\fontsize{10pt}{13pt}\\color{Gray}\\selectfont #1}%"))		
 label <- c(  
-    "\\noindent{\\red d}roo{\\lbl g}"
-    ,"\\noindent{\\reda d}roo{\\lbla g}"
-    ,"\\noindent{\\redb d}roo{\\lblb g}"
-    ,"\\noindent{\\redf d}roo{\\lblf g}\\\\[.3cm]"
-    ,"\\noindent{\\redc d}roo{\\lblc g}"
-    ,"\\noindent{\\redd d}roo{\\lbld g}"
-    ,"\\noindent{\\rede d}roo{\\lble g}"
-    ,"\\noindent{\\redg d}roo{\\lblg g}\\\\[.2cm]"
-)
+  "\\noindent{\\red d}roo{\\lbl g}"
+  ,"\\noindent{\\reda d}roo{\\lbla g}"
+  ,"\\noindent{\\redb d}roo{\\lblb g}"
+  ,"\\noindent{\\redf d}roo{\\lblf g}\\\\[.3cm]"
+  ,"\\noindent{\\redc d}roo{\\lblc g}"
+  ,"\\noindent{\\redd d}roo{\\lbld g}"
+  ,"\\noindent{\\rede d}roo{\\lble g}"
+  ,"\\noindent{\\redg d}roo{\\lblg g}\\\\[.2cm]")
 title <- c(
-    "\\smallprint{D. Taraborelli (2008), \\href{http://nitens.org/taraborelli/latex}%"
-    ,"{The Beauty of \\LaTeX}}"
-    ,"\\smallprint{\\\\\\emph{Some rights reserved}.% 
-    ,"\\href{http://creativecommons.org/licenses/by-sa/3.0/}{\\textsc{cc-by-sa}}}"
-	)
-	
+  "\\smallprint{D. Taraborelli (2008), \\href{http://nitens.org/taraborelli/latex}%"
+  ,"{The Beauty of \\LaTeX}}"
+  ,"\\smallprint{\\\\\\emph{Some rights reserved}.% 
+  ,"\\href{http://creativecommons.org/licenses/by-sa/3.0/}{\\textsc{cc-by-sa}}}")
 lim <- 0:(length(label)+1)
-
 tikz('xelatexEx.tex',standAlone=T,width=5,height=5)
 plot(lim,lim,cex=0,pch='.',xlab = 'Xe\\LaTeX{} Test',
     ylab='', main = title[1], sub = title[2])
@@ -682,7 +688,13 @@ for(i in 1:length(label))
 dev.off()
 \end{Schunk}
 
-Compiling the resulting file \code{xelatexEx.tex} with Xe\LaTeX{} will produce the output below!
+Compiling the resulting file \code{xelatexEx.tex} like so:
+
+\begin{tikzShellExample}
+xelatex xelatexEx.tex
+\end{tikzShellExample}
+
+will produce the output below!  Please note some of the fonts used in the example may not be available on your system. 
 
 \begin{figure}[h]
 \centering
@@ -901,7 +913,8 @@ About \TikZ{}, the Pic\TeX{} device and the story of two fortran programmers wit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{On the Importance of Font and Style Consistancy in Reports}
+If you haven't figured it out by now, we are quite picky about the way our graphics look and the way 
 
 \section{The \pkg{pgfSweave} Package and Automatic Report Generation}
-	
+Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have another package called \pkg{pgfSweave} which provides a driver for Sweave.  \pkg{pgfSweave} started as an interface to \href{http://sourceforge.net/projects/eps2pgf/}{eps2pgf} and its ability to interpret strings in eps files as \LaTeX{}.  This was used to much the same effect as \pkg{tikzDevice}.  The problem was the conversion from eps to pgf was SLOW.  Long story short, by combining this functionality with the externalization feature of pgf and the \pkg{cacheSweave} we were able to achieve bearable compilation speed and nice looking graphics.   \pkg{pgfSweave} is in the process of getting pumped up by interfacing with the \pkg{tikzDevice} package.   We hope that the combination will be a self-caching, consistancy-enducing, user-empowering tool for high quality reports. 
 \end{document}
