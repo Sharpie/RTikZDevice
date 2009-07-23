@@ -149,6 +149,12 @@
 \newif\iftikzCode@heapStart
 \newif\iftikzCode@heapEnd
 
+% This conditional controls the execution of the page breaking
+% algorithm implemented by this package. It is enabled by default.
+\newif\iftikzCode@breakPages
+\tikzCode@breakPagestrue
+\def\tikzCode@true{true}
+
 % Since listings does not like to work inside defined environments,
 % all source code enclosed in the tikzCodeBlock environment will
 % be stashed in a temporary file and parsed back in using: 
@@ -169,6 +175,7 @@
 	\pgfkeys{/tikzCode/title/.store in=\tikzCode@codeNodeTitle,
 		/tikzCode/footer/.store in=\tikzCode@codeNodeFooter,
 		/tikzCode/listing style/.store in=\tikzCode@listingStyle,
+		/tikzCode/no break/.store in=\tikzCode@noBreak,
 		/tikzCode/code body/.style={/tikzCode/defaults/code body},
 		/tikzCode/code title body/.style={/tikzCode/defaults/code title body},
 		/tikzCode/code title outline/.style={/tikzCode/defaults/code title outline},
@@ -399,17 +406,47 @@
 }%
 {%
 	\tikzCode@suspendOutputCapture
-	% Load the contents of the temp file into
-	% the codeHeap via the listings package.
-	\setbox\tikzCode@codeHeap = \vbox{
-		\ifx \tikzCode@listingStyle \undefined
-			\lstinputlisting{\jobname.lst}
-		\else
-			\lstinputlisting[style=\tikzCode@listingStyle]{\jobname.lst}
-		\fi
-	}
-	% Process the codeHeap
-	\tikzCode@processCodeHeap
+	
+	% This odd roundabout method to setting the page break
+	% conditional is here because I don't feel like hacking
+	% Sweave any more at this time.
+	\ifx \tikzCode@noBreak \tikzCode@true
+		\tikzCode@breakPagesfalse
+	\fi
+		
+	% If we are breaking pages, load the contents 
+	% of the temp file into the codeHeap via the 
+	% listings package.
+	\iftikzCode@breakPages
+		
+		\setbox\tikzCode@codeHeap = \vbox{
+			\ifx \tikzCode@listingStyle \undefined
+				\lstinputlisting{\jobname.lst}
+			\else
+				\lstinputlisting[style=\tikzCode@listingStyle]{\jobname.lst}
+			\fi
+		}
+		% Process the codeHeap
+		\tikzCode@processCodeHeap	
+		
+	\else
+		% We are not breaking pages, load the contents
+		% directly into the code chunk and process it.
+		\setbox\tikzCode@codeChunk = \vbox{
+			\ifx \tikzCode@listingStyle \undefined
+				\lstinputlisting{\jobname.lst}
+			\else
+				\lstinputlisting[style=\tikzCode@listingStyle]{\jobname.lst}
+			\fi
+		}
+		% Enable header and footer printing.
+		\tikzCode@heapStarttrue
+		\tikzCode@heapEndtrue
+		
+		% Output the code chunk
+		\tikzCode@processCodeChunk
+		
+	\fi
 }
 
 
@@ -418,21 +455,51 @@
 %--------------------- Begin User-Level Commands  --------------------
 
 \newcommand{\tikzCodeInput}[2][]{%
-	% Process environment options.
+	% Process command options.
 	\tikzCode@setupKeys
 	% Shift the key directory to our namespace.
 	\pgfkeys{ /tikzCode/.cd, #1 }
-	% Load the contents of the requested file
-	% into the codeHeap via the listings package.
-	\setbox\tikzCode@codeHeap = \vbox{%
-		\ifx \tikzCode@listingStyle \undefined%
-			\lstinputlisting{#2}
-		\else%
-			\lstinputlisting[style=\tikzCode@listingStyle]{#2}
-		\fi%
-	}
-	% Process the codeHeap
-	\tikzCode@processCodeHeap
+	
+	% This odd roundabout method to setting the page break
+	% conditional is here because I don't feel like hacking
+	% Sweave any more at this time.
+	\ifx \tikzCode@noBreak \tikzCode@true
+		\tikzCode@breakPagesfalse
+	\fi
+	
+	% If we are breaking pages, load the contents 
+	% of the temp file into the codeHeap via the 
+	% listings package.
+	\iftikzCode@breakPages
+		
+		\setbox\tikzCode@codeHeap = \vbox{
+			\ifx \tikzCode@listingStyle \undefined
+				\lstinputlisting{#2}
+			\else
+				\lstinputlisting[style=\tikzCode@listingStyle]{#2}
+			\fi
+		}
+		% Process the codeHeap
+		\tikzCode@processCodeHeap	
+		
+	\else
+		% We are not breaking pages, load the contents
+		% directly into the code chunk and process it.
+		\setbox\tikzCode@codeChunk = \vbox{
+			\ifx \tikzCode@listingStyle \undefined
+				\lstinputlisting{#2}
+			\else
+				\lstinputlisting[style=\tikzCode@listingStyle]{#2}
+			\fi
+		}
+		% Enable header and footer printing.
+		\tikzCode@heapStarttrue
+		\tikzCode@heapEndtrue
+		
+		% Output the code chunk
+		\tikzCode@processCodeChunk
+		
+	\fi
 }
 
 

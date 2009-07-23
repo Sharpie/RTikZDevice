@@ -318,6 +318,17 @@ The \pkg{tikzDevice} package is currently influenced by a number of global optio
 
 \begin{description}
 
+% The additional indent added by the description will be picked up by the listings
+% package and inserted into the code blocks. It is hard to detect in general when this
+% happens- so we'll just temporarily shift the listing margin and shorten the max
+% width of tikzCodeBlock node bodies. Since this is all done inside the description
+% environment, the changes will disappear when the environment ends.
+\lstset{xleftmargin=-\leftmargini}
+\newlength\tikzShortenLine
+\setlength\tikzShortenLine{\textwidth}
+\addtolength\tikzShortenLine{-\leftmargini}
+\tikzset{/tikzCode/defaults/code body/.append style={text width=\tikzShortenLine}}
+
 \item[\code{tikzLatex}]{ Specifies the location of the \LaTeX\ compiler to be used by \pkg{tikzDevice}. Setting a default for this this option may help the package locate a missing compiler:
 
 \begin{tikzCodeBlock}[title={Setting the default \LaTeX\ compiler in \code{.Rprofile}},listing style=sweavechunk]
@@ -331,7 +342,7 @@ options( tikzMetricsDictionary = '/path/to/dictionary/location' )
 \end{tikzCodeBlock}
 }
 
-\item[\code{tikzDocumentDeclaration}]{A string. The documentclass declaration when \code{standAlone == TRUE} as wel as when font metrics are calculated}
+\item[\code{tikzDocumentDeclaration}]{A string. The documentclass declaration when \code{standAlone == TRUE} as well as when font metrics are calculated}
 
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
 options( tikzDocumentDeclaration = "\\documentclass{article}" )
@@ -362,7 +373,6 @@ options( tikzMetricPackages = c(
 \end{tikzCodeBlock}
 
 \end{description}
-
 
 For convenience the function \code{setTikzDefaults()} is provided which sets all the global options back to their original values.
 
@@ -441,7 +451,7 @@ A simple \LaTeX\ document is then required to display the output of the basic \c
 
 	\begin{minipage}{0.5\textwidth}
 
-\begin{tikzCodeBlock}[title={Example \LaTeX\ Document},listing style=latexsource,code body/.append style={codebody color=white}]
+\begin{tikzCodeBlock}[title={Example \LaTeX\ Document},listing style=latexsource,code body/.append style={codebody color=white},no break=true]
 \documentclass{article}
 
 % All LaTeX documents including 
@@ -471,6 +481,11 @@ A simple \LaTeX\ document is then required to display the output of the basic \c
 \end{figure}
 
 One of the most exciting aspects of the \code{tikz()} function is that it allows the inclusion of arbitrary \LaTeX\ code in plotting commands. An important issue to note is that many \LaTeX\ commands pare prefixed by the backaslash, \textbackslash, character. This character has a special meaning as an escape charcter in many computing applications, including \lang{R}. Therefore, it is necessary to place two backslashes, \textbackslash\textbackslash, in the input to \lang{R} commands in order to cause one to appear in the output.  The next example demonstrates how to use \LaTeX\ commands in plot annotation.
+
+% Disable chunk page breaking so the following code doesn't get mangled.
+\makeatletter
+\tikzCode@breakPagesfalse
+\makeatother
 
 \begin{figure}[H]
 	\centering
@@ -502,6 +517,11 @@ dev.off()
 	\end{minipage}
 	\caption{A more complicated example of \code{tikz()} usage incorporating natively rendered \LaTeX\ commands.}
 \end{figure}
+
+% Reinstate tikzCodeBlock defaults.
+\makeatletter
+\tikzCode@breakPagestrue
+\makeatother
 
 \subsubsection{\code{bareBones} Mode}
 
