@@ -11,8 +11,11 @@ language. TikZ code may be used inside a LaTeX document by specifying \code{\\us
 in the document header.
 }
 \usage{
-	tikz(file = "Rplots.tex", width = 7, height = 7, 
-		bg="white", fg="black", standAlone = FALSE )
+tikz(file = "Rplots.tex", width = 7, height = 7, 
+	bg="white", fg="black", standAlone = FALSE, bareBones = FALSE, 
+	documentDeclaration = getOption("tikzDocumentDeclaration"),
+	packages = getOption("tikzLatexPackages"),
+	footer = getOption("tikzFooter")))
 }
 \arguments{
   \item{file}{A character string indicating the desired path to the output file.}
@@ -20,10 +23,19 @@ in the document header.
   \item{height}{The hegiht of the output figure, in \bold{inches}.}
   \item{bg}{The starting background color for the plot.}
   \item{fg}{The starting foreground color for the plot.}
-  \item{standAlone}{A logical value indicating whether the resulting file should be suitable for direct 
-		processing by LaTeX. A value of \code{FALSE} indicates that the file is intended for inclusion in a
-	  larger document. See \sQuote{Details}.}
+  \item{standAlone}{A logical value indicating whether the resulting file 
+			should be suitable for direct processing by LaTeX. A value of 
+			\code{FALSE} indicates that the file is intended for inclusion in 
+			a larger document. See \sQuote{Details}.}
+  \item{bareBones}{A logical value.  When \code{TRUE} the figure will not be 
+			wrapped in a \code{tikzpicture} environment.  This option is 
+			useful for embedding one TikZ picture within another. When 
+			\code{TRUE} multipage output will be drawn on a single page.}
+  \item{documentDeclaration}{See the section ``Options That Affect Package Behavior.''}
+  \item{packages}{See the section ``Options That Affect Package Behavior.''}
+  \item{footer}{See the section ``Options That Affect Package Behavior.''}
   }
+
 \details{
 The TikZ device enables LaTeX-ready output from R graphics functions. This is done by producing code that 
 can be understood by the TikZ graphics language. All text in a graphic output with \code{tikz} will be typeset by LaTeX and therefore will match whatever fonts are currently used in the document. This also means that \strong{LaTeX mathematics can be typeset directly into labels and annotations}.
@@ -76,12 +88,12 @@ Charlie can wax poetic here about string widths, font metrics, encodings, metric
 }
 
 \section{Options That Affect Package Behavior}{
-The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \lang{R} scripts, in the \lang{R} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
+The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \R{} scripts, in the \R{} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
 
 \itemize{
 \item{\code{tikzLatex}}{ Specifies the location of the \LaTeX\ compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. The default is searched for when the package is loaded, otherwise it can be set manually.   This option may be set as follows: \code{options( tikzLatex = '/path/to/latex/compiler' )}.}
 
-\item{\code{tikzMetricsDictionary}}{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \lang{R} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the \LaTeX\ compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \lang{R} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \lang{R} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}.}
+\item{\code{tikzMetricsDictionary}}{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \R{} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the \LaTeX\ compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \R{} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \R{} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}.}
 
 \item{\code{tikzDocumentDeclaration}}{A string. The documentclass declaration when \code{standAlone == TRUE} as wel as when font metrics are calculated
 
@@ -106,7 +118,7 @@ options( tikzLatexPackagesDefault = c(
 }
 }
 
-\item{\code{tikzMetricPackages}}{ A character vector. These are the packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of \LaTeX{} and \lang{R} match up.
+\item{\code{tikzMetricPackages}}{ A character vector. These are the packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of \LaTeX{} and \R{} match up.
 
 \preformatted{
 options( tikzMetricPackages = c(
@@ -114,8 +126,8 @@ options( tikzMetricPackages = c(
 		"\\usepackage[T1]{fontenc}",
 		"\\usetikzlibrary{calc}"))
 }}
-} #Itemize
-} #Section
+} 
+} 
 
 \seealso{
 \code{\link{pictex}}, \code{\link{getLatexCharMetrics}}, \code{\link{getLatexStrWidth}}, \code{\link{setTikzDefaults}}
@@ -132,7 +144,7 @@ setwd(td)
 
 # Minimal plot
 tikz(tf,standAlone=T)
-plot(1)
+	plot(1)
 dev.off()
 
 # View the output
@@ -170,7 +182,7 @@ system(paste(getOption('pdfviewer'),file.path(td,'example2.pdf')))
 setwd(oldwd)
 ################################################
 
-## Example 2 ###################################
+## Example 3 ###################################
 #Set up temporary work directory
 td <- tempdir()
 tf <- file.path(td,'example3.tex')

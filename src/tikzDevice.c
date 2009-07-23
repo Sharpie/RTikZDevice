@@ -279,7 +279,7 @@ static Rboolean TikZ_Setup(
 	 * right aligned- this is certainly possible in TeX but would take some
 	 * though to implement.
 	*/
-	deviceInfo->canHAdj = 0;
+	deviceInfo->canHAdj = 1;
 
 	/*
 	 * useRotatedTextInContour specifies if the text function along with
@@ -513,8 +513,12 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
 		/* End the current TikZ environment, unless we are making bare bones code. */
 		if( tikzInfo->bareBones != TRUE ){
-
+			
+			fprintf(tikzInfo->outputFile, "\\end{scope}\n");
 			fprintf(tikzInfo->outputFile, "\\end{tikzpicture}\n");
+			
+			/*Next clipping region will be the first on the page*/
+			tikzInfo->firstClip = TRUE;
 
 			/*Show only for debugging*/
 			if(tikzInfo->debug == TRUE) 
@@ -555,7 +559,7 @@ static void TikZ_Clip( double x0, double x1,
 	deviceInfo->clipTop = y1;
 	deviceInfo->clipRight = x1;
 	
-	if(tikzInfo->firstClip != TRUE){
+	if(tikzInfo->firstClip == FALSE){
 		fprintf(tikzInfo->outputFile, "\\end{scope}\n");
 	}else{
 		tikzInfo->firstClip = FALSE;
@@ -843,6 +847,8 @@ static void TikZ_Text( double x, double y, const char *str,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 	
+	double tol = 0.01;
+	
 	// Append font face commands depending on which font R is using.
 	char *tikzString = (char *) calloc( strlen(str) + 20, sizeof(char) );
 
@@ -889,7 +895,23 @@ static void TikZ_Text( double x, double y, const char *str,
 	// Add a reference to the text color to the node options.
 	SetColor( plotParams->col, FALSE, deviceInfo );
 	/* End options, print coordinates and string. */
-	fprintf( tikzInfo->outputFile, "anchor=base west, inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s};\n",
+	fprintf( tikzInfo->outputFile, "anchor=");
+	
+	//Justify the text
+	if(fabs(hadj - 0.0) < tol){
+		//Left Justified
+		fprintf( tikzInfo->outputFile, "base west,");
+	}
+	if(fabs(hadj - 0.5) < tol){
+		//Center Justified
+		fprintf( tikzInfo->outputFile, "base,");
+	}
+	if(fabs(hadj - 1) < tol){
+		//Right Justified
+		fprintf( tikzInfo->outputFile, "base east,");
+	}
+		
+	fprintf( tikzInfo->outputFile, "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s};\n",
 		plotParams->cex, x, y, tikzString);
 
 	// Since we no longer neexd tikzString, we should free the memory that it is being stored in.

@@ -166,6 +166,27 @@ function(main){
     
 },
 
+# Test for text alignment (left center right)
+function(main){
+	
+	plot(1,1,type='n',xlab='',ylab='',main=main,axes=F)
+	abline(v=1)
+	
+	#left justified
+	par(adj = 0)
+	text(1,1.1,'Left')
+	
+	#Center Justified
+	par(adj = 0.5)
+	text(1,1,'Center')
+	
+	#Right Justified
+	par(adj = 1)
+	text(1,0.9,'Right')
+	
+	
+},
+
 # Three dimensional plotting test- taken from a persp example.
 function(main){
 
@@ -191,17 +212,17 @@ function(main){
 },
 
 # Neat example of image.plot using the fields package.
-function(main){
-
-	sink('/dev/null')
-	suppressPackageStartupMessages(require(spam))
-	suppressPackageStartupMessages(require(fields))
-	sink()
-	data(RCMexample)
-
-	image.plot( RCMexample$x, RCMexample$y, RCMexample$z[,,8], main=main )
-
-},
+#function(main){
+#
+#	sink('/dev/null')
+#	suppressPackageStartupMessages(require(spam))
+#	suppressPackageStartupMessages(require(fields))
+#	sink()
+#	data(RCMexample)
+#
+#	image.plot( RCMexample$x, RCMexample$y, RCMexample$z[,,8], main=main )
+#
+#},
 
 # from the ggplot2 book section "Fitting multiple models"
 function(main){

@@ -7,7 +7,7 @@
 %\usepackage[T1]{fontenc}
 \usepackage{atbegshi}
 \usepackage[colorlinks]{hyperref}
-\usepackage{courier}
+\usepackage[scaled=.9]{couriers}
 
 
 % Sexyness
@@ -312,7 +312,7 @@ Error: package/namespace load failed for 'tikzDevice'
 In this case, \pkg{tikzDevice} has done it's very best to locate a working compiler and came up empty. If you have a working \LaTeX\ compiler, the next section describes how to inform the \pkg{tikzDevice} package of its location. For suggestions on how to obtain a \LaTeX\ compiler, see \autoref{part:two}.
 
 
-\subsection{\lang{R} Options That Affect Package Behavior}
+\subsection{\lang{R} Options That Affect Package Behavior}\label{sec:options}
 The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \lang{R} scripts, in the \lang{R} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
 
 
@@ -379,7 +379,7 @@ For convenience the function \code{setTikzDefaults()} is provided which sets all
 The proper placement of a \code{.Rprofile} file is explained in \code{?Startup}. For the details of why calling the \LaTeX\ compiler is necessary, see \autoref{part:three}.
 
 \tikzDocDisclaim{A Word of Caution About Setting Options.}
-{A lot of power is given to you through these global options, and with great power comes great responsibility.  For example, if you do not include the \TikZ{} package in the \code{tikzLatexPackages} option then all of the string metric calculations will fail.  There are innumerable ways for packages to clash in \LaTeX{} so just be aware. 
+{A lot of power is given to you through these global options, and with great power comes great responsibility.  For example, if you do not include the \TikZ{} package in the \code{tikzLatexPackages} option then all of the string metric calculations will fail. Or if you use a different font when compiling than you used for calculating metrics, strings may be placed incorrectly.  There are innumerable ways for packages to clash in \LaTeX{} so just be aware. 
 }
 
 
@@ -398,7 +398,10 @@ The \code{tikz()} function opens a new graphics device and may be called with th
 
 \begin{Verbatim}[frame=single]
 tikz(file = "Rplots.tex", width = 7, height = 7, 
-	bg="white", fg="black", standAlone = FALSE, bareBones = FALSE )
+    bg="white", fg="black", standAlone = FALSE, bareBones = FALSE, 
+    documentDeclaration = getOption("tikzDocumentDeclaration"),
+    packages = getOption("tikzLatexPackages"),
+    footer = getOption("tikzFooter")))
 \end{Verbatim}
 
 \begin{description}
@@ -408,7 +411,10 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
 \item[\code{bg}]{ The starting background color for the plot. }
 \item[\code{fg}]{ The starting foreground color for the plot. }
 \item[\code{standAlone}]{ A logical value indicating whether the resulting file should be suitable for direct processing by \LaTeX .}
-\item[\code{bareBones}]{ A logical value indicating whether the resulting \TikZ code produced without being placed within a \LaTeX\ \code{tikzpicture} envirement.}
+\item[\code{bareBones}]{ A logical value indicating whether the resulting \TikZ code produced without being placed within a \LaTeX\ \code{tikzpicture} environment.}
+\item[\code{documentDeclaration}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
+\item[\code{packages}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
+\item[\code{footer}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
 \end{description}
 
 The first five options should be familiar to anyone who has used the default graphics devices shipped with \lang{R}. The options \code{file}, \code{width}, \code{height}, \code{bg} and \code{fg} represent the standard graphics parameters currently implemented by \pkg{tikzDevice}. The last two options, \code{standAlone} and \code{bareBones}, are specific to the \code{tikz()} graphics device and affect the structure the output file. Using these options \code{tikz()} supports three modes of output: 
@@ -495,7 +501,7 @@ require(tikzDevice)
 tikz('latexEx.tex',
   width=3.5,height=3.5)
 
-x <- rnorm(5)
+x <- rnorm(10)
 y <- x + rnorm(5,sd=0.25)
 
 model <- lm(y ~ x)
@@ -507,6 +513,12 @@ abline(model,col='red')
 
 mtext(paste("Linear model: $R^{2}=",
   rsq,"$" ),line=0.5)
+  
+legend('bottomright', legend = 
+  paste("$y = ",
+    round(coef(model)[2],3), 'x +',
+    round(coef(model)[1],3), '$',
+    sep=''), bty= 'n')
 
 dev.off()
 @
@@ -543,7 +555,7 @@ dev.off()
 
 The resulting code may then be used inside a \code{tikzpicture} environment using the \verb`\include{}` command. The included code must be wrapped in a \code{scope} environment that contains the options \code{x=1pt} and \code{y=1pt}. This informs \TikZ\ of the units being used in the coordinates of the plot output. The options \code{xshift} and \code{yshift} may also be applied to the \code{scope} in order to position the plot. The following code demonstrates how to embed \code{bareBones} output in a \code{tikzpicture}
 
-\begin{tikzCodeBlock}[title={Example of a \TikZ\ environment including \code{bareBones} output},code body/.append style={codebody color=white}]
+\begin{tikzCodeBlock}[title={Example of a \TikZ\ environment including \code{bareBones} output},code body/.append style={codebody color=white},listing style=latexsource]
 \begin{tikzpicture}
 
   \draw[clip] (-0.25,-0.25) rectangle (4.25in,4.25in);
@@ -647,7 +659,7 @@ dev.off()
 
 \subsubsection{An Xe\LaTeX{} example}
 
-It is also possible to use Xe\LaTeX{} with \pkg{tikzDevice} that introduces some interesting possibilities.  The following example was taken inspired by Dario Taraborelli and his article \textit{The Beauty of LaTeX}.
+It is also possible to use Xe\LaTeX{} with \pkg{tikzDevice} that introduces some interesting possibilities.  The following example was inspired by Dario Taraborelli and his article \textit{The Beauty of LaTeX}.
 
 \begin{tikzCodeBlock}[title={Xe\LaTeX{} Example},listing style=sweavechunk]
 options(tikzLatex = 'xelatex')
@@ -698,15 +710,14 @@ options( tikzLatexPackages = c(
 ))
 		
 label <- c(  
-    "\\noindent{\\red d}roo{\\lbl g}"
-    ,"\\noindent{\\reda d}roo{\\lbla g}"
-    ,"\\noindent{\\redb d}roo{\\lblb g}"
-    ,"\\noindent{\\redf d}roo{\\lblf g}\\\\[.3cm]"
-    ,"\\noindent{\\redc d}roo{\\lblc g}"
-    ,"\\noindent{\\redd d}roo{\\lbld g}"
-    ,"\\noindent{\\rede d}roo{\\lble g}"
-    ,"\\noindent{\\redg d}roo{\\lblg g}\\\\[.2cm]"
-)
+  "\\noindent{\\red d}roo{\\lbl g}"
+  ,"\\noindent{\\reda d}roo{\\lbla g}"
+  ,"\\noindent{\\redb d}roo{\\lblb g}"
+  ,"\\noindent{\\redf d}roo{\\lblf g}\\\\[.3cm]"
+  ,"\\noindent{\\redc d}roo{\\lblc g}"
+  ,"\\noindent{\\redd d}roo{\\lbld g}"
+  ,"\\noindent{\\rede d}roo{\\lble g}"
+  ,"\\noindent{\\redg d}roo{\\lblg g}\\\\[.2cm]")
 title <- c(
     "\\smallprint{D. Taraborelli (2008), 
       \\href{http://nitens.org/taraborelli/latex}%","{The Beauty of \\LaTeX}}"
@@ -716,7 +727,6 @@ title <- c(
 	)
 	
 lim <- 0:(length(label)+1)
-
 tikz('xelatexEx.tex',standAlone=T,width=5,height=5)
 plot(lim,lim,cex=0,pch='.',xlab = 'Xe\\LaTeX{} Test',
     ylab='', main = title[1], sub = title[2])
@@ -725,12 +735,18 @@ for(i in 1:length(label))
 dev.off()
 \end{tikzCodeBlock}
 
-Compiling the resulting file \code{xelatexEx.tex} with Xe\LaTeX{} will produce the output below!
+Compiling the resulting file \code{xelatexEx.tex} like so:
 
-\begin{figure}[h]
+\begin{tikzCodeBlock}[title={Compileing with Xe\LaTeX{}},listing style=bashsource]
+xelatex xelatexEx.tex
+\end{tikzCodeBlock}
+
+will produce the output in figure \ref{fig:xelatex}!  Please note some of the fonts used in the example may not be available on your system. 
+
+\begin{figure}[!h]
 \centering
 \includegraphics{img/testXeLaTeX.pdf}
-\caption{Result of Xe\LaTeX{} example}
+\caption{Result of Xe\LaTeX{} example}\label{fig:xelatex}
 \end{figure}
 
 
@@ -944,7 +960,8 @@ About \TikZ{}, the Pic\TeX{} device and the story of two fortran programmers wit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{On the Importance of Font and Style Consistancy in Reports}
+If you haven't figured it out by now, we are quite picky about the way our graphics look and the way 
 
 \section{The \pkg{pgfSweave} Package and Automatic Report Generation}
-	
+Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have another package called \pkg{pgfSweave} which provides a driver for Sweave.  \pkg{pgfSweave} started as an interface to \href{http://sourceforge.net/projects/eps2pgf/}{eps2pgf} and its ability to interpret strings in eps files as \LaTeX{}.  This was used to much the same effect as \pkg{tikzDevice}.  The problem was the conversion from eps to pgf was SLOW.  Long story short, by combining this functionality with the externalization feature of pgf and the \pkg{cacheSweave} we were able to achieve bearable compilation speed and nice looking graphics.   \pkg{pgfSweave} is in the process of getting pumped up by interfacing with the \pkg{tikzDevice} package.   We hope that the combination will be a self-caching, consistancy-enducing, user-empowering tool for high quality reports. 
 \end{document}

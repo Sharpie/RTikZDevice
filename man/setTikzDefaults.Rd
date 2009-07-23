@@ -16,7 +16,7 @@ Reset all the \pkg{tikzDevice} options to their default values.
   None.
 }
 \details{
-specifially resets the options \code{tikzLatex}, \code{tikzDocumentDeclaration}, \code{tikzLatexPackages} and \code{tikzFooter} 
+Specifically resets the options \code{tikzLatex}, \code{tikzDocumentDeclaration}, \code{tikzLatexPackages} and \code{tikzFooter} 
 }
 
 \value{

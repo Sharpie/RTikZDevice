@@ -27,9 +27,10 @@
 		{swe@veEndOutput},
 	% Normal TeX tildes are kind of ugly- let's substitute a math symbol instead.
 	% Shit, why not replace <- as well? *Mad typographic scientist cackle*
-	literate={~}{{$\sim$}}1 {<-}{$\leftarrow$}1,
+	% literate={~}{{$\sim$}}1 {<-}{$\leftarrow$}1,
 	showstringspaces = false,
 	upquote = false,
+	basicstyle = \ttfamily
 	commentstyle = {\color{blue!70}\itshape}
 }
 
@@ -37,17 +38,19 @@
 	language = [LaTeX]TeX,
 	showstringspaces = false,
 	upquote = false,
+	basicstyle = \ttfamily
 	commentstyle = {\color{red!80}\itshape}
 }
 
 \lstdefinestyle{bashsource}{
 	language = bash,
-	literate={~}{{$\sim$}}1,
+	% literate={~}{{$\sim$}}1,
 	moredelim=[is][\color{gray}]
 		{!out}
 		{!/out},
 	showstringspaces = false,
 	upquote = false,
+	basicstyle = \ttfamily
 	commentstyle = {\color{blue!80}\itshape}
 }
 
