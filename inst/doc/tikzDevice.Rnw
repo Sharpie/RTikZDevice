@@ -8,6 +8,7 @@
 \usepackage{atbegshi}
 \usepackage[colorlinks]{hyperref}
 \usepackage[scaled=.9]{couriers}
+\usepackage{ulem}
 
 
 % Sexyness
@@ -19,6 +20,7 @@
 % Page layout
 \usepackage[parfill]{parskip}
 \usepackage[letterpaper,margin=1in]{geometry}
+\usepackage{epigraph}
 
 
 % Graphics control.
@@ -741,7 +743,7 @@ Compiling the resulting file \code{xelatexEx.tex} like so:
 xelatex xelatexEx.tex
 \end{tikzCodeBlock}
 
-will produce the output in figure \ref{fig:xelatex}!  Please note some of the fonts used in the example may not be available on your system. 
+will produce the output in \autoref{fig:xelatex}!  Please note some of the fonts used in the example may not be available on your system. 
 
 \begin{figure}[!h]
 \centering
@@ -942,8 +944,28 @@ kpsewhich tikz.sty
 \part{Package Internals}
 \label{part:three}
 
-\section{Background}
-About \TikZ{}, the Pic\TeX{} device and the story of two fortran programmers with a dream.
+\epigraph{We will encourage you to develop the three great virtues of a programmer: {\itshape laziness}, {\itshape impatience}, and {\itshape hubris}.}{--{\scshape Larry Wall}}
+
+\section{Introduction and Background}
+
+% A friendly reminder that this portion of the documen-scratch that, ravings may be more % incoherent and crazy than the preceding sections..
+\tikzDocDisclaim{Caveat Lector}
+{
+The following introduction currently presents a \sout{vision}(delusion?) of what this section of the documentation could be. Currently the only portion of the inner workings of this package that we attempt to explain and document are those related to using the \LaTeX\ compiler to obtain font metrics.
+}
+
+We learn best through working with examples. When it comes to programming languages this involves taking working code that someone else has written, breaking it in as many places at it can possibly be broken, and then trying to build something out of the wreckage. Open source software facilitates this process wonderfully by ensuring the source code of a project is always available for inspection and experimentation. The \pkg{tikzDevice} its self was created by disassembling and then rebuilding Valerio Aimale's Pic\TeX\ device driver which is a part of the R core codebase.
+
+This section is our attempt to help anyone who may be experimenting with our code, and by extension the internals of the R graphics system. There may also be useful, or useless, tidbits concerning building R packages and interacting with the core R language. The R language can be extended in so many interesting and useful ways and it is our hope that the following documentation may provide a case study for anyone attempting such an extension.
+
+We will make an attempt to assume no special expertise with any of the systems or programming languages leveraged by this package and described by this documentation. Therefore, if you are an experienced developer and find yourself thinking ``My god, are they {\bfseries really} about to launch into a description of how C header files work?", please feel free to skip ahead a few paragraphs. We received our formal introduction to computer programming in a college engineering program- therefore our programming background is rooted in Fortran (or, if you prefer, {\scshape fortran}). We are attempting to write the sort of documentation that we would have found invaluable at the start of this project
+
+Therefore, this section is for all the budding developers like ourselves out there- people who have done some programming and who are starting to take a close look at the nuts and bolts of the R programming environment. If you feel like you are wandering through a vast forest getting smacked in the face by every branch then maybe this section will help pull some of those branches out of the way...
+
+...then again we have a lot of material to cover: R, C, \LaTeX , typography and the details of computerized font systems. Our grip may fail and send those branches flying back with increased velocity.
+
+We wish you luck!\\
+\vbox{}\quad{\itshape -The tikzDevice Team}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -963,5 +985,5 @@ About \TikZ{}, the Pic\TeX{} device and the story of two fortran programmers wit
 If you haven't figured it out by now, we are quite picky about the way our graphics look and the way 
 
 \section{The \pkg{pgfSweave} Package and Automatic Report Generation}
-Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have another package called \pkg{pgfSweave} which provides a driver for Sweave.  \pkg{pgfSweave} started as an interface to \href{http://sourceforge.net/projects/eps2pgf/}{eps2pgf} and its ability to interpret strings in eps files as \LaTeX{}.  This was used to much the same effect as \pkg{tikzDevice}.  The problem was the conversion from eps to pgf was SLOW.  Long story short, by combining this functionality with the externalization feature of pgf and the \pkg{cacheSweave} we were able to achieve bearable compilation speed and nice looking graphics.   \pkg{pgfSweave} is in the process of getting pumped up by interfacing with the \pkg{tikzDevice} package.   We hope that the combination will be a self-caching, consistancy-enducing, user-empowering tool for high quality reports. 
+Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have another package called \pkg{pgfSweave} which provides a driver for Sweave.  \pkg{pgfSweave} started as an interface to \href{http://sourceforge.net/projects/eps2pgf/}{eps2pgf} and its ability to interpret strings in eps files as \LaTeX{}.  This was used to much the same effect as \pkg{tikzDevice}.  The problem was the conversion from eps to pgf was SLOW.  Long story short, by combining this functionality with the externalization feature of pgf and the \pkg{cacheSweave} we were able to achieve bearable compilation speed and nice looking graphics.   \pkg{pgfSweave} is in the process of getting pumped up by interfacing with the \pkg{tikzDevice} package.   We hope that the combination will be a self-caching, consistancy-inducing, user-empowering tool for high quality reports. 
 \end{document}
