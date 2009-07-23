@@ -642,6 +642,7 @@ dev.off()
 It is also possible to use Xe\LaTeX{} with \pkg{tikzDevice} that introduces some interesting possibilities.  The following example was inspired by Dario Taraborelli and his article \textit{The Beauty of LaTeX}.
 
 \begin{tikzCodeBlock}[title={Xe\LaTeX{} Example},listing style=sweavechunk]
+#Set options for using XeLaTeX
 options(tikzLatex = 'xelatex')
 options(tikzDocumentDeclaration = '\\documentclass{article}')
 options( tikzLatexPackages = c(
@@ -662,8 +663,7 @@ options( tikzLatexPackages = c(
   	{\\color{myred}\\fontspec[Variant=5]{Zapfino}#1}"
   ,"\\newcommand{\\rede}[1]
   	{\\color{myred}\\fontspec[Variant=6]{Zapfino}#1}"
-  ,"\\newcommand{\\redf}[1]
-  	{\\color{myred}\\fontspec[Variant=7]{Zapfino}#1}"
+  ,"\\newcommand{\\redf}[1]{\\color{myred}\\fontspec[Variant=7]{Zapfino}#1}"
   ,"\\newcommand{\\redg}[1]
   	{\\color{myred}\\fontspec[Variant=8]{Zapfino}#1}"
   ,"\\newcommand{\\lbl}[1]{\\color{lightblue} #1}"
@@ -688,7 +688,8 @@ options( tikzLatexPackages = c(
   ,"\\newcommand{\\smallprint}[1]{\\fontspec{Hoefler Text}%"
   ,"\\fontsize{10pt}{13pt}\\color{Gray}\\selectfont #1}%"
 ))
-		
+
+#Set the content using custom defined commands
 label <- c(  
   "\\noindent{\\red d}roo{\\lbl g}"
   ,"\\noindent{\\reda d}roo{\\lbla g}"
@@ -698,6 +699,8 @@ label <- c(
   ,"\\noindent{\\redd d}roo{\\lbld g}"
   ,"\\noindent{\\rede d}roo{\\lble g}"
   ,"\\noindent{\\redg d}roo{\\lblg g}\\\\[.2cm]")
+
+#Set the titles using custom defined commands, and hyperlinks
 title <- c(
     "\\smallprint{D. Taraborelli (2008), 
       \\href{http://nitens.org/taraborelli/latex}%","{The Beauty of \\LaTeX}}"
@@ -706,6 +709,7 @@ title <- c(
       {\\textsc{cc-by-sa}}}"
 	)
 	
+#Draw the graphic
 lim <- 0:(length(label)+1)
 tikz('xelatexEx.tex',standAlone=T,width=5,height=5)
 plot(lim,lim,cex=0,pch='.',xlab = 'Xe\\LaTeX{} Test',

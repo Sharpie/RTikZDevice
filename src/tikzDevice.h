@@ -115,4 +115,7 @@ static void TikZ_Deactivate( pDevDesc deviceInfo );
 static Rboolean TikZ_Locator( double *x, double *y, pDevDesc deviceInfo );
 static void TikZ_Mode( int mode, pDevDesc deviceInfo );
 
+/* Auxilury routines*/
+void tikzAnnotate(const char **annotation, int *size);
+
 #endif // End of Once Only header
