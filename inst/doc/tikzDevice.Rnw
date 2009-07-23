@@ -717,16 +717,16 @@ dev.off()
 
 Compiling the resulting file \code{xelatexEx.tex} like so:
 
-\begin{tikzCodeBlock}title={Compileing with Xe\LaTeX{}},listing style=bashsource]
+\begin{tikzCodeBlock}[title={Compileing with Xe\LaTeX{}},listing style=bashsource]
 xelatex xelatexEx.tex
 \end{tikzCodeBlock}
 
-will produce the output below!  Please note some of the fonts used in the example may not be available on your system. 
+will produce the output in figure \ref{fig:xelatex}!  Please note some of the fonts used in the example may not be available on your system. 
 
-\begin{figure}[h]
+\begin{figure}[!h]
 \centering
 \includegraphics{img/testXeLaTeX.pdf}
-\caption{Result of Xe\LaTeX{} example}
+\caption{Result of Xe\LaTeX{} example}\label{fig:xelatex}
 \end{figure}
 
 
