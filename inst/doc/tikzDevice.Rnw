@@ -761,7 +761,7 @@ will produce the output in \autoref{fig:xelatex}!  Please note some of the fonts
 \newpage
 \subsubsection{Annotating Graphics with \TikZ{} Commands}
 
-The function \code{tikzAnnotate} provides the ability to annotate you graphics with \TikZ{} commands.  There are a lot of exciting possibilities with this feature; It basically opens up the door for you to draw anything on your plot that can be drawn with \TikZ{}. Check out the results in figure \ref{fig:annotation}.
+The function \code{tikzAnnotate} provides the ability to annotate you graphics with \TikZ{} commands.  There are a lot of exciting possibilities with this feature; It basically opens up the door for you to draw anything on your plot that can be drawn with \TikZ{}. Check out the results in \autoref{fig:annotation}.
 
 <<annotation,echo=T,results=hide,keep.source=T>>=
 options(tikzLatexPackages = 
@@ -779,11 +779,11 @@ tikz("annotation.tex",width=4,height=4)
     max.outlier <- grconvertY(max( p[outliers] ),, "device")
     x <- grconvertX(1,,"device")
 
-    tikzAnnotate(paste("\\node (min) at (",x,',',min.outlier,") {};"))
-    tikzAnnotate(paste("\\node (max) at (",x,',',max.outlier,") {};"))
+    tikzAnnotate(paste("\\coordinate (min) at (",x,',',min.outlier,") {};"))
+    tikzAnnotate(paste("\\coordinate (max) at (",x,',',max.outlier,") {};"))
     tikzAnnotate(c("\\draw[decorate,very thick,red,",
         "decoration={brace,amplitude=20pt}] (min) ",
-        "-- node[single arrow,anchor=tip,left=20pt,draw=green] ",
+        "-- node[single arrow,anchor=tip,fill=white,left=20pt,draw=green] ",
         "{Look at These Outliers!} (max);"))
     tikzAnnotate(c("\\node[starburst, fill=green, ",
         "draw=blue, very thick,right=of max]  (burst) {Wow!};"))
@@ -991,7 +991,7 @@ kpsewhich tikz.sty
 \part{Package Internals}
 \label{part:three}
 
-\epigraph{We will encourage you to develop the three great virtues of a programmer: {\itshape laziness}, {\itshape impatience}, and {\itshape hubris}.}{--{\scshape Larry Wall}}
+\epigraph{We will encourage you to develop the three great virtues of a programmer: {\itshape laziness}, {\itshape impatience}, and {\itshape hubris}.}{{\itshape Programming Perl}\\ --{\scshape Larry Wall}}
 
 \section{Introduction and Background}
 
