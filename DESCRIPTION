@@ -2,10 +2,10 @@ Package: tikzDevice
 Type: Package
 Title: A Device for R Graphics Output in PGF/TikZ Format
 Version: 0.4
-Date: 2009-07-15
+Date: 2009-07-23
 Author: Charlie Sharpsteen and Cameron Bracken
 Maintainer: The tikzDevice team: <tikzdevice-bugs@lists.r-forge.r-project.org>
-Description: This package is almost ready to rock out in real life!
+Description: The TikZ device enables LaTeX-ready output from R graphics functions. This is done by producing code that can be understood by the TikZ graphics language. All text in a graphic output with the tikz() funciton will can be typeset by LaTeX and therefore will match whatever fonts are currently used in the document. This also means that LaTeX mathematics can be typeset directly into labels and annotations!  Graphics produced this way can also be annotated with cutom TikZ commands.
 License: GPL (>= 2.0)
 Depends: filehash
 LazyLoad: yes
