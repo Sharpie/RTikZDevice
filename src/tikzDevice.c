@@ -1331,6 +1331,24 @@ static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo){
 	}
 }
 
+void tikzAnnotate(const char **annotation, int *size){
+	
+	//1. Get values of tikzInfo and deviceInfo
+	//2. Print out annotation 
+	pDevDesc deviceInfo = GEcurrentDevice()->dev;
+	
+	/* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+		
+	int i = 0;
+		
+	if(tikzInfo->debug == TRUE)
+		fprintf(tikzInfo->outputFile,"\n%% Annotating Graphic\n");
+	
+	for(i == 0; i < size[0]; ++i)
+		fprintf(tikzInfo->outputFile, "%s\n", annotation[i] );
+}
+
 /* TeX Text Translations from the PixTeX Device, I thought we might be able to 
  * use these possibly for an option to sanitize TeX strings
  */
