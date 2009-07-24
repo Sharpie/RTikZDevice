@@ -1,4 +1,3 @@
-\Rdversion{1.1}
 \name{tikz}
 \alias{tikz}
 
@@ -88,12 +87,12 @@ Charlie can wax poetic here about string widths, font metrics, encodings, metric
 }
 
 \section{Options That Affect Package Behavior}{
-The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \R{} scripts, in the \R{} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
+The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \R{} scripts, in the \R{} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, LaTeX packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
 
 \itemize{
-\item{\code{tikzLatex}}{ Specifies the location of the \LaTeX\ compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. The default is searched for when the package is loaded, otherwise it can be set manually.   This option may be set as follows: \code{options( tikzLatex = '/path/to/latex/compiler' )}.}
+\item{\code{tikzLatex}}{ Specifies the location of the LaTeX compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. The default is searched for when the package is loaded, otherwise it can be set manually.   This option may be set as follows: \code{options( tikzLatex = '/path/to/latex/compiler' )}.}
 
-\item{\code{tikzMetricsDictionary}}{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \R{} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the \LaTeX\ compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \R{} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \R{} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}.}
+\item{\code{tikzMetricsDictionary}}{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \R{} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the LaTeX compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \R{} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \R{} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}.}
 
 \item{\code{tikzDocumentDeclaration}}{A string. The documentclass declaration when \code{standAlone == TRUE} as wel as when font metrics are calculated
 
@@ -118,7 +117,7 @@ options( tikzLatexPackagesDefault = c(
 }
 }
 
-\item{\code{tikzMetricPackages}}{ A character vector. These are the packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of \LaTeX{} and \R{} match up.
+\item{\code{tikzMetricPackages}}{ A character vector. These are the packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of LaTeX and \R{} match up.
 
 \preformatted{
 options( tikzMetricPackages = c(
