@@ -14,8 +14,8 @@
 % Sexyness
 \usepackage{tikz}
 \usetikzlibrary{calc,positioning}
-\usetikzlibrary{shapes.multipart,shapes.geometric}
-\usetikzlibrary{decorations.shapes,decorations.text}
+\usetikzlibrary{shapes.multipart,shapes.geometric,shapes.symbols,shapes.arrows}
+\usetikzlibrary{decorations.shapes,decorations.text,decorations.pathreplacing}
 
 % Page layout
 \usepackage[parfill]{parskip}
@@ -755,23 +755,46 @@ will produce the output in \autoref{fig:xelatex}!  Please note some of the fonts
 \caption{Result of Xe\LaTeX{} example}\label{fig:xelatex}
 \end{figure}
 
-
+\newpage
 \subsubsection{Annotating Graphics with \TikZ{} Commands}
 
-The function \code{tikzAnnotate} provides the ability to annotate you graphics with \TikZ{} commands.  There are a lot of exciting possibilities with this feature; It basically opens up the door for you to draw anythign on your plot that can be drawn with \TikZ{}.
+The function \code{tikzAnnotate} provides the ability to annotate you graphics with \TikZ{} commands.  There are a lot of exciting possibilities with this feature; It basically opens up the door for you to draw anything on your plot that can be drawn with \TikZ{}. Check out the results in figure \ref{fig:annotation}.
 
-\begin{tikzCodeBlock}[title={Xe\LaTeX{} Example},listing style=sweavechunk]
-	library(tikzDevice)
-	options(tikzLatexPackages = c(getOption('tikzLatexPackages'),
-		"\\usetikzlibrary{shapes.arrows}"))
-	tikz(standAlone=T)
-	plot(1)
-	x <- grconvertX(1,,'device')
-	y <- grconvertY(1,,'device')
-	tikzAnnotate(paste('\\node[single arrow,anchor=tip,draw,fill=green] at (',
-		x,',',y,') {Look over here!};'))
-	dev.off()
-\end{tikzCodeBlock}
+<<annotation,echo=T,results=hide,keep.source=T>>=
+options(tikzLatexPackages = 
+    c(getOption('tikzLatexPackages'),
+        c("\\usetikzlibrary{decorations.pathreplacing}",
+        "\\usetikzlibrary{shapes.arrows}")))
+
+p <- rgamma(300,1)
+outliers <- which( p > quantile(p,.75)+1.5*IQR(p) )
+
+tikz("annotation.tex",width=4,height=4)
+    boxplot(p)
+
+    min.outlier <- grconvertY(min( p[outliers] ),, "device")
+    max.outlier <- grconvertY(max( p[outliers] ),, "device")
+    x <- grconvertX(1,,"device")
+
+    tikzAnnotate(paste("\\node (min) at (",x,',',min.outlier,") {};"))
+    tikzAnnotate(paste("\\node (max) at (",x,',',max.outlier,") {};"))
+    tikzAnnotate(c("\\draw[decorate,very thick,red,",
+        "decoration={brace,amplitude=20pt}] (min) ",
+        "-- node[single arrow,anchor=tip,left=20pt,draw=green] ",
+        "{Look at These Outliers!} (max);"))
+    tikzAnnotate(c("\\node[starburst, fill=green, ",
+        "draw=blue, very thick,right=of max]  (burst) {Wow!};"))
+    tikzAnnotate(c("\\draw[->, very thick] (burst.west) -- (max);"))
+
+dev.off()
+setTikzDefaults()
+@
+
+\begin{figure}[!h]
+\centering
+\input{figs/annotation.tex}
+\caption{An example using \TikZ{} annotation.}\label{fig:annotation}
+\end{figure}
 
 % Return to the normal working directory
 <<pathStepOut,results=hide>>=
