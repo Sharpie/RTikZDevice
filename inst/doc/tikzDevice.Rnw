@@ -21,6 +21,7 @@
 \usepackage[parfill]{parskip}
 \usepackage[letterpaper,margin=1in]{geometry}
 \usepackage{epigraph}
+\usepackage{multicol}
 
 
 % Graphics control.
@@ -358,20 +359,22 @@ options( tikzFooter = c( "\\end{document}" ) )
 
 \item[\code{tikzLatexPackages}]{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. }
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
-	options( tikzLatexPackages = c(
-		"\\usepackage{tikz}",
-		"\\usepackage[active,tightpage]{preview}",
-		"\\PreviewEnvironment{pgfpicture}",
-		"\\setlength\\PreviewBorder{0pt}") )
+options( tikzLatexPackages = c(
+  "\\usepackage{tikz}",
+  "\\usepackage[active,tightpage]{preview}",
+  "\\PreviewEnvironment{pgfpicture}",
+  "\\setlength\\PreviewBorder{0pt}")
+)
 \end{tikzCodeBlock}
 
 \item[\code{tikzMetricPackages}]{ A character vector. These are the extra packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of \LaTeX{} and \lang{R} match up.}
 
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
 options( tikzMetricPackages = c(
-		"\\usepackage[utf8]{inputenc}",
-		"\\usepackage[T1]{fontenc}",
-		"\\usetikzlibrary{calc}"))
+  "\\usepackage[utf8]{inputenc}",
+  "\\usepackage[T1]{fontenc}",
+  "\\usetikzlibrary{calc}")
+)
 \end{tikzCodeBlock}
 
 \end{description}
@@ -998,30 +1001,271 @@ kpsewhich tikz.sty
 The following introduction currently presents a \sout{vision}(delusion?) of what this section of the documentation could be. Currently the only portion of the inner workings of this package that we attempt to explain and document are those related to using the \LaTeX\ compiler to obtain font metrics.
 }
 
-We learn best through working with examples. When it comes to programming languages this involves taking working code that someone else has written, breaking it in as many places at it can possibly be broken, and then trying to build something out of the wreckage. Open source software facilitates this process wonderfully by ensuring the source code of a project is always available for inspection and experimentation. The \pkg{tikzDevice} its self was created by disassembling and then rebuilding Valerio Aimale's Pic\TeX\ device driver which is a part of the R core codebase.
+We learn best through working with examples. When it comes to programming languages this involves taking working code that someone else has written, breaking it in as many places at it can possibly be broken, and then trying to build something out of the wreckage. Open source software facilitates this process wonderfully by ensuring the source code of a project is always available for inspection and experimentation. The \pkg{tikzDevice} its self was created by disassembling and then rebuilding Valerio Aimale's Pic\TeX\ device driver which is a part of the \lang{R} core codebase.
 
 This section is our attempt to help anyone who may be experimenting with our code, and by extension the internals of the R graphics system. There may also be useful, or useless, tidbits concerning building R packages and interacting with the core R language. The R language can be extended in so many interesting and useful ways and it is our hope that the following documentation may provide a case study for anyone attempting such an extension.
 
 We will make an attempt to assume no special expertise with any of the systems or programming languages leveraged by this package and described by this documentation. Therefore, if you are an experienced developer and find yourself thinking ``My god, are they {\bfseries really} about to launch into a description of how C header files work?", please feel free to skip ahead a few paragraphs. We received our formal introduction to computer programming in a college engineering program- therefore our programming background is rooted in Fortran (or, if you prefer, {\scshape fortran}). We are attempting to write the sort of documentation that we would have found invaluable at the start of this project
 
-Therefore, this section is for all the budding developers like ourselves out there- people who have done some programming and who are starting to take a close look at the nuts and bolts of the R programming environment. If you feel like you are wandering through a vast forest getting smacked in the face by every branch then maybe this section will help pull some of those branches out of the way...
+Therefore, this section is for all the budding developers like ourselves out there- people who have done some programming and who are starting to take a close look at the nuts and bolts of the \lang{R} programming environment. If you feel like you are wandering through a vast forest getting smacked in the face by every branch then maybe this section will help pull some of those branches out of the way...
 
-...then again we have a lot of material to cover: R, C, \LaTeX , typography and the details of computerized font systems. Our grip may fail and send those branches flying back with increased velocity.
+...then again we have a lot of material to cover: R, C, \LaTeX , \TikZ\ , typography and the details of computerized font systems. Our grip may fail and send those branches flying back with increased velocity.
 
 We wish you luck!\\
 \vbox{}\quad{\itshape -The tikzDevice Team}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{System Requirements}
+
+\section{Anatomy of an \lang{R} Graphics Device}
+
+The core of an \lang{R} graphics device is a collection of functions, written in C, that perform various specialized tasks. A description of some of these functions can be found in the {\itshape R Internals} manual while the main documentation is in the C header file \code{GraphicsDevice.h}. For most \lang{R} installations this header file can be found in the directory \code{R\_HOME/include/R\_ext}. For copies of \lang{R} distributed in source code form, \code{GraphicsDevice.h} is located inside \code{R-version/src/include/R\_ext}. The following is a description of the functions each graphics device is expected to provide:
+
+
+\setlength\columnsep{5em}
+
+\begin{multicols}{2}
+
+
+\subsection*{Drawing Routines}
+
+\begin{itemize}
+
+\item[\code{circle}]{This function is required to draw a circle centered at a given location with a given radius.}
+
+\item[\code{clip}]{This function specifies a rectangular area to be used a a clipping boundary for device output.}
+
+\item[\code{line}]{This function draws a line between two points.}
+
+\item[\code{polygon}]{This function draws lines between a list of points and then connects the first point to the last point.}
+
+\item[\code{polyline}]{This function draws lines between a list of points.}
+
+\item[\code{rect}]{This function is given a lower left corner and an upper right corner and draws a rectangle between the two.}
+
+\item[\code{text}]{This function inserts text at a given location.}
+
+\end{itemize}
+
+\subsection*{Font Metric Routines}
+
+\begin{itemize}
+
+\item[\code{metricInfo}]{This function is given the name of a single character and reports the ascent, descent and width of that character.}
+
+\item[\code{strWidth}]{This function is given a text string and reports the width of that string.}
+
+\end{itemize}
+
+\subsection*{Utility Routines}
+
+\begin{itemize}
+
+\item[\code{activate}]{This function is called when the device is designated as the active output device- i.e. by using \code{dev.set()} in \lang{R}}
+
+\item[\code{close}]{This function is called when the device is shut down- i.e. by using \code{dev.off()} in \lang{R}}
+
+\item[\code{deactivate}]{This function is called when another device is designated as the active output device.}
+
+\item[\code{locator}]{This function is mainly used by devices with a GUI window and reports the location of a mouseclick.}
+
+\item[\code{mode}]{This function is called when a device begins drawing output and again when the device finishes drawing output.}
+
+\item[\code{newPage}]{This function initiates the creation of a new page of output.}
+
+\item[\code{size}]{This function reports the size of the canvas the device is drawing on.}
+
+\end{itemize}
+
+\end{multicols}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Character Metrics and String Width}
+\section{Calculating Font Metrics}
 
-\subsection{Dictionaries}
-\subsection{What the Heck are Acent, Decent and Width}
+Font metrics are measurements associated with the glyphs, or printed characters, of a particular font. \lang{R} requires three of these metrics in order to produce correctly aligned output. The three metrics graphics devices are required to supply are:
 
+\begin{tikzpicture}
+
+\coordinate (centerpoint) at (0,0);
+
+\node[anchor=north,outer sep=0pt] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Ascent};
+
+\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below=0.25em of title] (char) {A};
+\draw[color=black,very thick] (char.base west) -- (char.base east);
+\draw[color=black,very thick] (char.north west) -- (char.north east);
+\draw[color=red,very thick,<->,>=stealth] ([xshift=10pt]char.south west) -- ([xshift=10pt]char.north west);
+
+
+\newdimen\yone
+\newdimen\ytwo
+
+\pgfextracty{\yone}{\pgfpointanchor{char}{north}}
+\pgfextracty{\ytwo}{\pgfpointanchor{char}{south}}
+\pgfmathparse{ \yone - \ytwo }
+
+\yone = \pgfmathresult pt
+
+\node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
+Ascent is the distance between the baseline and the tallest point on a character's glyph. For the "A" printed to the left, the ascent has been calculated as: \the\yone
+};
+\end{tikzpicture}
+
+
+
+\begin{tikzpicture}
+
+\coordinate (centerpoint) at (0,0) {};
+
+\node[anchor=north,outer sep=0pt] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Descent};
+
+\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {g};
+\draw[color=black,very thick] (char.base west) -- (char.base east);
+\draw[color=black,very thick] (char.south west) -- (char.south east);
+\draw[color=red,very thick,<-,>=stealth] ([xshift=10pt]char.south west) -- +(0,-6pt); 
+\draw[color=red,very thick,<-,>=stealth] ([xshift=10pt]char.base west) -- +(0,+6pt);
+
+
+\newdimen\yone
+\newdimen\ytwo
+
+\pgfextracty{\yone}{\pgfpointanchor{char}{base}}
+\pgfextracty{\ytwo}{\pgfpointanchor{char}{south}}
+\pgfmathparse{ \yone - \ytwo }
+
+\yone = \pgfmathresult pt
+
+\node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
+Descent is the distance between the baseline and the lowest point on a character's glyph. For the "g" printed to the left, the descent has been calculated as: \the\yone 
+};
+\end{tikzpicture}
+
+
+
+\begin{tikzpicture}
+
+\coordinate (centerpoint) at (0,0);
+
+\node[outer sep=0pt,anchor=north] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Width};
+
+\node[scale=4,text=black!30,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {X};
+\draw[color=black,very thick] (char.south west) -- (char.north west);
+\draw[color=black,very thick] (char.south east) -- (char.north east);
+\draw[color=red,very thick,<->,>=stealth] (char.mid west) -- (char.mid east); 
+
+\newdimen\xone
+\newdimen\xtwo
+
+\pgfextractx{\xone}{\pgfpointanchor{char}{east}}
+\pgfextractx{\xtwo}{\pgfpointanchor{char}{west}}
+\pgfmathparse{ \xone - \xtwo }
+
+\xone = \pgfmathresult pt
+
+\node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
+Width is the distance between the left and right sides of a character's glyph. For the "X" printed to the left, the width has been calculated as: \the\xone 
+};
+\end{tikzpicture}
+
+Providing font metrics and string widths is without a doubt most difficult task a \lang{R} graphics device must undertake. The calculation of string widths is made even difficult for the \pkg{tikzDevice} as we attempt to process arbitrary \LaTeX\ strings. Inside \lang{R} the string ``\verb`$\alpha$`" literally has 8 characters, but when it is typeset it only has one: $\alpha$.
+
+Calculating font metrics is a tricky business to begin with and the fact that the typeset representation of a \LaTeX\ string is different from it's representation in source code compounds the difficulty of the task immensely. Therefore, we took the path of laziness and started looking for an easy way out (remember the three great virtues of a programmer?). The solution we came up with seemed easy enough-- make \LaTeX\ calculate these metrics for us, after all that is what a \LaTeX\ compiler does for a living.
+
+Now, how to do that?
+
+\subsection{Character Metrics}
+
+As a starting point, let's examine the interface of the C function that \lang{R} calls in order to determine string width:
+
+\begin{tikzCodeBlock}[title={Function declaration for \code{metricInfo}}]
+void (metricInfo)(int c, const pGEcontext gc,
+  double* ascent, double* descent, double* width,
+  pDevDesc dd);
+\end{tikzCodeBlock}
+
+The most important variables involved in the function are \code{c}, \code{ascent}, \code{descent} and \code{width}. The incoming variable is \code{c}, which contains the character for which \lang{R} is requesting font metrics. Interestingly, \code{c} is passed as an integer, not a character as one might expect. What's up with that? Well, the short answer is that \lang{R} passes the \code{ASCII} or \code{UTF8} {\itshape symbol code} of a character and not the character it's self. The long answer will follow later.
+
+The outgoing variables are \code{ascent}, \code{descent} and \code{width}. The asterisks, `*', in their definitions mean these variables are passed as {\itshape pointers} as opposed to {\itshape values}. A complete discussion of the differences between pointers and values could, and has, filled up several chapters of several programming books. The important distinction in context of the \code{metricInfo} function is that when a number is assigned to a pointer variable, that number is available elsewhere after the function terminates. In contrast, when a number is assigned to a value variable, that number disappears when the function ends unless it is explicitly sent back out to the wide world through the \code{return} statement. So, the main task of the \code{metricInfo} function is to assign values to \code{ascent}, \code{descent} and \code{width}.
+
+The other two variables present in the function are the \code{pGEcontext} variable \code{gc} and the \code{pDevDesc} variable \code{dd}. \code{gc} contains information such as the font face, foreground color, background color, character expansion factor, ect. currently in use by the graphics system. \code{dd} is the object which contains \lang{R}'s representation of the graphics device. For the sake of simplifying the following discussion, we will ignore these variables.
+
+So, to recap-- we have an integer \code{c} coming in that represents a code for a character in the \code{ASCII} or \code{UTF8} symbol tables. Our overall task is to somehow turn that integer into three numbers which can be assigned to the pointer variables \code{ascent}, \code{descent} and \code{width}. And, since we're being lazy, we've decided that the best way to do that is to ask the \LaTeX\ compiler to compute the numbers for us.
+
+Recovering these numbers from the \LaTeX\ compiler involves the execution of three additional tasks:
+
+\begin{enumerate}
+
+	\item{We must write a \LaTeX\ input file that contains instructions for calculating the metrics.}
+	
+	\item{We call the \LaTeX\ compiler to process that input file.}
+	
+	\item{We must read the compiler's output in order to recover the metrics.}
+
+\end{enumerate}
+
+Each of these tasks can be executed from inside our \lang{C} function, \code{metricInfo}. However, we will run into some difficulties- namely with step 2, which involves calling out to the operating system with orders to run \LaTeX . Each operating system handles these calls a little differently and our package must attempt to get this job done whether it is running on Windows, UNIX, Linux or Mac OS X.
+
+Portable \lang{C} code could be written to handle each of these situations, but that is starting to sound like work and we're trying to be lazy here. What we need is to be able to work at a higher {\itshape level of abstraction}. That is-- instead of using \lang{C}, we need to be working inside a language that shields us from such details as what operating system is being used. \lang{R} may have called this \lang{C} function to calculate font metrics, but we really want to do the actual computations back inside \lang{R}.
+
+\subsubsection{Calling \lang{R} Functions from \lang{C} Functions}
+
+The ``Ritual of the Calling of the R Function" is easy enough to perform as long as you don't have burning need to know all the details of the objects you are handling. The \lang{C} level representation of a \lang{R} object such as a variable or function is an object known as a \code{SEXP}. For the exact details on what a \code{SEXP} is and how it works, we refer the interested user to chapter one of the {\itshape R Internals} manual.
+
+The \lang{R} function we will be calling is declared in the \lang{R} environment as follows:
+
+\begin{tikzCodeBlock}[title={Definition of target \lang{R} function},listing style=sweavechunk]
+getLatexCharMetrics <- function( charCode ){
+
+  # System call to LaTeX
+
+}
+\end{tikzCodeBlock}
+
+In order to call this function for \lang{C}, we need a vector composed of two \lang{C}-level \lang{R} objects-- one containing the name of the function we are calling and another one containing the value we are passing for \code{charCode}. This is set up in \lang{C} as follows:
+
+\begin{tikzCodeBlock}[title={Preparing a \lang{R} function call inside \lang{C}}]
+void (metricInfo)(int c, const pGEcontext gc, double* ascent, double* descent,
+  double* width, pDevDesc dd){
+  
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP, 2) );
+  
+  SEXP metricFun = findFun( install("getLatexCharMetrics"), R_Global_Env );
+  
+  SETCAR( RCallBack, metricFun );
+  
+  SETCADR( RCallBack, ScalarInteger( c ) );
+  SET_TAG( CDR( RCallBack ), install("charCode") );
+
+  \\ To be continued...
+
+}
+\end{tikzCodeBlock}
+
+The first thing that happens in the code chunk above is that a new \code{SEXP} variable named \code{RCallBack} is created. This variable will be the agent through which we will communicate with the \lang{R} environment. The next action is to allocate our callback variable as a vector of length 2-- we need one slot for the \lang{R} function name and one slot for the value that is being passed into the function. This allocation happens inside the \lang{R} environment, so it is executed inside the \code{PROTECT} statement. The reason for using \code{PROTECT} is that the \lang{R} garbage collector is constantly on the prowl for unused objects in the \lang{R} environment. An object is considered ``unused" if it is not attached to any variable name in the \lang{R} environment. Since the object is only attached to the variable \code{RCallBack} in our \lang{C} function, the \lang{R} garbage collector will see it a a valid candidate for deletion. The purpose of \code{PROTECT} is to keep our new vector from being trashed.
+
+The next portion of the \lang{C} function retrieves the \lang{R} function object for \code{getLatexCharMetrics}. The function is searched for in \lang{R} global namespace, so it must be one that is available to the user from the \lang{R} command prompt when the package is loaded. The function is stored in the \code{SEXP} variable \code{metricFun}. We do not have to involve \code{PROTECT} in the assignment since \code{getLatexCharMetrics} exists as a variable name in the \lang{R} environment.
+
+The last portion of the code chunk is responsible for loading the function name and call value into \code{RCallBack}. The \code{CAR} statement is used to retrieve the value of a \code{SEXP} variable and the \code{SETCAR} statement is used to set the value of a \code{SEXP}. In this case we use \code{SETCAR} to designate the \lang{R} function stored in \code{metricFun} as the first value of \code{RCallBack}.
+
+When dealing with a vector \code{SEXP} such as \code{RCallBack}, which has 2 slots, we need to use a different function to access the second slot. The \code{CDR} function will allow us to move to the second slot in \code{RCallBack} where we may perform a \code{SETCAR} to specify a value. In the example code, these operations were combined by using the \code{SETCADR} function which has the same effect as:
+
+\begin{tikzCodeBlock}[no break=true,listing style=sweavechunk]
+SETCAR( CDR(RCallBack), ScalarInteger( c ) );
+\end{tikzCodeBlock}
+
+After assigning the value of the \lang{C} variable \code{c} as the second value of \code{RCallBack}, we need to "tag" it as the value that corresponds to the \code{charCode} argument of \code{getLatexCharMetrics}. This is done by using the \code{SET\_TAG} function. Once again, we use \code{CDR} to shift our area of operation to the second slot of \code{RCallBack}. Now that the \code{RCallBack} object is set up, we are ready to actually call the \code{getLatexCharMetrics} function.
+
+\begin{tikzCodeBlock}[title={Executing a \lang{R} function call inside \lang{C}}]
+SEXP LatexMetrics;
+PROTECT( LatexMetrics = eval( RCallBack, R_GlobalEnv) );
+\end{tikzCodeBlock}
+
+And that's it! We create a new \code{SEXP} to hold the return values of \code{getLatexCharMetrics} and execute the \code{eval} function to cause \code{getLatexCharMetrics} to be executed inside the \lang{R} environment.
+
+
+
+\subsection{String Widths}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
