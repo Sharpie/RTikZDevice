@@ -8,6 +8,7 @@
 \usepackage{atbegshi}
 \usepackage[colorlinks]{hyperref}
 \usepackage[scaled=.9]{couriers}
+\usepackage{ulem}
 
 
 % Sexyness
@@ -19,6 +20,7 @@
 % Page layout
 \usepackage[parfill]{parskip}
 \usepackage[letterpaper,margin=1in]{geometry}
+\usepackage{epigraph}
 
 
 % Graphics control.
@@ -318,6 +320,17 @@ The \pkg{tikzDevice} package is currently influenced by a number of global optio
 
 \begin{description}
 
+% The additional indent added by the description will be picked up by the listings
+% package and inserted into the code blocks. It is hard to detect in general when this
+% happens- so we'll just temporarily shift the listing margin and shorten the max
+% width of tikzCodeBlock node bodies. Since this is all done inside the description
+% environment, the changes will disappear when the environment ends.
+\lstset{xleftmargin=-\leftmargini}
+\newlength\tikzShortenLine
+\setlength\tikzShortenLine{\textwidth}
+\addtolength\tikzShortenLine{-\leftmargini}
+\tikzset{/tikzCode/defaults/code body/.append style={text width=\tikzShortenLine}}
+
 \item[\code{tikzLatex}]{ Specifies the location of the \LaTeX\ compiler to be used by \pkg{tikzDevice}. Setting a default for this this option may help the package locate a missing compiler:
 
 \begin{tikzCodeBlock}[title={Setting the default \LaTeX\ compiler in \code{.Rprofile}},listing style=sweavechunk]
@@ -331,7 +344,7 @@ options( tikzMetricsDictionary = '/path/to/dictionary/location' )
 \end{tikzCodeBlock}
 }
 
-\item[\code{tikzDocumentDeclaration}]{A string. The documentclass declaration when \code{standAlone == TRUE} as wel as when font metrics are calculated}
+\item[\code{tikzDocumentDeclaration}]{A string. The documentclass declaration when \code{standAlone == TRUE} as well as when font metrics are calculated}
 
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
 options( tikzDocumentDeclaration = "\\documentclass{article}" )
@@ -362,7 +375,6 @@ options( tikzMetricPackages = c(
 \end{tikzCodeBlock}
 
 \end{description}
-
 
 For convenience the function \code{setTikzDefaults()} is provided which sets all the global options back to their original values.
 
@@ -447,7 +459,7 @@ A simple \LaTeX\ document is then required to display the output of the basic \c
 
 	\begin{minipage}{0.5\textwidth}
 
-\begin{tikzCodeBlock}[title={Example \LaTeX\ Document},listing style=latexsource,code body/.append style={codebody color=white}]
+\begin{tikzCodeBlock}[title={Example \LaTeX\ Document},listing style=latexsource,code body/.append style={codebody color=white},no break=true]
 \documentclass{article}
 
 % All LaTeX documents including 
@@ -477,6 +489,11 @@ A simple \LaTeX\ document is then required to display the output of the basic \c
 \end{figure}
 
 One of the most exciting aspects of the \code{tikz()} function is that it allows the inclusion of arbitrary \LaTeX\ code in plotting commands. An important issue to note is that many \LaTeX\ commands pare prefixed by the backaslash, \textbackslash, character. This character has a special meaning as an escape charcter in many computing applications, including \lang{R}. Therefore, it is necessary to place two backslashes, \textbackslash\textbackslash, in the input to \lang{R} commands in order to cause one to appear in the output.  The next example demonstrates how to use \LaTeX\ commands in plot annotation.
+
+% Disable chunk page breaking so the following code doesn't get mangled.
+\makeatletter
+\tikzCode@breakPagesfalse
+\makeatother
 
 \begin{figure}[H]
 	\centering
@@ -514,6 +531,11 @@ dev.off()
 	\end{minipage}
 	\caption{A more complicated example of \code{tikz()} usage incorporating natively rendered \LaTeX\ commands.}
 \end{figure}
+
+% Reinstate tikzCodeBlock defaults.
+\makeatletter
+\tikzCode@breakPagestrue
+\makeatother
 
 \subsubsection{\code{bareBones} Mode}
 
@@ -637,9 +659,9 @@ dev.off()
 
 \Sexpr{print(pdfLink)}Note that files produced using the \code{standAlone} option should not be included in \LaTeX documents using the \verb`\input{}` command! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
 
-\subsubsection{An Xe\LaTeX{} example}
+\subsubsection{Using the Global Options: An Xe\LaTeX{} example}
 
-It is also possible to use Xe\LaTeX{} with \pkg{tikzDevice} that introduces some interesting possibilities.  The following example was inspired by Dario Taraborelli and his article \textit{The Beauty of LaTeX}.
+It is also possible to use other typesetting engines like Xe\LaTeX{} by using the global options provided by \pkg{tikzDevice}.  The following example was inspired by Dario Taraborelli and his article \href{http://nitens.org/taraborelli/latex}{The Beauty of LaTeX}.
 
 \begin{tikzCodeBlock}[title={Xe\LaTeX{} Example},listing style=sweavechunk]
 #Set options for using XeLaTeX
@@ -725,7 +747,7 @@ Compiling the resulting file \code{xelatexEx.tex} like so:
 xelatex xelatexEx.tex
 \end{tikzCodeBlock}
 
-will produce the output in figure \ref{fig:xelatex}!  Please note some of the fonts used in the example may not be available on your system. 
+will produce the output in \autoref{fig:xelatex}!  Please note some of the fonts used in the example may not be available on your system. 
 
 \begin{figure}[!h]
 \centering
@@ -733,6 +755,23 @@ will produce the output in figure \ref{fig:xelatex}!  Please note some of the fo
 \caption{Result of Xe\LaTeX{} example}\label{fig:xelatex}
 \end{figure}
 
+
+\subsubsection{Annotating Graphics with \TikZ{} Commands}
+
+The function \code{tikzAnnotate} provides the ability to annotate you graphics with \TikZ{} commands.  There are a lot of exciting possibilities with this feature; It basically opens up the door for you to draw anythign on your plot that can be drawn with \TikZ{}.
+
+\begin{tikzCodeBlock}[title={Xe\LaTeX{} Example},listing style=sweavechunk]
+	library(tikzDevice)
+	options(tikzLatexPackages = c(getOption('tikzLatexPackages'),
+		"\\usetikzlibrary{shapes.arrows}"))
+	tikz(standAlone=T)
+	plot(1)
+	x <- grconvertX(1,,'device')
+	y <- grconvertY(1,,'device')
+	tikzAnnotate(paste('\\node[single arrow,anchor=tip,draw,fill=green] at (',
+		x,',',y,') {Look over here!};'))
+	dev.off()
+\end{tikzCodeBlock}
 
 % Return to the normal working directory
 <<pathStepOut,results=hide>>=
@@ -926,8 +965,28 @@ kpsewhich tikz.sty
 \part{Package Internals}
 \label{part:three}
 
-\section{Background}
-About \TikZ{}, the Pic\TeX{} device and the story of two fortran programmers with a dream.
+\epigraph{We will encourage you to develop the three great virtues of a programmer: {\itshape laziness}, {\itshape impatience}, and {\itshape hubris}.}{--{\scshape Larry Wall}}
+
+\section{Introduction and Background}
+
+% A friendly reminder that this portion of the documen-scratch that, ravings may be more % incoherent and crazy than the preceding sections..
+\tikzDocDisclaim{Caveat Lector}
+{
+The following introduction currently presents a \sout{vision}(delusion?) of what this section of the documentation could be. Currently the only portion of the inner workings of this package that we attempt to explain and document are those related to using the \LaTeX\ compiler to obtain font metrics.
+}
+
+We learn best through working with examples. When it comes to programming languages this involves taking working code that someone else has written, breaking it in as many places at it can possibly be broken, and then trying to build something out of the wreckage. Open source software facilitates this process wonderfully by ensuring the source code of a project is always available for inspection and experimentation. The \pkg{tikzDevice} its self was created by disassembling and then rebuilding Valerio Aimale's Pic\TeX\ device driver which is a part of the R core codebase.
+
+This section is our attempt to help anyone who may be experimenting with our code, and by extension the internals of the R graphics system. There may also be useful, or useless, tidbits concerning building R packages and interacting with the core R language. The R language can be extended in so many interesting and useful ways and it is our hope that the following documentation may provide a case study for anyone attempting such an extension.
+
+We will make an attempt to assume no special expertise with any of the systems or programming languages leveraged by this package and described by this documentation. Therefore, if you are an experienced developer and find yourself thinking ``My god, are they {\bfseries really} about to launch into a description of how C header files work?", please feel free to skip ahead a few paragraphs. We received our formal introduction to computer programming in a college engineering program- therefore our programming background is rooted in Fortran (or, if you prefer, {\scshape fortran}). We are attempting to write the sort of documentation that we would have found invaluable at the start of this project
+
+Therefore, this section is for all the budding developers like ourselves out there- people who have done some programming and who are starting to take a close look at the nuts and bolts of the R programming environment. If you feel like you are wandering through a vast forest getting smacked in the face by every branch then maybe this section will help pull some of those branches out of the way...
+
+...then again we have a lot of material to cover: R, C, \LaTeX , typography and the details of computerized font systems. Our grip may fail and send those branches flying back with increased velocity.
+
+We wish you luck!\\
+\vbox{}\quad{\itshape -The tikzDevice Team}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -947,5 +1006,5 @@ About \TikZ{}, the Pic\TeX{} device and the story of two fortran programmers wit
 If you haven't figured it out by now, we are quite picky about the way our graphics look and the way 
 
 \section{The \pkg{pgfSweave} Package and Automatic Report Generation}
-Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have another package called \pkg{pgfSweave} which provides a driver for Sweave.  \pkg{pgfSweave} started as an interface to \href{http://sourceforge.net/projects/eps2pgf/}{eps2pgf} and its ability to interpret strings in eps files as \LaTeX{}.  This was used to much the same effect as \pkg{tikzDevice}.  The problem was the conversion from eps to pgf was SLOW.  Long story short, by combining this functionality with the externalization feature of pgf and the \pkg{cacheSweave} we were able to achieve bearable compilation speed and nice looking graphics.   \pkg{pgfSweave} is in the process of getting pumped up by interfacing with the \pkg{tikzDevice} package.   We hope that the combination will be a self-caching, consistancy-enducing, user-empowering tool for high quality reports. 
+Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have another package called \pkg{pgfSweave} which provides a driver for Sweave.  \pkg{pgfSweave} started as an interface to \href{http://sourceforge.net/projects/eps2pgf/}{eps2pgf} and its ability to interpret strings in eps files as \LaTeX{}.  This was used to much the same effect as \pkg{tikzDevice}.  The problem was the conversion from eps to pgf was SLOW.  Long story short, by combining this functionality with the externalization feature of pgf and the \pkg{cacheSweave} we were able to achieve bearable compilation speed and nice looking graphics.   \pkg{pgfSweave} is in the process of getting pumped up by interfacing with the \pkg{tikzDevice} package.   We hope that the combination will be a self-caching, consistancy-inducing, user-empowering tool for high quality reports. 
 \end{document}
