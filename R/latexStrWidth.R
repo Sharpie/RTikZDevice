@@ -202,7 +202,7 @@ function( TeXMetrics ){
 
 	# We calculate width for both characters and strings.
 	writeLines("\\path let \\p1 = ($(TeX.east) - (TeX.west)$), 
-		\\n1 = {veclen(\\x1,\\y1)} in (TeX.east) -- (TeX.west)
+		\\n1 = {veclen(\\x1,\\y1)} in
 		node{ \\typeout{tikzTeXWidth=\\n1} };", texIn)
 
 	# We only want ascent and descent for characters.
@@ -210,12 +210,12 @@ function( TeXMetrics ){
 
 		# Calculate the ascent and print it to the log.
 		writeLines("\\path let \\p1 = ($(TeX.north) - (TeX.base)$), 
-			\\n1 = {veclen(\\x1,\\y1)} in (TeX.north) -- (TeX.base)
+			\\n1 = {veclen(\\x1,\\y1)} in 
 			node{ \\typeout{tikzTeXAscent=\\n1} };", texIn)
 
 		# Calculate the descent and print it to the log.
 		writeLines("\\path let \\p1 = ($(TeX.base) - (TeX.south)$), 
-			\\n1 = {veclen(\\x1,\\y1)} in (TeX.base) -- (TeX.south)
+			\\n1 = {veclen(\\x1,\\y1)} in
 			node{ \\typeout{tikzTeXDescent=\\n1} };", texIn)
 
 	}

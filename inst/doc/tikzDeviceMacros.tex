@@ -29,7 +29,7 @@
 		{swe@veEndOutput},
 	% Normal TeX tildes are kind of ugly- let's substitute a math symbol instead.
 	% Shit, why not replace <- as well? *Mad typographic scientist cackle*
-	% literate={~}{{$\sim$}}1 {<-}{$\leftarrow$}1,
+	literate={~}{{$\sim$}}1,
 	showstringspaces = false,
 	upquote = false,
 	commentstyle = {\color{blue!70}\itshape}
@@ -40,6 +40,14 @@
 	showstringspaces = false,
 	upquote = false,
 	commentstyle = {\color{red!80}\itshape}
+}
+
+\lstdefinestyle{latexexample}{
+	language = [LaTeX]TeX,
+	showstringspaces = false,
+	upquote = false,
+	commentstyle = {\color{red!80}\itshape},
+	moredelim=[is][\color{red}]{XX}{XX}
 }
 
 \lstdefinestyle{bashsource}{
