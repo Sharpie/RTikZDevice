@@ -21,6 +21,7 @@
 \usepackage[parfill]{parskip}
 \usepackage[letterpaper,margin=1in]{geometry}
 \usepackage{epigraph}
+\usepackage{multicol}
 
 
 % Graphics control.
@@ -358,20 +359,22 @@ options( tikzFooter = c( "\\end{document}" ) )
 
 \item[\code{tikzLatexPackages}]{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. }
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
-	options( tikzLatexPackages = c(
-		"\\usepackage{tikz}",
-		"\\usepackage[active,tightpage]{preview}",
-		"\\PreviewEnvironment{pgfpicture}",
-		"\\setlength\\PreviewBorder{0pt}") )
+options( tikzLatexPackages = c(
+  "\\usepackage{tikz}",
+  "\\usepackage[active,tightpage]{preview}",
+  "\\PreviewEnvironment{pgfpicture}",
+  "\\setlength\\PreviewBorder{0pt}")
+)
 \end{tikzCodeBlock}
 
 \item[\code{tikzMetricPackages}]{ A character vector. These are the extra packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of \LaTeX{} and \lang{R} match up.}
 
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
 options( tikzMetricPackages = c(
-		"\\usepackage[utf8]{inputenc}",
-		"\\usepackage[T1]{fontenc}",
-		"\\usetikzlibrary{calc}"))
+  "\\usepackage[utf8]{inputenc}",
+  "\\usepackage[T1]{fontenc}",
+  "\\usetikzlibrary{calc}")
+)
 \end{tikzCodeBlock}
 
 \end{description}
@@ -954,29 +957,183 @@ kpsewhich tikz.sty
 The following introduction currently presents a \sout{vision}(delusion?) of what this section of the documentation could be. Currently the only portion of the inner workings of this package that we attempt to explain and document are those related to using the \LaTeX\ compiler to obtain font metrics.
 }
 
-We learn best through working with examples. When it comes to programming languages this involves taking working code that someone else has written, breaking it in as many places at it can possibly be broken, and then trying to build something out of the wreckage. Open source software facilitates this process wonderfully by ensuring the source code of a project is always available for inspection and experimentation. The \pkg{tikzDevice} its self was created by disassembling and then rebuilding Valerio Aimale's Pic\TeX\ device driver which is a part of the R core codebase.
+We learn best through working with examples. When it comes to programming languages this involves taking working code that someone else has written, breaking it in as many places at it can possibly be broken, and then trying to build something out of the wreckage. Open source software facilitates this process wonderfully by ensuring the source code of a project is always available for inspection and experimentation. The \pkg{tikzDevice} its self was created by disassembling and then rebuilding Valerio Aimale's Pic\TeX\ device driver which is a part of the \lang{R} core codebase.
 
 This section is our attempt to help anyone who may be experimenting with our code, and by extension the internals of the R graphics system. There may also be useful, or useless, tidbits concerning building R packages and interacting with the core R language. The R language can be extended in so many interesting and useful ways and it is our hope that the following documentation may provide a case study for anyone attempting such an extension.
 
 We will make an attempt to assume no special expertise with any of the systems or programming languages leveraged by this package and described by this documentation. Therefore, if you are an experienced developer and find yourself thinking ``My god, are they {\bfseries really} about to launch into a description of how C header files work?", please feel free to skip ahead a few paragraphs. We received our formal introduction to computer programming in a college engineering program- therefore our programming background is rooted in Fortran (or, if you prefer, {\scshape fortran}). We are attempting to write the sort of documentation that we would have found invaluable at the start of this project
 
-Therefore, this section is for all the budding developers like ourselves out there- people who have done some programming and who are starting to take a close look at the nuts and bolts of the R programming environment. If you feel like you are wandering through a vast forest getting smacked in the face by every branch then maybe this section will help pull some of those branches out of the way...
+Therefore, this section is for all the budding developers like ourselves out there- people who have done some programming and who are starting to take a close look at the nuts and bolts of the \lang{R} programming environment. If you feel like you are wandering through a vast forest getting smacked in the face by every branch then maybe this section will help pull some of those branches out of the way...
 
-...then again we have a lot of material to cover: R, C, \LaTeX , typography and the details of computerized font systems. Our grip may fail and send those branches flying back with increased velocity.
+...then again we have a lot of material to cover: R, C, \LaTeX , \TikZ\ , typography and the details of computerized font systems. Our grip may fail and send those branches flying back with increased velocity.
 
 We wish you luck!\\
 \vbox{}\quad{\itshape -The tikzDevice Team}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{System Requirements}
+
+\section{Anatomy of an \lang{R} Graphics Device}
+
+The core of an \lang{R} graphics device is a collection of functions, written in C, that perform various specialized tasks. A description of some of these functions can be found in the {\itshape R Internals} manual while the main documentation is in the C header file \code{GraphicsDevice.h}. For most \lang{R} installations this header file can be found in the directory \code{R\_HOME/include/R\_ext}. For copies of \lang{R} distributed in source code form, \code{GraphicsDevice.h} is located inside \code{R-version/src/include/R\_ext}. The following is a description of the functions each graphics device is expected to provide:
+
+
+\setlength\columnsep{5em}
+
+\begin{multicols}{2}
+
+
+\subsection*{Drawing Routines}
+
+\begin{itemize}
+
+\item[\code{circle}]{This function is required to draw a circle centered at a given location with a given radius.}
+
+\item[\code{clip}]{This function specifies a rectangular area to be used a a clipping boundary for device output.}
+
+\item[\code{line}]{This function draws a line between two points.}
+
+\item[\code{polygon}]{This function draws lines between a list of points and then connects the first point to the last point.}
+
+\item[\code{polyline}]{This function draws lines between a list of points.}
+
+\item[\code{rect}]{This function is given a lower left corner and an upper right corner and draws a rectangle between the two.}
+
+\item[\code{text}]{This function inserts text at a given location.}
+
+\end{itemize}
+
+\subsection*{Font Metric Routines}
+
+\begin{itemize}
+
+\item[\code{metricInfo}]{This function is given the name of a single character and reports the ascent, descent and width of that character.}
+
+\item[\code{strWidth}]{This function is given a text string and reports the width of that string.}
+
+\end{itemize}
+
+\subsection*{Utility Routines}
+
+\begin{itemize}
+
+\item[\code{activate}]{This function is called when the device is designated as the active output device- i.e. by using \code{dev.set()} in \lang{R}}
+
+\item[\code{close}]{This function is called when the device is shut down- i.e. by using \code{dev.off()} in \lang{R}}
+
+\item[\code{deactivate}]{This function is called when another device is designated as the active output device.}
+
+\item[\code{locator}]{This function is mainly used by devices with a GUI window and reports the location of a mouseclick.}
+
+\item[\code{mode}]{This function is called when a device begins drawing output and again when the device finishes drawing output.}
+
+\item[\code{newPage}]{This function initiates the creation of a new page of output.}
+
+\item[\code{size}]{This function reports the size of the canvas the device is drawing on.}
+
+\end{itemize}
+
+\end{multicols}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Character Metrics and String Width}
+\section{Font Metrics}
 
-\subsection{Dictionaries}
-\subsection{What the Heck are Acent, Decent and Width}
+Font metrics are measurements associated with the glyphs, or printed characters, of a particular font. \lang{R} requires three of these metrics in order to produce correctly aligned output. The three metrics graphics devices are required to supply are:
+
+\begin{tikzpicture}
+
+\coordinate (centerpoint) at (0,0);
+
+\node[anchor=north,outer sep=0pt] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Ascent};
+
+\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below=0.25em of title] (char) {A};
+\draw[color=black,very thick] (char.base west) -- (char.base east);
+\draw[color=black,very thick] (char.north west) -- (char.north east);
+\draw[color=red,very thick,<->,>=stealth] ([xshift=10pt]char.south west) -- ([xshift=10pt]char.north west);
+
+
+\newdimen\yone
+\newdimen\ytwo
+
+\pgfextracty{\yone}{\pgfpointanchor{char}{north}}
+\pgfextracty{\ytwo}{\pgfpointanchor{char}{south}}
+\pgfmathparse{ \yone - \ytwo }
+
+\yone = \pgfmathresult pt
+
+\node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
+Ascent is the distance between the baseline and the tallest point on a character's glyph. For the "A" printed to the left, the ascent has been calculated as: \the\yone
+};
+\end{tikzpicture}
+
+
+
+\begin{tikzpicture}
+
+\coordinate (centerpoint) at (0,0) {};
+
+\node[anchor=north,outer sep=0pt] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Descent};
+
+\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {g};
+\draw[color=black,very thick] (char.base west) -- (char.base east);
+\draw[color=black,very thick] (char.south west) -- (char.south east);
+\draw[color=red,very thick,<-,>=stealth] ([xshift=10pt]char.south west) -- +(0,-6pt); 
+\draw[color=red,very thick,<-,>=stealth] ([xshift=10pt]char.base west) -- +(0,+6pt);
+
+
+\newdimen\yone
+\newdimen\ytwo
+
+\pgfextracty{\yone}{\pgfpointanchor{char}{base}}
+\pgfextracty{\ytwo}{\pgfpointanchor{char}{south}}
+\pgfmathparse{ \yone - \ytwo }
+
+\yone = \pgfmathresult pt
+
+\node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
+Descent is the distance between the baseline and the lowest point on a character's glyph. For the "g" printed to the left, the descent has been calculated as: \the\yone 
+};
+\end{tikzpicture}
+
+
+
+\begin{tikzpicture}
+
+\coordinate (centerpoint) at (0,0);
+
+\node[outer sep=0pt,anchor=north] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Width};
+
+\node[scale=4,text=black!30,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {X};
+\draw[color=black,very thick] (char.south west) -- (char.north west);
+\draw[color=black,very thick] (char.south east) -- (char.north east);
+\draw[color=red,very thick,<->,>=stealth] (char.mid west) -- (char.mid east); 
+
+\newdimen\xone
+\newdimen\xtwo
+
+\pgfextractx{\xone}{\pgfpointanchor{char}{east}}
+\pgfextractx{\xtwo}{\pgfpointanchor{char}{west}}
+\pgfmathparse{ \xone - \xtwo }
+
+\xone = \pgfmathresult pt
+
+\node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
+Width is the distance between the left and right sides of a character's glyph. For the "X" printed to the left, the width has been calculated as: \the\xone 
+};
+\end{tikzpicture}
+
+Providing font metrics and string widths is without a doubt most difficult task a \lang{R} graphics device must undertake. The calculation of string widths is made even difficult for the \pkg{tikzDevice} as we attempt to process arbitrary \LaTeX\ strings. Inside \lang{R} the string ``\verb`$\alpha$`" literally has 8 characters, but when it is typeset it only has one: $\alpha$.
+
+Calculating font metrics is a tricky business to begin with and the fact that the typeset representation of a \LaTeX\ string is different from it's representation in source code compounds the difficulty of the task immensely. Therefore, we took the path of laziness and started looking for an easy way out (remember the three great virtues of a programmer?). The solution we came up with seemed easy enough-- make \LaTeX\ calculate these metrics for us, after all that is what a \LaTeX\ compiler does for a living.
+
+Now, how to do that?
+
+\subsection{Character Metrics}
+
+\subsection{String Widths}
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
