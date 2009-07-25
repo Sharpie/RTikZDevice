@@ -80,12 +80,6 @@ versions of TikZ may be obtained from the project website hosted at \url{http://
 Multiple plots will be placed as separate environments in the output file.
 }
 
-\section{String Widths and Font Metrics and Calulation Times}{
-
-Charlie can wax poetic here about string widths, font metrics, encodings, metric dictionaries, comutation time, and the meaning of life.
-
-}
-
 \section{Options That Affect Package Behavior}{
 The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \R{} scripts, in the \R{} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, LaTeX packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
 
@@ -142,7 +136,7 @@ oldwd <- getwd()
 setwd(td)
 
 # Minimal plot
-tikz(tf,standAlone=T)
+tikz(tf,standAlone=TRUE)
 	plot(1)
 dev.off()
 
@@ -169,14 +163,14 @@ syms <-c('alpha','theta','tau','beta','vartheta','pi','upsilon',
 x <- rnorm(length(syms))
 y <- rnorm(length(syms))
 
-tikz(tf,standAlone=T)
+tikz(tf,standAlone=TRUE)
 	plot(-2:2, -2:2, type = "n", axes=F, 
 			xlab='', ylab='', main='TikZ Device Example')
     text(x,y,paste('\\Large$\\',syms,'$',sep=''))
 dev.off()
 
 #View the output
-tools::texi2dvi(tf,pdf=T)
+tools::texi2dvi(tf,pdf=TRUE)
 system(paste(getOption('pdfviewer'),file.path(td,'example2.pdf')))
 setwd(oldwd)
 ################################################
@@ -188,14 +182,14 @@ tf <- file.path(td,'example3.tex')
 oldwd <- getwd()
 setwd(td)
 
-tikz(tf,standAlone=T)
+tikz(tf,standAlone=TRUE)
 	plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main=main)
     points(rnorm(50), rnorm(50), pch=21, 
 			bg=rainbow(50,alpha=.5), cex=10)
 dev.off()
 
 #View the output
-tools::texi2dvi(tf,pdf=T)
+tools::texi2dvi(tf,pdf=TRUE)
 system(paste(getOption('pdfviewer'),file.path(td,'example3.pdf')))
 setwd(oldwd)
 ################################################
