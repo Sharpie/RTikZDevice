@@ -8,6 +8,7 @@
 \usepackage{atbegshi}
 \usepackage[colorlinks]{hyperref}
 
+% Extra text effects (strikethrough)
 \usepackage{ulem}
 
 
@@ -23,10 +24,13 @@
 \usepackage{epigraph}
 \usepackage{multicol}
 
-
 % Graphics control.
 \usepackage{graphicx}
 \usepackage{float}
+
+% Bibliography
+\usepackage{natbib}
+\bibliographystyle{agufull04}
 
 % Extra pretty pretty printing.
 \usepackage{tikzCodeBlock}
@@ -139,7 +143,6 @@
 \vfill	
 \vbox{}
 
-
 \begin{tikzpicture}[remember picture,overlay,>=stealth]
 
 	\node (R) at ($(current page.south west) + (18cm,2cm)$)
@@ -246,7 +249,7 @@ We hope this package will improve with time and attain a level of usability and 
 In fact, the documentation may differ significantly from what is described in the documentation.\\[1em]
 
 Thanks for giving it a try!\\
-\quad{\itshape -The tikzDevice Team}
+\quad{\itshape --The tikzDevice Team}
 }
 
 
@@ -258,10 +261,32 @@ This document is divided into three parts. The first part describes the function
 
 The third part of the documentation is intended for those who are curious as to the details of how this package has been implemented. It attempts to explain how the \TikZ\ package does the things that it does and why it chooses to do them that way. The authors have attempted to write this part of the documentation in a way that is accessible to users as well as developers. This has been done in the hope that this project may serve as a case study in creating an R graphics device. This part of the documentation may also help those considering undertaking the transition from casual package-building to full-on hacking of the \lang{R} internals.
 
+\section{Acknowledgements}
+
+This package would not have been possible without the hard work and ingenuity of many individuals. This package straddles the divide between two great open source communities-- the \lang{R} programming language and the \TeX\ typesetting system. It is our hope that this work will make it easier to leverage the strengths of both systems.
+
+First off, we would like to thank the R Core Team for creating such a wonderful, open and flexible programming environment. Compared to other languages we have used, creating packages and extensions for \lang{R} has always been a liberating experience.
+
+This package started as a fork of the Pic\TeX\ driver, created by Valerio Aimale. Without access to such a concise, compact example of implementing a \lang{R} driver we likely would have abandoned the project in it's infancy. We would also like to thank Paul Murrel for all of his work on the \lang{R} graphics system and especially for his research and documentation concerning the differences between the font systems used by \TeX\ and \lang{R}.
+
+This package also owes it's existence to Friedrich Leisch's work on the \code{Sweave} system and Roger D. Peng's \code{cacheSweave} extension. These two tools got us interested in the concept of Literate Programming and development of this package was driven by our desire to achieve a more seamless union between our reports and our code.
+
+The performance of this package is also enhanced by the database capabilities provided by Roger D. Peng's \code{filehash} package. Without this package, the approach to calculating font metrics taken by the \code{tikzDevice} would be infeasible.
+
+Last, but certainly not least, we would like to thank Till Tantu, Mark Wibrow and the rest of the PGF/\TikZ\ team for creating the \LaTeX\ graphics package that makes the output of this device meaningful. We would also like to express deep appreciation for the excellent documentation that has been created for the \TikZ\ system.
+
+As always, there are many more who have contributed in ways too numerous to list.
+
+Thank you!\\
+\vbox{}{\quad\itshape --The tikzDevice Team}
+
+\nocite{murrellTex}
+\nocite{rintern2009}
+\nocite{tantu2008}
+\nocite{peng2006}
 
 \part{Usage and Examples}
 \label{part:one}
-
 
 %----------------------------  Package Loading -----------------------------------------------------------
 
@@ -1349,8 +1374,10 @@ The \code{inner sep} and \code{outer sep} options are set to \code{0pt} in order
 	  (char) {\char103};
 	  
 	\foreach \anchor/\placement in 
-		{north/above, south/below, base/below, east/right, west/left} {		
-		\draw[shift=(char.\anchor),color=red] plot[mark=*] coordinates{(0,0)}			node[\placement,text=red] {\small\texttt{(char.\anchor)}};
+		{north/above, south/below, base/below, east/right, west/left} {
+		
+		\draw[shift=(char.\anchor),color=red] plot[mark=*] coordinates{(0,0)}
+			node[\placement,text=red] {\small\texttt{(char.\anchor)}};
 	}
 	
 	\node[above= 1em of char.north] {Node Bounding Box}
@@ -1440,5 +1467,10 @@ Here we use the \code{grep} function to search through the log output for the ta
 If you haven't figured it out by now, we are quite picky about the way our graphics and reports look.  We are especially picky about the consistency in fonts (both sizes and shapes).  Without launching into a diatribe about this, we just want to say with tools like \pkg{tikzDevice} you no longer have to settle for what is ``just okay.'' So go nuts, be picky about how your text and graphics look.  Don't be afraid to snub your nose at reports which pay no attention to detail.  Be that person who says ``NO! I wont settle for half rate graphics, I want the best!''
 
 \section{The \pkg{pgfSweave} Package and Automatic Report Generation}
-Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have another package called \pkg{pgfSweave} which provides a driver for Sweave.  \pkg{pgfSweave} started as an interface to \href{http://sourceforge.net/projects/eps2pgf/}{eps2pgf} and its ability to interpret strings in eps files as \LaTeX{}.  This was used to much the same effect as \pkg{tikzDevice}.  The problem was the conversion from eps to pgf was SLOW.  Long story short, by combining this functionality with the externalization feature of pgf and the \pkg{cacheSweave} we were able to achieve bearable compilation speed and nice looking graphics.   \pkg{pgfSweave} is in the process of getting pumped up by interfacing with the \pkg{tikzDevice} package.   We hope that the combination will be a self-caching, consistancy-inducing, user-empowering tool for high quality reports. 
+Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have another package called \pkg{pgfSweave} which provides a driver for Sweave.  \pkg{pgfSweave} started as an interface to \href{http://sourceforge.net/projects/eps2pgf/}{eps2pgf} and its ability to interpret strings in eps files as \LaTeX{}.  This was used to much the same effect as \pkg{tikzDevice}.  The problem was the conversion from eps to pgf was SLOW.  Long story short, by combining this functionality with the externalization feature of pgf and the \pkg{cacheSweave} we were able to achieve bearable compilation speed and nice looking graphics.   \pkg{pgfSweave} is in the process of getting pumped up by interfacing with the \pkg{tikzDevice} package.   We hope that the combination will be a self-caching, consistancy-inducing, user-empowering tool for high quality reports.
+
+\newpage
+
+\bibliography{refs}
+
 \end{document}

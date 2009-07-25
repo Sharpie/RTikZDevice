@@ -1,7 +1,6 @@
 \name{setTikzDefaults}
 \Rdversion{1.1}
 \alias{setTikzDefaults}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Reset tikzDevice options.
 }
@@ -35,6 +34,3 @@ Cameron Bracken <cameron.bracken@gmail.com>
 	setTikzDefaults() 
 	options( 'tikzDocumentDeclaration' )
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ character }

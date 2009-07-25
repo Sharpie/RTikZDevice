@@ -1,7 +1,6 @@
 \name{tikzAnnotate}
 \Rdversion{1.1}
 \alias{tikzAnnotate}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Annotate an active tikz device
 }
@@ -34,7 +33,7 @@ Cameron Bracken <cameron.bracken@gmail.com>
 	library(tikzDevice)
 	options(tikzLatexPackages = c(getOption('tikzLatexPackages'),
 		"\\usetikzlibrary{shapes.arrows}"))
-	tikz(standAlone=T)
+	tikz(standAlone=TRUE)
 	plot(1)
 	x <- grconvertX(1,,'device')
 	y <- grconvertY(1,,'device')
