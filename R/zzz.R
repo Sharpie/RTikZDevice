@@ -13,24 +13,24 @@ function(libname, pkgname) {
 	}
 	
 	# Set Header and Footer options
-	options( tikzDocumentDeclarationDefault = "\\documentclass{article}" )
+	options( tikzDocumentDeclarationDefault = "\\documentclass{article}\n" )
 	options( tikzDocumentDeclaration = getOption("tikzDocumentDeclarationDefault") )
 	options( tikzLatexPackagesDefault = c(
-		"\\usepackage{tikz}",
-		"\\usepackage[active,tightpage]{preview}",
-		"\\PreviewEnvironment{pgfpicture}",
-		"\\setlength\\PreviewBorder{0pt}") )
+		"\\usepackage{tikz}\n",
+		"\\usepackage[active,tightpage,psfixbb]{preview}\n",
+		"\\PreviewEnvironment{pgfpicture}\n",
+		"\\setlength\\PreviewBorder{0pt}\n") )
 	options( tikzLatexPackages = getOption("tikzLatexPackagesDefault"))
-	options( tikzFooterDefault = c( "\\end{document}" ) )
+	options( tikzFooterDefault = c( "\\end{document}\n" ) )
 	options( tikzFooter = getOption('tikzFooterDefault') )
 	options( tikzMetricPackages = c(
-		"\\usepackage[utf8]{inputenc}",
+		"\\usepackage[utf8]{inputenc}\n",
 		# The fontenc package is very important here! 
 		# R assumes the output device is uing T1 encoding.
 		# LaTeX defaults to OT1. This package makes the
 		# symbol codes consistant for both systems.
-		"\\usepackage[T1]{fontenc}",
-		"\\usetikzlibrary{calc}"))
+		"\\usepackage[T1]{fontenc}\n",
+		"\\usetikzlibrary{calc}\n"))
 	
 
 	versionInfo <- read.dcf(file.path( libname, pkgname, "DESCRIPTION"))
