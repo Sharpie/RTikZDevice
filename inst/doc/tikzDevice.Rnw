@@ -4,7 +4,6 @@
 % \VignetteDepends{tikzDevice}
 % \usepackage{Sweave}
 \usepackage[scaled=.9]{couriers}
-\usepackage[OT1,T1]{fontenc}
 \usepackage{atbegshi}
 \usepackage[colorlinks]{hyperref}
 
@@ -106,7 +105,7 @@
 	{\large\url{http://r-forge.r-project.org/projects/tikzdevice}}
 }
 \author{Charlie Sharpsteen and Cameron Bracken}
-\date{Version \tikzDeviceVersion\qquad\today}
+\date{Version \tikzDeviceVersion\qquad July 25, 2009}
 
 
 \begin{document}
@@ -191,7 +190,7 @@
 	lines(xi,yi,type='s')
 	lines(range(xi),c(0,0))
 	lines(xi,yi,type='h')
-	title(main="$p(x)=\\frac{1}{\\sqrt{2\\pi}}e^{-\\frac{1}{2-x^2}}$")
+	title(main="$p(x)=\\frac{1}{\\sqrt{2\\pi}}e^{-\\frac{x^2}{2}}$")
 	int <- integrate(dnorm,min(xi),max(xi),subdivisions=length(xi))
 	text(2.8,0.3,paste("\\small$\\displaystyle\\int_{",min(xi),"}^{",max(xi),"}p(x)dx\\approx",round(int[['value']],3),'$',sep=''))
 
@@ -1335,7 +1334,7 @@ Now that we have a place to work, we set up a couple of filenames- one for the i
   writeLines("\\batchmode", texIn)
 \end{tikzCodeBlock}
 
-Here we have started a standard \LaTeX\ input file by specifying \code{article} as the document class. We also add the \code{fontenc} package and specify \code{T1} as its option. This ensures we are using the Type 1 font encoding- by default \TeX and \LaTeX\ use an encoding called \code{OT1}. Why do we need to worry about font encodings? Well, a font encoding specifies which \code{ASCII} symbol codes map to which characters and by default, \lang{R} expects us to be using the Type 1 encoding (\lang{R} does support other encodings- but we're ignoring that for now). For example, in the Type 1 encoding, the character that corresponds to the \code{ASCII} code 60 is the less-than sign: \char60. If we were to allow \TeX\ to retain its default \code{OT1} encoding, that same character code would instead map to an upside-down exclamation point: {\usefont{OT1}{cmr}{m}{n}\char60}.
+Here we have started a standard \LaTeX\ input file by specifying \code{article} as the document class. We also add the \code{fontenc} package and specify \code{T1} as its option. This ensures we are using the Type 1 font encoding- by default \TeX and \LaTeX\ use an encoding called \code{OT1}. Why do we need to worry about font encodings? Well, a font encoding specifies which \code{ASCII} symbol codes map to which characters and by default, \lang{R} expects us to be using the Type 1 encoding (\lang{R} does support other encodings- but we're ignoring that for now). For example, in the Type 1 encoding, the character that corresponds to the \code{ASCII} code 60 is the less-than sign: `{\usefont{T1}{cmr}{m}{n}\char60}'. If we were to allow \TeX\ to retain its default \code{OT1} encoding, that same character code would instead map to an upside-down exclamation point: `{\char60}'.
 
 The other two packages we load are the \code{tikz} package and its \code{calc} library. Essentially we will have \TikZ\ drop the character into a box and report some measurements concerning the size of that box. The last command, \code{batchmode} tells \LaTeX\ that there isn't any user available to interact with-- so it should bother to stop and ask any questions while processing this file.
 
@@ -1400,19 +1399,19 @@ So, what exactly is going on here? Normally, the \verb`\path` command is used to
 \path[draw] (0,0) -- (1,1) node {Hi!};
 \end{tikzCodeBlock}
 
-Draws a line from \code{(0,0)} to \code{(1,1)} and places a node at \code{(1,1)} containing the words `Hi!'. In the \TikZ\ code produced by \code{getLatexCharMetrics}, the \code{let} operation is specified. Bascially, \code{let} postpones the actual drawing of a path and performs calculations until the \code{in} keyword is encountered. The result of these calculations are stored in a set of special variables which must start with \verb`\n`, \verb`\p`, \verb`\x` or \verb`\y`. The first \code{let} operation executed is:
+Draws a line from \code{(0,0)} to \code{(1,1)} and places a node at \code{(1,1)} containing the word `Hi!'. In the \TikZ\ code produced by \code{getLatexCharMetrics}, the \code{let} operation is specified. Bascially, \code{let} postpones the actual drawing of a path and performs calculations until the \code{in} keyword is encountered. The result of these calculations are stored in a set of special variables which must start with \verb`\n`, \verb`\p`, \verb`\x` or \verb`\y`. The first \code{let} operation executed is:
 
 \begin{tikzCodeBlock}[]
 \p1 = ( $(char.north) - (char.base)$ )
 \end{tikzCodeBlock}
 
-This performs a vector subtraction between the coordinates of \code{char.north} and \code{char.base}. The result is stored in the `point' variable \verb`\p1`. The second operation executed is:
+This performs a vector subtraction between the coordinates of \code{char.north} and \code{char.base}. The resulting x and y components are stored in the `point' variable \verb`\p1`. The second operation executed is:
 
 \begin{tikzCodeBlock}[]
 \n1 = {veclen(\x1,\y1)}
 \end{tikzCodeBlock}
 
-This code \code{let} operation treats the coordinates stored in \verb`\p1` as a vector and find their magnitude. The `1' appended to the \verb`\x` and \verb`\y` variables specifies that we are accessing the x and y components of \verb`\p1`. This result is stored in the `number' variable \verb`\n1`. Now, that our metric is stored in \verb`\n1`, our final task is to ensure it makes it into the \LaTeX\ \code{.log} file-- this is done by adding a \code{node} containing the \verb`\typeout` command. The contents of the node:
+This code \code{let} operation treats the coordinates stored in \verb`\p1` as a vector and calculates its magnitude. The `1' appended to the \verb`\x` and \verb`\y` variables specifies that we are accessing the x and y components of \verb`\p1`. This result is stored in the `number' variable \verb`\n1`. Now, that our metric is stored in \verb`\n1`, our final task is to ensure it makes it into the \LaTeX\ \code{.log} file-- this is done by adding a \code{node} containing the \verb`\typeout` command. The contents of the node:
 
 \begin{tikzCodeBlock}[]
 \typeout{tikzTexAscent=\n1}
@@ -1467,7 +1466,7 @@ Here we use the \code{grep} function to search through the log output for the ta
 If you haven't figured it out by now, we are quite picky about the way our graphics and reports look.  We are especially picky about the consistency in fonts (both sizes and shapes).  Without launching into a diatribe about this, we just want to say with tools like \pkg{tikzDevice} you no longer have to settle for what is ``just okay.'' So go nuts, be picky about how your text and graphics look.  Don't be afraid to snub your nose at reports which pay no attention to detail.  Be that person who says ``NO! I wont settle for half rate graphics, I want the best!''
 
 \section{The \pkg{pgfSweave} Package and Automatic Report Generation}
-Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have another package called \pkg{pgfSweave} which provides a driver for Sweave.  \pkg{pgfSweave} started as an interface to \href{http://sourceforge.net/projects/eps2pgf/}{eps2pgf} and its ability to interpret strings in eps files as \LaTeX{}.  This was used to much the same effect as \pkg{tikzDevice}.  The problem was the conversion from eps to pgf was SLOW.  Long story short, by combining this functionality with the externalization feature of pgf and the \pkg{cacheSweave} we were able to achieve bearable compilation speed and nice looking graphics.   \pkg{pgfSweave} is in the process of getting pumped up by interfacing with the \pkg{tikzDevice} package.   We hope that the combination will be a self-caching, consistancy-inducing, user-empowering tool for high quality reports.
+Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have another package called \pkg{pgfSweave} which provides a driver for Sweave.  \pkg{pgfSweave} started as an interface to \href{http://sourceforge.net/projects/eps2pgf/}{eps2pgf} and its ability to interpret strings in eps files as \LaTeX{}.  This was used to much the same effect as \pkg{tikzDevice}.  The problem was the conversion from eps to pgf was SLOW.  Long story short, by combining this functionality with the externalization feature of pgf and the \pkg{cacheSweave} we were able to achieve bearable compilation speed and nice looking graphics.   \pkg{pgfSweave} is in the process of getting pumped up by interfacing with the \pkg{tikzDevice} package.   We hope that the combination will be a self-caching, consistency-inducing, user-empowering tool for high quality reports.
 
 \newpage
 
