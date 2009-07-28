@@ -4,7 +4,6 @@
 % \VignetteDepends{tikzDevice}
 % \usepackage{Sweave}
 \usepackage[scaled=.9]{couriers}
-\usepackage{atbegshi}
 \usepackage[colorlinks]{hyperref}
 
 % Extra text effects (strikethrough)
