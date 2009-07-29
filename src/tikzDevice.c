@@ -1349,41 +1349,6 @@ void tikzAnnotate(const char **annotation, int *size){
 		fprintf(tikzInfo->outputFile, "%s\n", annotation[i] );
 }
 
-/* TeX Text Translations from the PixTeX Device, I thought we might be able to 
- * use these possibly for an option to sanitize TeX strings
- */
-static void TeXText(const char *str,  tikzDevDesc *tikzInfo){
-	fputc('{', tikzInfo->outputFile);
-	for( ; *str ; str++)
-		switch(*str) {
-		case '$':
-			fprintf(tikzInfo->outputFile, "\\$");
-			break;
-
-		case '%':
-			fprintf(tikzInfo->outputFile, "\\%%");
-			break;
-
-		case '{':
-			fprintf(tikzInfo->outputFile, "\\{");
-			break;
-
-		case '}':
-			fprintf(tikzInfo->outputFile, "\\}");
-			break;
-
-		case '^':
-			fprintf(tikzInfo->outputFile, "\\^{}");
-			break;
-
-		default:
-			fputc(*str, tikzInfo->outputFile);
-			break;
-		}
-	fprintf(tikzInfo->outputFile,"} ");
-}
-
-
 /* 
  * Activate and deactivate execute commands when the active R device is 
  * changed. For devices using plotting windows, these routines usually change 

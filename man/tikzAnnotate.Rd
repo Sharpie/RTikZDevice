@@ -29,6 +29,7 @@ Cameron Bracken <cameron.bracken@gmail.com>
 \code{\link{grconvertX}}, \code{\link{grconvertY}},\code{\link{tikzDevice}}, \code{\link{tikz}}
 }
 \examples{
+\dontrun{
 #### Example 1
 	library(tikzDevice)
 	options(tikzLatexPackages = c(getOption('tikzLatexPackages'),
@@ -69,6 +70,7 @@ Cameron Bracken <cameron.bracken@gmail.com>
 
 	dev.off()
 	setTikzDefaults()
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
