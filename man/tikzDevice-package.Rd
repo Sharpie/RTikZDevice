@@ -46,7 +46,7 @@ setwd(td)
 tikz(tf,standAlone=T)
 	plot(-2:2, -2:2, type = "n", axes=F, 
 			xlab='', ylab='', main='TikZ Device Example')
-    text(x,y,paste('\\Large$\\',syms,'$',sep=''))
+    text(x,y,paste('\\\\Large$\\\\',syms,'$',sep=''))
 dev.off()
 tools::texi2dvi(tf,pdf=T)
 system(paste(getOption('pdfviewer'),file.path(td,'example.pdf')))

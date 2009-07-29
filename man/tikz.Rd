@@ -19,7 +19,7 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
 \arguments{
   \item{file}{A character string indicating the desired path to the output file.}
   \item{width}{The width of the output figure, in \bold{inches}.}
-  \item{height}{The hegiht of the output figure, in \bold{inches}.}
+  \item{height}{The height of the output figure, in \bold{inches}.}
   \item{bg}{The starting background color for the plot.}
   \item{fg}{The starting foreground color for the plot.}
   \item{standAlone}{A logical value indicating whether the resulting file 
@@ -81,49 +81,53 @@ Multiple plots will be placed as separate environments in the output file.
 }
 
 \section{Options That Affect Package Behavior}{
-The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \R{} scripts, in the \R{} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, LaTeX packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
+The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \R\ scripts, in the \R\ console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, LaTeX packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
 
 \itemize{
 \item{\code{tikzLatex}}{ Specifies the location of the LaTeX compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. The default is searched for when the package is loaded, otherwise it can be set manually.   This option may be set as follows: \code{options( tikzLatex = '/path/to/latex/compiler' )}.}
 
-\item{\code{tikzMetricsDictionary}}{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \R{} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the LaTeX compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \R{} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \R{} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}.}
+\item{\code{tikzMetricsDictionary}}{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \R\ appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the LaTeX compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \R\ becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \R\ is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}.}
 
-\item{\code{tikzDocumentDeclaration}}{A string. The documentclass declaration when \code{standAlone == TRUE} as wel as when font metrics are calculated
-
+\item{\code{tikzDocumentDeclaration}}{A string. The documentclass declaration when \code{standAlone == TRUE} as well. as when font metrics are calculated. The default value is:
 \preformatted{
 options( tikzDocumentDeclaration = "\\documentclass{article}" )
+
+
 }}
 
-\item{\code{tikzFooter}}{A character vector. The footer to be used only when \code{standAlone==TRUE} 
-
+\item{\code{tikzFooter}}{A character vector. The footer to be used only when \code{standAlone==TRUE}. The default value is: 
 \preformatted{
 options( tikzFooter = c( "\\end{document}" ) )
+
+
 }}
 
-\item{\code{tikzLatexPackages}}{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. 
-
+\item{\code{tikzLatexPackages}}{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. The default value is:
 \preformatted{
 options( tikzLatexPackagesDefault = c(
 	"\\usepackage{tikz}",
 	"\\usepackage[active,tightpage]{preview}",
 	"\\PreviewEnvironment{pgfpicture}",
 	"\\setlength\\PreviewBorder{0pt}") )
+	
+	
 }
 }
 
-\item{\code{tikzMetricPackages}}{ A character vector. These are the packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of LaTeX and \R{} match up.
-
+\item{\code{tikzMetricPackages}}{ A character vector. These are the packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of LaTeX and \R\ match up. The default value is:
 \preformatted{
 options( tikzMetricPackages = c(
 		"\\usepackage[utf8]{inputenc}",
 		"\\usepackage[T1]{fontenc}",
 		"\\usetikzlibrary{calc}"))
+		
+		
 }}
 } 
 } 
 
 \seealso{
-\code{\link{pictex}}, \code{\link{getLatexCharMetrics}}, \code{\link{getLatexStrWidth}}, \code{\link{setTikzDefaults}}
+\code{\link{pictex}}, \code{\link{getLatexCharMetrics}}, \code{\link{getLatexStrWidth}}, \code{\link{setTikzDefaults}}, \code{\link{tikzAnnotate}}
 }
 \examples{
 \dontrun{
@@ -166,7 +170,7 @@ y <- rnorm(length(syms))
 tikz(tf,standAlone=TRUE)
 	plot(-2:2, -2:2, type = "n", axes=F, 
 			xlab='', ylab='', main='TikZ Device Example')
-    text(x,y,paste('\\Large$\\',syms,'$',sep=''))
+    text(x,y,paste('\\\\Large$\\\\',syms,'$',sep=''))
 dev.off()
 
 #View the output

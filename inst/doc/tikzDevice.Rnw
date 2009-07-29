@@ -1385,7 +1385,7 @@ The \code{inner sep} and \code{outer sep} options are set to \code{0pt} in order
 \end{tikzpicture}
 \end{center}
 
-The `base' anchor sits on the baseline of the text-- therefore to calculate the ascent of the character `g', all we have to do is figure out the difference in height between the positions \code{char.north} and \code{char.base}. Similarly, for the descent we would calculate the difference in height between \code{char.base} and \code{char.south} and width can be obtained using \code{char.west} and \code{char.east}. This is the purpose of the admittingly cryptic \verb`\path` commands that are inserted in the \LaTeX\ input file. Let's examine one of them:
+The `base' anchor sits on the baseline of the text-- therefore to calculate the ascent of the character `g', all we have to do is figure out the difference in height between the positions \code{char.north} and \code{char.base}. Similarly, for the descent we would calculate the difference in height between \code{char.base} and \code{char.south} and width can be obtained using \code{char.west} and \code{char.east}. This is the purpose of the admittedly cryptic \verb`\path` commands that are inserted in the \LaTeX\ input file. Let's examine one of them:
 
 \begin{tikzCodeBlock}[]
 \path let \p1 = ($(char.north) - (char.base)$), 
@@ -1398,7 +1398,7 @@ So, what exactly is going on here? Normally, the \verb`\path` command is used to
 \path[draw] (0,0) -- (1,1) node {Hi!};
 \end{tikzCodeBlock}
 
-Draws a line from \code{(0,0)} to \code{(1,1)} and places a node at \code{(1,1)} containing the word `Hi!'. In the \TikZ\ code produced by \code{getLatexCharMetrics}, the \code{let} operation is specified. Bascially, \code{let} postpones the actual drawing of a path and performs calculations until the \code{in} keyword is encountered. The result of these calculations are stored in a set of special variables which must start with \verb`\n`, \verb`\p`, \verb`\x` or \verb`\y`. The first \code{let} operation executed is:
+Draws a line from \code{(0,0)} to \code{(1,1)} and places a node at \code{(1,1)} containing the word `Hi!'. In the \TikZ\ code produced by \code{getLatexCharMetrics}, the \code{let} operation is specified. Basically, \code{let} postpones the actual drawing of a path and performs calculations until the \code{in} keyword is encountered. The result of these calculations are stored in a set of special variables which must start with \verb`\n`, \verb`\p`, \verb`\x` or \verb`\y`. The first \code{let} operation executed is:
 
 \begin{tikzCodeBlock}[]
 \p1 = ( $(char.north) - (char.base)$ )
@@ -1461,7 +1461,7 @@ Here we use the \code{grep} function to search through the log output for the ta
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{On the Importance of Font and Style Consistancy in Reports}
+\section{On the Importance of Font and Style Consistency in Reports}
 If you haven't figured it out by now, we are quite picky about the way our graphics and reports look.  We are especially picky about the consistency in fonts (both sizes and shapes).  Without launching into a diatribe about this, we just want to say with tools like \pkg{tikzDevice} you no longer have to settle for what is ``just okay.'' So go nuts, be picky about how your text and graphics look.  Don't be afraid to snub your nose at reports which pay no attention to detail.  Be that person who says ``NO! I wont settle for half rate graphics, I want the best!''
 
 \section{The \pkg{pgfSweave} Package and Automatic Report Generation}

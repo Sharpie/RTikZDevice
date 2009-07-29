@@ -29,8 +29,8 @@ Cameron Bracken <cameron.bracken@gmail.com>
 \code{\link{tikz}}
 }
 \examples{
-	options( 'tikzDocumentDeclaration' )
+	print( options( 'tikzDocumentDeclaration' ) )
 	options( tikzDocumentDeclaration = 'foo' )
 	setTikzDefaults() 
-	options( 'tikzDocumentDeclaration' )
+	print( options( 'tikzDocumentDeclaration' ) )
 }

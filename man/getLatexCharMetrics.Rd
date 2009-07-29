@@ -19,7 +19,7 @@ This function is used to retrieve the ascent, decent and width of a character gl
 \code{getLatexCharMetrics} first checks to see if metrics have allready been calculated for the given character using the given values of \code{cex} and \code{face}. If so, cached values are returned. If no cached values exists, the LaTeX compiler specified by \code{options( tikzLatex )} is invoked in order to calculate them.
 }
 \value{
-  \item{metrics}{A numeric vector holding ascent, descent, width character metrics. Values should all be nonegative. }
+  \item{metrics}{A numeric vector holding ascent, descent, width character metrics. Values should all be nonnegative. }
 
 }
 \references{
