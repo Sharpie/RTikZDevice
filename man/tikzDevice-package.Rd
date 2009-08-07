@@ -30,7 +30,7 @@ Submit bug reports to: \email{tikzdevice-bugs@lists.r-forge.r-project.org}
 \references{
 The TikZ and PGF Packages: Manual for version 2.00\cr
 \url{http://sourceforge.net/projects/pgf}\cr
-Till Tantu, February 20, 2008
+Till Tanatu, February 20, 2008
 }
 \keyword{ package }
 \seealso{

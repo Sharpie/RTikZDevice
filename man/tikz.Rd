@@ -65,7 +65,7 @@ to the bounding box of the graphic.
 \references{
 The TikZ and PGF Packages: Manual for version 2.00\cr
 \url{http://sourceforge.net/projects/pgf}\cr
-Till Tantu, February 20, 2008
+Till Tantau, February 20, 2008
 }
 \author{
 Charlie Sharpsteen \email{source@sharpsteen.net} and Cameron Bracken \email{cameron.bracken@gmail.com}

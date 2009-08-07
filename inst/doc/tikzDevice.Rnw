@@ -271,7 +271,7 @@ This package also owes it's existence to Friedrich Leisch's work on the \code{Sw
 
 The performance of this package is also enhanced by the database capabilities provided by Roger D. Peng's \code{filehash} package. Without this package, the approach to calculating font metrics taken by the \code{tikzDevice} would be infeasible.
 
-Last, but certainly not least, we would like to thank Till Tantu, Mark Wibrow and the rest of the PGF/\TikZ\ team for creating the \LaTeX\ graphics package that makes the output of this device meaningful. We would also like to express deep appreciation for the excellent documentation that has been created for the \TikZ\ system.
+Last, but certainly not least, we would like to thank Till Tantau, Mark Wibrow and the rest of the PGF/\TikZ\ team for creating the \LaTeX\ graphics package that makes the output of this device meaningful. We would also like to express deep appreciation for the excellent documentation that has been created for the \TikZ\ system.
 
 As always, there are many more who have contributed in ways too numerous to list.
 
@@ -280,7 +280,7 @@ Thank you!\\
 
 \nocite{murrellTex}
 \nocite{rintern2009}
-\nocite{tantu2008}
+\nocite{tantau2008}
 \nocite{peng2006}
 
 \part{Usage and Examples}

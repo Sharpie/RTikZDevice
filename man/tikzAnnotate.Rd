@@ -33,20 +33,20 @@ Cameron Bracken <cameron.bracken@gmail.com>
 #### Example 1
 	library(tikzDevice)
 	options(tikzLatexPackages = c(getOption('tikzLatexPackages'),
-		"\\usetikzlibrary{shapes.arrows}"))
+		"\\\\usetikzlibrary{shapes.arrows}"))
 	tikz(standAlone=TRUE)
 	plot(1)
 	x <- grconvertX(1,,'device')
 	y <- grconvertY(1,,'device')
-	tikzAnnotate(paste('\\node[single arrow,anchor=tip,draw,fill=green] at (',
+	tikzAnnotate(paste('\\\\node[single arrow,anchor=tip,draw,fill=green] at (',
 		x,',',y,') {Look over here!};'))
 	dev.off()
 
 #### Example 2	
 	options(tikzLatexPackages = 
 	    c(getOption('tikzLatexPackages'),
-	        c("\\usetikzlibrary{decorations.pathreplacing}",
-	        "\\usetikzlibrary{shapes.arrows}")))
+	        c("\\\\usetikzlibrary{decorations.pathreplacing}",
+	        "\\\\usetikzlibrary{shapes.arrows}")))
 
 	p <- rgamma(300,1)
 	outliers <- which( p > quantile(p,.75)+1.5*IQR(p) )
@@ -58,15 +58,15 @@ Cameron Bracken <cameron.bracken@gmail.com>
 	    max.outlier <- grconvertY(max( p[outliers] ),, "device")
 	    x <- grconvertX(1,,"device")
 
-	    tikzAnnotate(paste("\\node (min) at (",x,',',min.outlier,") {};"))
-	    tikzAnnotate(paste("\\node (max) at (",x,',',max.outlier,") {};"))
-	    tikzAnnotate(c("\\draw[decorate,very thick,red,",
+	    tikzAnnotate(paste("\\\\node (min) at (",x,',',min.outlier,") {};"))
+	    tikzAnnotate(paste("\\\\node (max) at (",x,',',max.outlier,") {};"))
+	    tikzAnnotate(c("\\\\draw[decorate,very thick,red,",
 	        "decoration={brace,amplitude=20pt}] (min) ",
 	        "-- node[single arrow,anchor=tip,left=20pt,draw=green] ",
 	        "{Look at These Outliers!} (max);"))
-	    tikzAnnotate(c("\\node[starburst, fill=green, ",
+	    tikzAnnotate(c("\\\\node[starburst, fill=green, ",
 	        "draw=blue, very thick,right=of max]  (burst) {Wow!};"))
-	    tikzAnnotate(c("\\draw[->, very thick] (burst.west) -- (max);"))
+	    tikzAnnotate(c("\\\\draw[->, very thick] (burst.west) -- (max);"))
 
 	dev.off()
 	setTikzDefaults()
