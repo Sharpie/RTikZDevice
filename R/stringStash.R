@@ -18,14 +18,14 @@ function( key ){
 	# Something seems dirty about this... I guess we will remove
 	# the variable before we exit in order to keep .tikzInternal
 	# clean.
-	assign('key', key, envir=.tikzInternal)
+	.tikzInternal[['key']] <- key
 	
 	# Check for the string.
 	if( evalq( dbExists(dictionary, sha1(key) ), .tikzInternal) ){
 		
 		# Yay! The width exists! Recover and return it.
 		metrics <- evalq( dictionary[[ sha1(key) ]], .tikzInternal)
-		# Clean up .tikzOptions.
+		# Clean up .tikzInternal.
 		remove('key', envir=.tikzInternal, inherits=F)
 		return( metrics )
 
@@ -48,8 +48,8 @@ function( key, metrics ){
 
 	# See comment in queryMetricsDictionary on why these assign
 	# statments are here and why they give me a bad feeling.
-	assign('key', key, envir=.tikzInternal)
-	assign('metrics', metrics, envir=.tikzInternal)
+	.tikzInternal[['key']] <- key
+	.tikzInternal[['metrics']] <- metrics
 
 	evalq( dictionary[[ sha1(key) ]] <- metrics, .tikzInternal)
 
@@ -93,7 +93,7 @@ function(){
 
 		# Add the dictionary as an object in the .tikzOptions
 		# environment.
-		assign( 'dictionary', dbInit(dbFile), envir=.tikzInternal)
+		.tikzInternal[['dictionary']] <- dbInit(dbFile)
 
 	}
 

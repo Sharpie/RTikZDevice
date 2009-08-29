@@ -14,7 +14,7 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
 	bg="white", fg="black", standAlone = FALSE, bareBones = FALSE, 
 	documentDeclaration = getOption("tikzDocumentDeclaration"),
 	packages = getOption("tikzLatexPackages"),
-	footer = getOption("tikzFooter")))
+	footer = getOption("tikzFooter"))
 }
 \arguments{
   \item{file}{A character string indicating the desired path to the output file.}
@@ -65,7 +65,7 @@ to the bounding box of the graphic.
 \references{
 The TikZ and PGF Packages: Manual for version 2.00\cr
 \url{http://sourceforge.net/projects/pgf}\cr
-Till Tantu, February 20, 2008
+Till Tantau, February 20, 2008
 }
 \author{
 Charlie Sharpsteen \email{source@sharpsteen.net} and Cameron Bracken \email{cameron.bracken@gmail.com}
@@ -83,7 +83,7 @@ Multiple plots will be placed as separate environments in the output file.
 \section{Options That Affect Package Behavior}{
 The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \R\ scripts, in the \R\ console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, LaTeX packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
 
-\itemize{
+\describe{
 \item{\code{tikzLatex}}{ Specifies the location of the LaTeX compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. The default is searched for when the package is loaded, otherwise it can be set manually.   This option may be set as follows: \code{options( tikzLatex = '/path/to/latex/compiler' )}.}
 
 \item{\code{tikzMetricsDictionary}}{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \R\ appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the LaTeX compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \R\ becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \R\ is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}.}

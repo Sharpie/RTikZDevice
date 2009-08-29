@@ -46,16 +46,16 @@ function(libname, pkgname) {
 	checked <- c()
 
 	latexTest <- function( pathToTeX, pathDesc ){
+		
+		Sys.setenv("PATH" = Sys.getenv("PATH"))
+		latexPath <<- Sys.which( paste( pathToTeX ) )
 
-		latexCheck <- suppressWarnings(
-			system( paste( pathToTeX,'--version' ), ignore.stderr=T) )
-
-		if( latexCheck == 0 ){
-			options( tikzLatex=pathToTeX )
-			options( tikzLatexDefault=pathToTeX )
+		if( latexPath[1] != "" ){
+			options( tikzLatex=latexPath )
+			options( tikzLatexDefault=latexPath )
 			foundLatex <<- TRUE
 			checked <<- paste( "\nA working LaTeX compiler was found in:\n\t",pathDesc,
-				"\n\nGlobal option tikzLatex set to:\n\t",pathToTeX,'\n',sep='' )
+				"\n\nGlobal option tikzLatex set to:\n\t",latexPath,'\n',sep='' )
 			return( TRUE )
 		}else{
 			checked[ length(checked)+1 ] <<- pathDesc
@@ -65,7 +65,7 @@ function(libname, pkgname) {
 	}
 
 
-	testLocs <- c( ifelse( is.null(getOption('tikzLatex')), "NULL", getOption('tikzLatex') ),
+	testLocs <- c( ifelse( is.null(getOption('tikzLatex')), "", getOption('tikzLatex') ),
 		Sys.getenv("R_LATEXCMD"), 
 		Sys.getenv("R_PDFLATEXCMD"), 
 		ifelse( is.null(getOption('latexcmd')), "NULL", getOption('latexcmd') ),
@@ -85,6 +85,9 @@ function(libname, pkgname) {
 
 	if( foundLatex ){
 		message( checked )
+		p <- pipe( paste( latexPath, '--version' ) )
+		message( paste( readLines( p ), '\n', sep='' ) , sep='\n' )
+		close(p)
 	}else{
 		stop("\n\nAn appropriate LaTeX compiler could not be found.\n",
 				"Access to LaTeX is required in order for the TikZ device\n",
