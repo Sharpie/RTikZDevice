@@ -443,8 +443,8 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/* Header for a standalone LaTeX document*/
 	if(tikzInfo->standAlone == TRUE){
-		fprintf(tikzInfo->outputFile,tikzInfo->documentDeclaration);
-		fprintf(tikzInfo->outputFile,tikzInfo->packages);
+		fprintf(tikzInfo->outputFile,"%s",tikzInfo->documentDeclaration);
+		fprintf(tikzInfo->outputFile,"%s",tikzInfo->packages);
 		fprintf(tikzInfo->outputFile,"\\begin{document}\n\n");
 	}
 
