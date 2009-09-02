@@ -84,9 +84,9 @@ function(libname, pkgname) {
 	}
 
 	if( foundLatex ){
-		message( checked )
+		packageStartupMessage( checked )
 		p <- pipe( paste( latexPath, '--version' ) )
-		message( paste( readLines( p ), '\n', sep='' ) , sep='\n' )
+		packageStartupMessage( paste( readLines( p ), '\n', sep='' ) , sep='\n' )
 		close(p)
 	}else{
 		stop("\n\nAn appropriate LaTeX compiler could not be found.\n",
