@@ -1,4 +1,4 @@
-Version 0.4.5: Beta
+Version 0.4.7: Beta
 
 STATUS:
     The tikzDevice implements the tikz() graphics driver in R. This driver
