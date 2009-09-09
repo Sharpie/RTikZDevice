@@ -665,7 +665,7 @@ dev.off()
 @
 
 
-<<standAloneCompileExample, results=hide>>=
+<<standAloneCompileExample, results=hide, eval=F>>=
 
 	require(tools)
 	
@@ -680,10 +680,10 @@ dev.off()
 	}else{
 		pdfLink <- ""
 	}
-
+    #%\Sexpr{print(pdfLink)}
 @
 
-\Sexpr{print(pdfLink)}Note that files produced using the \code{standAlone} option should not be included in \LaTeX documents using the \verb`\input{}` command! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
+Note that files produced using the \code{standAlone} option should not be included in \LaTeX documents using the \verb`\input{}` command! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
 
 \subsubsection{Using the Global Options: An Xe\LaTeX{} example}
 

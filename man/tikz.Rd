@@ -90,36 +90,30 @@ The \pkg{tikzDevice} package is currently influenced by a number of global optio
 
 \item{\code{tikzDocumentDeclaration}}{A string. The documentclass declaration when \code{standAlone == TRUE} as well. as when font metrics are calculated. The default value is:
 \preformatted{
-options( tikzDocumentDeclaration = "\\documentclass{article}" )
-
-
+options( tikzDocumentDeclaration = "\\\\documentclass{article}" )
 }}
 
 \item{\code{tikzFooter}}{A character vector. The footer to be used only when \code{standAlone==TRUE}. The default value is: 
 \preformatted{
-options( tikzFooter = c( "\\end{document}" ) )
-
-
+options( tikzFooter = c( "\\\\end{document}" ) )
 }}
 
 \item{\code{tikzLatexPackages}}{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. The default value is:
 \preformatted{
 options( tikzLatexPackagesDefault = c(
-	"\\usepackage{tikz}",
-	"\\usepackage[active,tightpage]{preview}",
-	"\\PreviewEnvironment{pgfpicture}",
-	"\\setlength\\PreviewBorder{0pt}") )
-	
-	
+	"\\\\usepackage{tikz}",
+	"\\\\usepackage[active,tightpage]{preview}",
+	"\\\\PreviewEnvironment{pgfpicture}",
+	"\\\\setlength\\\\PreviewBorder{0pt}") )
 }
 }
 
 \item{\code{tikzMetricPackages}}{ A character vector. These are the packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of LaTeX and \R\ match up. The default value is:
 \preformatted{
 options( tikzMetricPackages = c(
-		"\\usepackage[utf8]{inputenc}",
-		"\\usepackage[T1]{fontenc}",
-		"\\usetikzlibrary{calc}"))
+		"\\\\usepackage[utf8]{inputenc}",
+		"\\\\usepackage[T1]{fontenc}",
+		"\\\\usetikzlibrary{calc}"))
 		
 		
 }}
