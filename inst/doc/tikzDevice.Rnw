@@ -253,9 +253,9 @@ Thanks for giving it a try!\\
 
 \section{Introduction}
 
-The \pkg{tikzDevice} package allows for R graphics output in a native \LaTeX\ format. That is, the output of the \code{tikz()} function is plain-text files that can be interpreted using \TikZ, a package for \LaTeX. These files can be directly included in \LaTeX\ documents by way of the \verb'\input{}' statement. Allowing \LaTeX\ to handle both typesetting and figure composition bestows the resulting document with a clean, unified look as there are no discontinuities in the size and selection of fonts used in the output.
+The \pkg{tikzDevice} package allows for R graphics output in a native \LaTeX\ format. That is, the \code{tikz()} function produces plain-text files that can be interpreted using \TikZ, a package for \LaTeX. These files can be directly included in \LaTeX\ documents by way of the \verb'\input{}' statement. Allowing \LaTeX\ to handle both typesetting and figure composition bestows the resulting document with a clean, unified look as there are no discontinuities in the size and selection of fonts used in the output.
 
-This document is divided into three parts. The first part describes the functions that the package makes available to the \lang{R} user and provides examples of their capabilities. Besides the \lang{R} environment, use of the \TikZ\ device device requires the user to have a working \LaTeX\ compiler along with an installed version of the \TikZ\ package. The second part of this documentation offers suggestions on how to get these tools working properly.
+This document is divided into three parts. The first part describes the functions that the package makes available to the \lang{R} user and provides examples of their capabilities. Besides the \lang{R} environment, use of the \TikZ\ device device requires the user to have a working \LaTeX\ compiler along with an installed version of the \TikZ\ package-- version 2.00 or greater. The second part of this documentation offers suggestions on how to get these tools working properly.
 
 The third part of the documentation is intended for those who are curious as to the details of how this package has been implemented. It attempts to explain how the \TikZ\ package does the things that it does and why it chooses to do them that way. The authors have attempted to write this part of the documentation in a way that is accessible to users as well as developers. This has been done in the hope that this project may serve as a case study in creating an R graphics device. This part of the documentation may also help those considering undertaking the transition from casual package-building to full-on hacking of the \lang{R} internals.
 
@@ -335,11 +335,11 @@ Error : .onLoad failed in 'loadNamespace' for 'tikzDevice'
 Error: package/namespace load failed for 'tikzDevice'
 \end{Verbatim}
 
-In this case, \pkg{tikzDevice} has done it's very best to locate a working compiler and came up empty. If you have a working \LaTeX\ compiler, the next section describes how to inform the \pkg{tikzDevice} package of its location. For suggestions on how to obtain a \LaTeX\ compiler, see \autoref{part:two}.
+In this case, \pkg{tikzDevice} has done it's very best to locate a working compiler and came up empty.  If you have a working \LaTeX\ compiler, the next section describes how to inform the \pkg{tikzDevice} package of its location.  For suggestions on how to obtain a \LaTeX\ compiler, see \autoref{part:two}.
 
 
 \subsection{\lang{R} Options That Affect Package Behavior}\label{sec:options}
-The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \lang{R} scripts, in the \lang{R} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
+The \pkg{tikzDevice} package is  influenced by a number of options that may be set locally in your \lang{R} scripts or in the \lang{R} console or globally in a \code{.Rprofile} file.  All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
 
 
 \begin{description}
@@ -581,7 +581,7 @@ title("A Brownian Motion")
 dev.off()
 @
 
-The resulting code may then be used inside a \code{tikzpicture} environment using the \verb`\include{}` command. The included code must be wrapped in a \code{scope} environment that contains the options \code{x=1pt} and \code{y=1pt}. This informs \TikZ\ of the units being used in the coordinates of the plot output. The options \code{xshift} and \code{yshift} may also be applied to the \code{scope} in order to position the plot. The following code demonstrates how to embed \code{bareBones} output in a \code{tikzpicture}
+The resulting code may then be used inside a \code{tikzpicture} environment using the \verb`\include{}` command. The included code must be wrapped in a \code{scope} environment that contains the options \code{x=1pt} and \code{y=1pt}. This informs \TikZ\ of the units being used in the coordinates of the plot output. The options \code{xshift} and \code{yshift} may also be applied to the \code{scope} in order to position the plot. The following code demonstrates how to embed \code{bareBones} output in a \code{tikzpicture}:
 
 \begin{tikzCodeBlock}[title={Example of a \TikZ\ environment including \code{bareBones} output},code body/.append style={codebody color=white},listing style=latexsource]
 \begin{tikzpicture}
@@ -1174,7 +1174,7 @@ Descent is the distance between the baseline and the lowest point on a character
 
 \node[outer sep=0pt,anchor=north] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Width};
 
-\node[scale=4,text=black!30,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {X};
+\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {X};
 \draw[color=black,very thick] (char.south west) -- (char.north west);
 \draw[color=black,very thick] (char.south east) -- (char.north east);
 \draw[color=red,very thick,<->,>=stealth] (char.mid west) -- (char.mid east); 
