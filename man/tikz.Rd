@@ -91,6 +91,7 @@ The \pkg{tikzDevice} package is currently influenced by a number of global optio
 \item{\code{tikzDocumentDeclaration}}{A string. The documentclass declaration when \code{standAlone == TRUE} as well. as when font metrics are calculated. The default value is:
 \preformatted{
 options( tikzDocumentDeclaration = "\\\\documentclass{article}" )
+<<<<<<< HEAD
 }}
 
 \item{\code{tikzFooter}}{A character vector. The footer to be used only when \code{standAlone==TRUE}. The default value is: 
@@ -98,6 +99,17 @@ options( tikzDocumentDeclaration = "\\\\documentclass{article}" )
 options( tikzFooter = c( "\\\\end{document}" ) )
 }}
 
+=======
+
+
+}}
+
+\item{\code{tikzFooter}}{A character vector. The footer to be used only when \code{standAlone==TRUE}. The default value is: 
+\preformatted{
+options( tikzFooter = c( "\\\\end{document}" ) )
+}}
+
+>>>>>>> beta
 \item{\code{tikzLatexPackages}}{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. The default value is:
 \preformatted{
 options( tikzLatexPackagesDefault = c(

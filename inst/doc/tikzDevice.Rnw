@@ -1471,4 +1471,4 @@ Now for a little shameless self promotion. The authors of \pkg{tikzDevice} have 
 
 \bibliography{refs}
 
-\end{document}
+\end{document}\n
