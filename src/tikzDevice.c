@@ -251,7 +251,6 @@ static Rboolean TikZ_Setup(
 	tikzInfo->documentDeclaration = documentDeclaration;
 	tikzInfo->packages = packages;
 	tikzInfo->footer = footer;
-	tikzInfo->baseSize = baseSize;
 	tikzInfo->polyLine = FALSE;
 
 	/* Incorporate tikzInfo into deviceInfo. */
@@ -359,8 +358,8 @@ static Rboolean TikZ_Setup(
 	/* Set initial font. */
 	deviceInfo->startfont = 1;
 
-	/* Set initial font size. */
-	deviceInfo->startps = 10;
+	/* Set base font size. */
+	deviceInfo->startps = baseSize;
 
 	/* 
 	 * Apparently these are supposed to center text strings over the points at
@@ -616,6 +615,25 @@ static void TikZ_Size( double *left, double *right,
 
 }
 
+/*
+ * This function calculates an appropriate scaling factor for text by
+ * first calculating the ratio of the requested font size to the LaTeX
+ * base font size. The ratio is then further scaled by the value of
+ * the character expansion factor cex.
+*/
+double
+TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
+
+	// These parameters all affect the font size.
+	double baseSize = deviceInfo->startps;
+	double fontSize = plotParams->ps;
+	double cex = plotParams->cex;
+
+	double fontScale = ( fontSize / baseSize ) * cex;
+
+	return( fontScale );
+
+}
 
 /*
  * This function is supposed to calculate character metrics (such as raised 
@@ -682,29 +700,6 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 	UNPROTECT(2);
 
 	return;
-
-}
-
-/*
- * This function calculates an appropriate scaling factor for text by
- * first calculating the ratio of the requested font size to the LaTeX
- * base font size. The ratio is then further scaled by the value of
- * the character expansion factor cex.
-*/
-double
-TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
-
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-
-	// These parameters all affect the font size.
-	double baseSize = tikzInfo->baseSize;
-	double fontSize = plotParams->ps;
-	double cex = plotParams->cex;
-
-	double fontScale = ( fontSize / baseSize ) * cex;
-
-	return( fontScale );
 
 }
 
