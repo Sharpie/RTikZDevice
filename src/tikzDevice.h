@@ -43,6 +43,7 @@ typedef struct{
 	const char *documentDeclaration;
 	const char *packages;
 	const char *footer;
+	double baseSize;
 	Rboolean polyLine;
 } tikzDevDesc;
 
@@ -56,9 +57,8 @@ static Rboolean TikZ_Setup(
 		const char *bg, const char *fg,
 		Rboolean standAlone, Rboolean bareBones,
 		const char *documentDeclaration,
-		const char *packages, const char *footer );
-
-double dim2dev( double length );
+		const char *packages, const char *footer,
+	  double baseSize );
 
 static Rboolean TikZ_Open( pDevDesc deviceInfo );
 
@@ -116,5 +116,7 @@ static void TikZ_Mode( int mode, pDevDesc deviceInfo );
 
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
+double dim2dev( double length );
+double TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ); 
 
 #endif // End of Once Only header

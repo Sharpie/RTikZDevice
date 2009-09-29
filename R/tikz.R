@@ -3,8 +3,9 @@ function (file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black",
 	standAlone = FALSE, bareBones = FALSE, 
 	documentDeclaration = getOption("tikzDocumentDeclaration"),
 	packages = getOption("tikzLatexPackages"),
-	footer = getOption("tikzFooter"))
-{
+	footer = getOption("tikzFooter"),
+	bfs = 11
+){
 
 	# Ensure the standAlone option will trump the bareBones option.
 	if( standAlone ) { bareBones = F }
@@ -19,7 +20,7 @@ function (file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black",
 	footer <- paste( paste( footer,collapse='\n'), collapse='\n')
 	
 	.External('tikzDevice', file, width, height, bg, fg, standAlone, 
-		bareBones, documentDeclaration, packages, footer,
+		bareBones, documentDeclaration, packages, footer, bfs,
 		PACKAGE='tikzDevice') 
 	
 	invisible()	

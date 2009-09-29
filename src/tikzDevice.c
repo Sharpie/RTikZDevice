@@ -74,6 +74,7 @@ SEXP tikzDevice ( SEXP args ){
 	double width, height;
 	Rboolean standAlone, bareBones;
 	const char *documentDeclaration, *packages, *footer;
+	double baseSize;
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -126,6 +127,9 @@ SEXP tikzDevice ( SEXP args ){
 	packages = CHAR(asChar(CAR(args))); args = CDR(args);
 	footer = CHAR(asChar(CAR(args))); args = CDR(args);
 
+	/* Recover the base fontsize */
+	baseSize = asReal(CAR(args)); args = CDR(args);
+
 	/* Ensure there is an empty slot avaliable for a new device. */
 	R_CheckDeviceAvailable();
 
@@ -154,7 +158,7 @@ SEXP tikzDevice ( SEXP args ){
 		*/
 		if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, 
 				standAlone, bareBones, documentDeclaration, packages, 
-				footer) ){
+				footer, baseSize ) ){
 			/* 
 			 * If setup was unsuccessful, destroy the device and return
 			 * an error message.
@@ -194,7 +198,8 @@ static Rboolean TikZ_Setup(
 	const char *bg, const char *fg,
 	Rboolean standAlone, Rboolean bareBones,
 	const char *documentDeclaration,
-	const char *packages, const char *footer ){
+	const char *packages, const char *footer,
+  double baseSize ){
 
 	/* 
 	 * Create tikzInfo, this variable contains information which is
@@ -246,6 +251,7 @@ static Rboolean TikZ_Setup(
 	tikzInfo->documentDeclaration = documentDeclaration;
 	tikzInfo->packages = packages;
 	tikzInfo->footer = footer;
+	tikzInfo->baseSize = baseSize;
 	tikzInfo->polyLine = FALSE;
 
 	/* Incorporate tikzInfo into deviceInfo. */
@@ -427,7 +433,6 @@ static Rboolean TikZ_Setup(
 double dim2dev( double length ){
 	return length*72.27;
 }
-
 
 static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
@@ -639,6 +644,9 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 		return;
 	}
 
+	// Calculate font scaling factor.
+	double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+
 	// Prepare to call back to R in order to retrieve character metrics.
 	
 	// Call out to R to retrieve the latexParseCharForMetrics function.
@@ -658,7 +666,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 	SET_TAG( CDR( RCallBack ), install("charCode") );
 
 	// Pass graphics parameters cex and fontface.
-	SETCADDR( RCallBack,  ScalarReal( plotParams->cex ) );
+	SETCADDR( RCallBack,  ScalarReal( fontScale ) );
 	SET_TAG( CDDR( RCallBack ), install("cex") );
 	SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
 	SET_TAG( CDR(CDDR( RCallBack )), install("face") );
@@ -674,6 +682,29 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 	UNPROTECT(2);
 
 	return;
+
+}
+
+/*
+ * This function calculates an appropriate scaling factor for text by
+ * first calculating the ratio of the requested font size to the LaTeX
+ * base font size. The ratio is then further scaled by the value of
+ * the character expansion factor cex.
+*/
+double
+TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
+
+	/* Shortcut pointers to variables of interest. */
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+	// These parameters all affect the font size.
+	double baseSize = tikzInfo->baseSize;
+	double fontSize = plotParams->ps;
+	double cex = plotParams->cex;
+
+	double fontScale = ( fontSize / baseSize ) * cex;
+
+	return( fontScale );
 
 }
 
@@ -710,6 +741,9 @@ static double TikZ_StrWidth( const char *str,
 			
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+	// Calculate font scaling factor.
+	double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
 
 	/*
 	 * New string with calculation method: call back to R
@@ -772,7 +806,7 @@ static double TikZ_StrWidth( const char *str,
 	SET_TAG( CDR( RCallBack ), install("texString") );
 
 	// Pass graphics parameters cex and fontface.
-	SETCADDR( RCallBack,  ScalarReal( plotParams->cex ) );
+	SETCADDR( RCallBack,  ScalarReal( fontScale ) );
 	SET_TAG( CDDR( RCallBack ), install("cex") );
 	SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
 	SET_TAG( CDR(CDDR( RCallBack )), install("face") );
@@ -873,6 +907,9 @@ static void TikZ_Text( double x, double y, const char *str,
 
 	// Form final output string.
 	strcat( tikzString, str );
+
+	// Calculate font scaling factor.
+	double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
 	
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
@@ -912,7 +949,7 @@ static void TikZ_Text( double x, double y, const char *str,
 	}
 		
 	fprintf( tikzInfo->outputFile, "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s};\n",
-		plotParams->cex, x, y, tikzString);
+		fontScale, x, y, tikzString);
 
 	// Since we no longer neexd tikzString, we should free the memory that it is being stored in.
 	free( tikzString );
