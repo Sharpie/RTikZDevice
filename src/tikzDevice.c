@@ -911,7 +911,7 @@ static void TikZ_Text( double x, double y, const char *str,
 		fprintf( tikzInfo->outputFile, "base east,");
 	}
 		
-	fprintf( tikzInfo->outputFile, "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s};\n",
+	fprintf( tikzInfo->outputFile, "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s%%\n};\n",
 		plotParams->cex, x, y, tikzString);
 
 	// Since we no longer neexd tikzString, we should free the memory that it is being stored in.
