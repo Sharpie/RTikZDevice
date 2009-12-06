@@ -444,6 +444,10 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 	*/
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 	
+	if(tikzInfo->outFileName[0] == '\0'){
+		//If empty file name output to console
+		tikzInfo->console = TRUE;	
+	}
 	if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
 
 	/* Header for a standalone LaTeX document*/
