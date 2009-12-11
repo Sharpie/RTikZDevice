@@ -3,8 +3,8 @@
 library(tikzDevice)
 library(getopt)
 
-#Run separate XeLaTeX test
-source('testXeLaTeX.R')
+#Run separate XeLaTeX test (currently broken)
+#source('testXeLaTeX.R')
 setTikzDefaults()
 
 #Column 3: Argument mask of the flag. An integer. Possible values: 
@@ -227,7 +227,7 @@ function(main){
 # from the ggplot2 book section "Fitting multiple models"
 function(main){
 	
-	sink('/dev/null')
+	sink(tempfile())
 	suppressPackageStartupMessages(require(mgcv))
 	suppressPackageStartupMessages(require(ggplot2))
 	sink()
@@ -269,7 +269,11 @@ for(i in 1:length(tests)){
 	cat("Compiling Test",sprintf('%02d',i),"... ")
 	t <- system.time(
     {
-		silence <- system( paste(Sys.getenv("R_PDFLATEXCMD"),
+	    pdflatex <- Sys.getenv("R_PDFLATEXCMD")
+		if (pdflatex == "") {
+			pdflatex <- "pdflatex"
+		}
+		silence <- system( paste(pdflatex,
 			'-output-directory', prefix, this.testfile), intern =T)
 	})
 	cat("Done, took ",t[['elapsed']],"seconds.\n")
@@ -308,9 +312,14 @@ newsizes <- file.info(file.path(prefix,texfiles))$size
 cat(paste(texfiles,newsizes,sep='\t'),sep='\n',file=f)
 
 # Combine the output files into summary PDFs.
-silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=compares.pdf -dBATCH',
+gs <- Sys.getenv("GSCMD")
+if (gs == "") {
+	gs <- if (.Platform$OS.type == "windows") "gswin32c.exe" else "gs"
+}
+
+silence <- system( paste(gs, '-dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=compares.pdf -dBATCH',
 	paste(output.list,collapse=' ') ), intern=T, ignore.stderr=T)
 
 # Combine only the test files.
-silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH',
+silence <- system( paste(gs, '-dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH',
 	paste(output.list[seq(1,length(output.list),2)],collapse=' ')), intern=T, ignore.stderr=T)
