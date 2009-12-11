@@ -4,7 +4,6 @@ library(tikzDevice)
 library(getopt)
 
 #Run separate XeLaTeX test
-source('testXeLaTeX.R')
 setTikzDefaults()
 
 #Column 3: Argument mask of the flag. An integer. Possible values: 

@@ -5,7 +5,7 @@
  *  	A Computer Language for Statistical Data Analysis
  *
  *  Copyright (C) 1995, 1996  Robert Gentleman and Ross Ihaka
- *  Copyright (C) 2001-8  The R Development Core Team
+ *  Copyright (C) 2001-present  The R Development Core Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@
  * the programmer to order the code in any sequence they choose.
  *
  * NOTE:
- * 	This is the first effort of a dyed-in-the-wool Fortran programmer
+ * 	This is the first effort of dyed-in-the-wool Fortran programmers
  * 	to write C code. Hence the comments in this file will make many
  * 	observations that may seem obvious. There also may be a generous
  * 	amount of snide comments concerning the syntax of the C language.
@@ -58,6 +58,8 @@
 // We are writing to files so we need stdio.h
 #include <stdio.h>
 #define DEBUG FALSE
+
+#define TIKZ_DEVICE_VERSION "0.4.8"
 
 SEXP tikzDevice ( SEXP args ){
 
@@ -78,26 +80,27 @@ SEXP tikzDevice ( SEXP args ){
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
-	 * that contains all device information required by the parent
-	 * R system. It contains one important componant of type pDevDesc
-	 * which containts information specific to the implementation of
-	 * the tikz device. The creation and initialization of this component
-	 * is one of the main tasks of this routine.
-  */
+	 * that represents a graphics device to the rest of the R system.
+   * It contains one important componant of type pDevDesc
+	 * which contains information specific to the implementation of
+	 * the TikZ Device. The creation and initialization of this component
+	 * is the main task of this routine.
+    */
 	pGEDevDesc tikzDev;
 
 
 	/* Retrieve function arguments from input SEXP. */
 
+	
 	/*
 	 * Skip first argument. It holds the name of the R function
 	 * that called this C routine.
-  */ 
+    */ 
 	args = CDR(args);
 
 	/* Recover file name. */
 	fileName = translateChar(asChar(CAR(args)));
-	/* Advance to next argument stored in SEXPR. */
+	/* Advance to next argument stored in the args SEXP. */
 	args = CDR(args);
 
 	/* Recover figure dimensions. */
@@ -116,8 +119,8 @@ SEXP tikzDevice ( SEXP args ){
 	standAlone = asLogical(CAR(args)); args = CDR(args);
 
 	/* 
-	 * Set the bareBones parameter for direct output of TikZ code withou
-	 * wrapping it in the tikzpicture environment.
+	 * Set the bareBones parameter for direct output of TikZ code without
+	 * wrapping it a LaTeX document or the tikzpicture environment.
 	 * 
 	*/
 	bareBones = asLogical(CAR(args)); args = CDR(args);
@@ -136,8 +139,8 @@ SEXP tikzDevice ( SEXP args ){
 	BEGIN_SUSPEND_INTERRUPTS{
 
 		/* 
-		 * The pDevDesc variable specifies which funtions and components 
-		 * which describe the specifics of this graphics device. After
+		 * The pDevDesc variable specifies the funtions and components 
+		 * that describe the specifics of this graphics device. After
 		 * setup, this information will be incorporated into the pGEDevDesc
 		 * variable tikzDev.
 		*/ 
@@ -148,8 +151,9 @@ SEXP tikzDevice ( SEXP args ){
 		 * a 0 is returned in order to cause R to shut down due to the
 		 * possibility of corrupted memory.
 		*/
-		if( !( deviceInfo = (pDevDesc) calloc(1, sizeof(DevDesc))) )
+		if( !( deviceInfo = (pDevDesc) calloc(1, sizeof(DevDesc))) ) {
 			return 0;
+		}
 
 		/*
 		 * Call setup routine to initialize deviceInfo and associate
@@ -170,8 +174,11 @@ SEXP tikzDevice ( SEXP args ){
 		/* Create tikzDev as a Graphics Engine device using deviceInfo. */
 		tikzDev = GEcreateDevDesc( deviceInfo );
 
-		// Register the device as an avaiable graphics device in the R
-		// Session.
+    /*
+		 * Register the device as an avaiable graphics device in the R
+		 * Session.  The user will now see a device labeled "tikz output"
+     * when running functions such as dev.list().
+    */ 
 		GEaddDevice2( tikzDev, "tikz output" );
 
 	} END_SUSPEND_INTERRUPTS;
@@ -213,7 +220,6 @@ static Rboolean TikZ_Setup(
 	 * struct _DevDesc in the R header file GraphicsDevice.h
 	 *
 	 * tikzInfo is a structure which is defined in the file tikzDevice.h
-	 *
 	*/
 	tikzDevDesc *tikzInfo;
 	
@@ -226,15 +232,17 @@ static Rboolean TikZ_Setup(
 	 * to anything. This causes nasty crashes- for some reason
 	 * only on Windows and Linux...
   */	
-	if( !( plotParams = (pGEcontext) malloc(sizeof(pGEcontext)) ) )
+	if( !( plotParams = (pGEcontext) malloc(sizeof(pGEcontext)) ) ){
 		return FALSE;
+  }
 
 	/* 
 	 * Initialize tikzInfo, return false if this fails. A false return
 	 * value will cause the whole device initialization routine to fail.
 	*/
-	if( !( tikzInfo = (tikzDevDesc *) malloc(sizeof(tikzDevDesc)) ) )
+	if( !( tikzInfo = (tikzDevDesc *) malloc(sizeof(tikzDevDesc)) ) ){
 		return FALSE;
+  }
 
 	/* Copy TikZ-specific information to the tikzInfo variable. */
 	strcpy( tikzInfo->outFileName, fileName);
@@ -270,19 +278,20 @@ static Rboolean TikZ_Setup(
 	 * Define the gamma factor- used to adjust the luminosity of an image. 
 	 * Set to 1 since there is no gamma correction in the TikZ device. Also,
 	 * canChangeGamma is set to FALSE to disallow user adjustment of this
-	 * default
+	 * default.
 	*/
 	deviceInfo->startgamma = 1;
 	deviceInfo->canChangeGamma = FALSE;
 
 	/*
 	 * canHAdj is an integer specifying the level of horizontal adjustment
-	 * or justification provided by this device. Currently set to 0 as this
-	 * is not implemented. Level 1 would be possible by having the device
-	 * insert /raggedleft, /raggedright and /centering directives. Level 2
-	 * represents support for continuous variation between left aligned and
-	 * right aligned- this is certainly possible in TeX but would take some
-	 * though to implement.
+	 * or justification provided by this device. Currently set to 1 as this
+	 * is implemented by having the device  insert /raggedleft, /raggedrigh
+   * and /centering directives.
+   *
+   * Level 2 represents support for continuous variation between left aligned 
+   * and right aligned- this is certainly possible in TeX but would take some
+	 * thought to implement.
 	*/
 	deviceInfo->canHAdj = 1;
 
@@ -295,13 +304,8 @@ static Rboolean TikZ_Setup(
 	deviceInfo->useRotatedTextInContour = TRUE; 
 
 	/*
-	 * canClip specifies whether the device implements routines for filtering
-	 * plotting input such that it falls within a rectangular clipping area.
-	 * Implementing this leads to an interesting design choice- to implement
-	 * clipping here in the C code or hand it off to the TikZ clipping 
-	 * routines.  Clipping at the C level may reduce  and simplify the final 
-	 * output file by not printing objects that fall outside the plot 
-	 * boundaries. 
+	 * canClip specifies whether the device implements routines for trimming
+	 * plotting output such that it falls within a rectangular clipping area.
 	*/
 	deviceInfo->canClip = TRUE;
 
@@ -328,8 +332,8 @@ static Rboolean TikZ_Setup(
 	 * this device useful for an international audience. For now only
 	 * the ASCII character set will be used as it is easy to implement.
 	 * 
-	 * wantSymbolUTF8 indicates if mathematical symbols should be treated
-	 * as UTF8 characters.
+	 * wantSymbolUTF8 indicates if mathematical symbols should be sent to
+   * the device as UTF8 characters.
 	*/
 	deviceInfo->hasTextUTF8 = FALSE;
 	deviceInfo->wantSymbolUTF8 = FALSE;
@@ -415,8 +419,9 @@ static Rboolean TikZ_Setup(
 	deviceInfo->mode = TikZ_Mode;
 
 	/* Call TikZ_Open to create and initialize the output file. */
-	if( !TikZ_Open( deviceInfo ) )
+	if( !TikZ_Open( deviceInfo ) ){
 		return FALSE;
+  }
 
 	return TRUE;
 
@@ -433,6 +438,45 @@ double dim2dev( double length ){
 	return length*72.27;
 }
 
+
+/*
+ * This function is responsible for writing header information
+ * to the output file. Currently this header information includes:
+ *
+ *   - The current version number of TikZ device.
+ *   - The date on which the graphic was created.
+ *
+*/
+static void Print_TikZ_Header( FILE* outputFile ){
+
+  /* Call back to R to retrieve current date */
+
+  /*
+   * Recover package namespace as the date formatting function
+   * is not exported
+  */
+  SEXP TikZ_namespace;
+  PROTECT( 
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+          ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
+
+
+  SEXP currentDate;
+  PROTECT( 
+    currentDate = eval(lang1( install("getDateStampForTikz") ), 
+      TikZ_namespace )
+  );
+
+
+
+  fprintf( outputFile, "%% Created by tikzDevice version %s on %s\n",
+    TIKZ_DEVICE_VERSION, CHAR(STRING_ELT(currentDate,0)) );
+
+	UNPROTECT(2);
+
+}
+
 static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/* 
@@ -444,6 +488,9 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
 		return FALSE;
+
+  /* Print header comment */
+  Print_TikZ_Header( tikzInfo->outputFile );
 
 	/* Header for a standalone LaTeX document*/
 	if(tikzInfo->standAlone == TRUE){
@@ -457,8 +504,6 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 		fprintf(tikzInfo->outputFile,
 			"%% Beginning tikzpicture, this file is %s\n",
 			R_ExpandFileName(tikzInfo->outFileName));
-
-	fprintf(tikzInfo->outputFile,"%% Created by tikzDevice\n");
 
 	/* Start the tikz environment if we have not specified a bare bones plot. */
 	if( tikzInfo->bareBones != TRUE ){

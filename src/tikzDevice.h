@@ -93,6 +93,17 @@ static void TikZ_Polyline( int n, double *x, double *y,
 static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 		
+
+/* Dummy routines. */
+static void TikZ_Activate( pDevDesc deviceInfo );
+static void TikZ_Deactivate( pDevDesc deviceInfo );
+static Rboolean TikZ_Locator( double *x, double *y, pDevDesc deviceInfo );
+static void TikZ_Mode( int mode, pDevDesc deviceInfo );
+
+/* End R Graphics engin function hooks. */
+
+
+
 /*Internal style definition routines*/
 static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
 	pDevDesc deviceInfo);
@@ -106,16 +117,10 @@ static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, pDevDesc deviceInfo)
 static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo);
 static void SetMitreLimit(double lmitre, FILE *outputFile);
 
-
-/* Dummy routines. */
-static void TikZ_Activate( pDevDesc deviceInfo );
-static void TikZ_Deactivate( pDevDesc deviceInfo );
-static Rboolean TikZ_Locator( double *x, double *y, pDevDesc deviceInfo );
-static void TikZ_Mode( int mode, pDevDesc deviceInfo );
-
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
 double dim2dev( double length );
+static void Print_TikZ_Header( FILE *outputFIle );
 double TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ); 
 
 #endif // End of Once Only header
