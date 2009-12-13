@@ -10,8 +10,8 @@ language. TikZ code may be used inside a LaTeX document by specifying \code{\\us
 in the document header.
 }
 \usage{
-tikz(file = "Rplots.tex", width = 7, height = 7, 
-	bg="white", fg="black", standAlone = FALSE, bareBones = FALSE, 
+tikz(file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black", 
+	standAlone = FALSE, bareBones = FALSE, console = FALSE, 
 	documentDeclaration = getOption("tikzDocumentDeclaration"),
 	packages = getOption("tikzLatexPackages"),
 	footer = getOption("tikzFooter"))
@@ -30,6 +30,10 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
 			wrapped in a \code{tikzpicture} environment.  This option is 
 			useful for embedding one TikZ picture within another. When 
 			\code{TRUE} multipage output will be drawn on a single page.}
+  \item{console}{Should the output of tikzDevice be directed to the R console 
+			(default FALSE). This is useful for dumping tikz output directly 
+			into a LaTeX document.  If TRUE, the \code{file} argument is 
+			ignored.}
   \item{documentDeclaration}{See the section ``Options That Affect Package Behavior.''}
   \item{packages}{See the section ``Options That Affect Package Behavior.''}
   \item{footer}{See the section ``Options That Affect Package Behavior.''}

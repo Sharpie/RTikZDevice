@@ -44,6 +44,7 @@ typedef struct{
 	const char *packages;
 	const char *footer;
 	Rboolean polyLine;
+	Rboolean console;
 } tikzDevDesc;
 
 
@@ -53,11 +54,11 @@ static Rboolean TikZ_Setup(
 		pDevDesc deviceInfo,
 		const char *fileName,
 		double width, double height,
-		const char *bg, const char *fg,
+		const char *bg, const char *fg, double baseSize,
 		Rboolean standAlone, Rboolean bareBones,
 		const char *documentDeclaration,
 		const char *packages, const char *footer,
-	  double baseSize );
+		Rboolean console );
 
 static Rboolean TikZ_Open( pDevDesc deviceInfo );
 
@@ -107,20 +108,21 @@ static void TikZ_Mode( int mode, pDevDesc deviceInfo );
 /*Internal style definition routines*/
 static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
 	pDevDesc deviceInfo);
-static void SetColor(int color, Rboolean def, pDevDesc deviceInfo);
-static void SetFill(int color, Rboolean def, pDevDesc deviceInfo);
-static void SetAlpha(int color, Rboolean fill, pDevDesc deviceInfo);
-static void SetLineStyle(int lty, int lwd, pDevDesc deviceInfo);
-static void SetDashPattern(int lty, FILE *outputFile);
-static void SetLineWeight(int lwd, FILE *outputFile);
-static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, pDevDesc deviceInfo);
-static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo);
-static void SetMitreLimit(double lmitre, FILE *outputFile);
+static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo);
+static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo);
+static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo);
+static void SetLineStyle(int lty, int lwd, tikzDevDesc *tikzInfo);
+static void SetDashPattern(int lty, tikzDevDesc *tikzInfo);
+static void SetLineWeight(int lwd, tikzDevDesc *tikzInfo);
+static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
+static void SetLineEnd(R_GE_linejoin lend, tikzDevDesc *tikzInfo);
+static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
 double dim2dev( double length );
 static void Print_TikZ_Header( FILE *outputFIle );
-double TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ); 
+double TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
+void printOutput(Rboolean console, FILE *outputFile, const char *format, ...);
 
 #endif // End of Once Only header
