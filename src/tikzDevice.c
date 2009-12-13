@@ -112,6 +112,9 @@ SEXP tikzDevice ( SEXP args ){
 	bg = CHAR(asChar(CAR(args))); args = CDR(args);
 	fg = CHAR(asChar(CAR(args))); args = CDR(args);
 
+	/* Recover the base fontsize */
+	baseSize = asReal(CAR(args)); args = CDR(args);
+
 	/* 
 	 * Set the standAlone parameter for wrapping the picture in a LaTeX 
 	 * document
@@ -129,9 +132,6 @@ SEXP tikzDevice ( SEXP args ){
 	documentDeclaration = CHAR(asChar(CAR(args))); args = CDR(args);
 	packages = CHAR(asChar(CAR(args))); args = CDR(args);
 	footer = CHAR(asChar(CAR(args))); args = CDR(args);
-
-	/* Recover the base fontsize */
-	baseSize = asReal(CAR(args)); args = CDR(args);
 
 	/* Ensure there is an empty slot avaliable for a new device. */
 	R_CheckDeviceAvailable();
