@@ -74,7 +74,7 @@ SEXP tikzDevice ( SEXP args ){
 	double width, height;
 	Rboolean standAlone, bareBones;
 	const char *documentDeclaration, *packages, *footer;
-	Rboolean console;
+	Rboolean console, sanitize;
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -129,6 +129,7 @@ SEXP tikzDevice ( SEXP args ){
 	
 	/*Should the output be sent to the R console*/
 	console = asLogical(CAR(args)); args = CDR(args);
+	sanitize = asLogical(CAR(args)); args = CDR(args);
 
 	/* Ensure there is an empty slot avaliable for a new device. */
 	R_CheckDeviceAvailable();
@@ -158,7 +159,7 @@ SEXP tikzDevice ( SEXP args ){
 		*/
 		if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, 
 				standAlone, bareBones, documentDeclaration, packages, 
-				footer, console ) ){
+				footer, console, sanitize ) ){
 			/* 
 			 * If setup was unsuccessful, destroy the device and return
 			 * an error message.
@@ -199,7 +200,7 @@ static Rboolean TikZ_Setup(
 	Rboolean standAlone, Rboolean bareBones,
 	const char *documentDeclaration,
 	const char *packages, const char *footer, 
-	Rboolean console ){
+	Rboolean console, Rboolean sanitize ){
 
 	/* 
 	 * Create tikzInfo, this variable contains information which is
@@ -253,6 +254,7 @@ static Rboolean TikZ_Setup(
 	tikzInfo->footer = footer;
 	tikzInfo->polyLine = FALSE;
 	tikzInfo->console = console;
+	tikzInfo->sanitize = sanitize;
 
 	/* Incorporate tikzInfo into deviceInfo. */
 	deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -452,30 +454,30 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/* Header for a standalone LaTeX document*/
 	if(tikzInfo->standAlone == TRUE){
-		printOutput(tikzInfo->console,tikzInfo->outputFile,"%s",tikzInfo->documentDeclaration);
-		printOutput(tikzInfo->console,tikzInfo->outputFile,"%s",tikzInfo->packages);
-		printOutput(tikzInfo->console,tikzInfo->outputFile,"\\begin{document}\n\n");
+		printOutput(tikzInfo,"%s",tikzInfo->documentDeclaration);
+		printOutput(tikzInfo,"%s",tikzInfo->packages);
+		printOutput(tikzInfo,"\\begin{document}\n\n");
 	}
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE)
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% Beginning tikzpicture, this file is %s\n",
 			R_ExpandFileName(tikzInfo->outFileName));
 			
-	printOutput(tikzInfo->console,tikzInfo->outputFile,"%% Created by tikzDevice\n");
+	printOutput(tikzInfo,"%% Created by tikzDevice\n");
 		
 	/* Start the tikz environment if we have not specified a bare bones plot. */
 	if( tikzInfo->bareBones != TRUE ){
 
-		printOutput(tikzInfo->console,tikzInfo->outputFile, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
+		printOutput(tikzInfo, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
 
 		/* 
 		 * For now, print an invisible rectangle to ensure all of the plotting 
 		 * area is used. Once color options are implemented, this could be 
 		 * replaced with a call to TikZ_Rectangle, if feasible.
 		*/
-		printOutput(tikzInfo->console,tikzInfo->outputFile, 
+		printOutput(tikzInfo, 
 				"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
 				deviceInfo->right,deviceInfo->top);
 
@@ -490,18 +492,18 @@ static void TikZ_Close( pDevDesc deviceInfo){
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	printOutput(tikzInfo->console,tikzInfo->outputFile, "\\end{scope}\n");
+	printOutput(tikzInfo, "\\end{scope}\n");
 
 	/* End the tikz environment if we're not doing a bare bones plot. */
 	if( tikzInfo->bareBones != TRUE )
-		printOutput(tikzInfo->console,tikzInfo->outputFile, "\\end{tikzpicture}\n");
+		printOutput(tikzInfo, "\\end{tikzpicture}\n");
 	
 	/* Close off the standalone document*/
 	if(tikzInfo->standAlone == TRUE)
-		printOutput(tikzInfo->console,tikzInfo->outputFile,"\n\\end{document}\n");
+		printOutput(tikzInfo,"\n\\end{document}\n");
 	
 	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% Calculated string width %d times\n",
 			tikzInfo->stringWidthCalls);
 
@@ -524,19 +526,19 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 		/* End the current TikZ environment, unless we are making bare bones code. */
 		if( tikzInfo->bareBones != TRUE ){
 			
-			printOutput(tikzInfo->console,tikzInfo->outputFile, "\\end{scope}\n");
-			printOutput(tikzInfo->console,tikzInfo->outputFile, "\\end{tikzpicture}\n");
+			printOutput(tikzInfo, "\\end{scope}\n");
+			printOutput(tikzInfo, "\\end{tikzpicture}\n");
 			
 			/*Next clipping region will be the first on the page*/
 			tikzInfo->firstClip = TRUE;
 
 			/*Show only for debugging*/
 			if(tikzInfo->debug == TRUE) 
-				printOutput(tikzInfo->console,tikzInfo->outputFile,
+				printOutput(tikzInfo,
 					"%% Beginning new tikzpicture 'page'\n");
 
 			/* Start a new TikZ envioronment. */
-			printOutput(tikzInfo->console,tikzInfo->outputFile, 
+			printOutput(tikzInfo, 
 				"\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
 			
 			/* 
@@ -544,7 +546,7 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 			 * area is used. Once color options are implemented, this could be 
 			 * replaced with a call to TikZ_Rectangle, if feasible.
 			*/
-			printOutput(tikzInfo->console,tikzInfo->outputFile, 
+			printOutput(tikzInfo, 
 				"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
 				deviceInfo->right,deviceInfo->top);
 
@@ -570,13 +572,13 @@ static void TikZ_Clip( double x0, double x1,
 	deviceInfo->clipRight = x1;
 	
 	if(tikzInfo->firstClip == FALSE){
-		printOutput(tikzInfo->console,tikzInfo->outputFile, "\\end{scope}\n");
+		printOutput(tikzInfo, "\\end{scope}\n");
 	}else{
 		tikzInfo->firstClip = FALSE;
 	}
 	
-	printOutput(tikzInfo->console,tikzInfo->outputFile, "\\begin{scope}\n");
-	printOutput(tikzInfo->console,tikzInfo->outputFile,
+	printOutput(tikzInfo, "\\begin{scope}\n");
+	printOutput(tikzInfo,
 		"\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
 		x0,y0,x1,y1);
 	
@@ -602,9 +604,9 @@ static void TikZ_Clip( double x0, double x1,
 	tikzInfo->oldLineType = -999;
 
 	if(tikzInfo->debug == TRUE)
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
-				"\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-				x0,y0,x1,y1);
+		printOutput(tikzInfo,
+			"\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+			x0,y0,x1,y1);
 			
 	/*Define the colors for fill and border*/
 	StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
@@ -829,7 +831,7 @@ static double TikZ_StrWidth( const char *str,
 	
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% Calculated string width of %s as %f\n",str,width);
 	
 	/*
@@ -852,7 +854,8 @@ static double TikZ_StrWidth( const char *str,
  * The rotation value is given in degrees.
 */
 static void TikZ_Text( double x, double y, const char *str,
-		double rot, double hadj, const pGEcontext plotParams, pDevDesc deviceInfo){
+		double rot, double hadj, const pGEcontext plotParams, 
+		pDevDesc deviceInfo){
 	
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
@@ -861,6 +864,7 @@ static void TikZ_Text( double x, double y, const char *str,
 	
 	// Append font face commands depending on which font R is using.
 	char *tikzString = (char *) calloc( strlen(str) + 20, sizeof(char) );
+	char *cleanString;
 
 	switch( plotParams->fontface ){
 	
@@ -884,9 +888,11 @@ static void TikZ_Text( double x, double y, const char *str,
 	// Form final output string.
 	strcat( tikzString, str );
 	
+	cleanString = Sanitize(tikzString);
+	
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% Drawing node at x = %f, y = %f\n",
 			x,y);
 
@@ -894,42 +900,54 @@ static void TikZ_Text( double x, double y, const char *str,
 	SetColor( plotParams->col, TRUE, tikzInfo );	
 
 	/* Start a node for the text, open an options bracket. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile,"\n\\node[");
+	printOutput(tikzInfo,"\n\\node[");
 
 	/* Rotate the text if desired. */
 	if( rot != 0 )
-		printOutput(tikzInfo->console, tikzInfo->outputFile, "rotate=%6.2f,", rot );
+		printOutput(tikzInfo, "rotate=%6.2f,", rot );
 
 	/* More options would go here such as scaling, color etc. */
 	
 	// Add a reference to the text color to the node options.
 	SetColor( plotParams->col, FALSE, tikzInfo );
 	/* End options, print coordinates and string. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile, "anchor=");
+	printOutput(tikzInfo, "anchor=");
 	
 	//Justify the text
 	if(fabs(hadj - 0.0) < tol){
 		//Left Justified
-		printOutput(tikzInfo->console, tikzInfo->outputFile, "base west,");
+		printOutput(tikzInfo, "base west,");
 	}
 	if(fabs(hadj - 0.5) < tol){
 		//Center Justified
-		printOutput(tikzInfo->console, tikzInfo->outputFile, "base,");
+		printOutput(tikzInfo, "base,");
 	}
 	if(fabs(hadj - 1) < tol){
 		//Right Justified
-		printOutput(tikzInfo->console, tikzInfo->outputFile, "base east,");
+		printOutput(tikzInfo, "base east,");
 	}
 		
-	printOutput(tikzInfo->console, tikzInfo->outputFile, "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {%s%%\n};\n",
-		plotParams->cex, x, y, tikzString);
+	printOutput(tikzInfo, 
+		"inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
+		plotParams->cex, x, y);
+	
+	if(tikzInfo->sanitize == TRUE)
+		printOutput(tikzInfo, "%s%%\n};\n", cleanString);
+	else 
+		printOutput(tikzInfo, "%s%%\n};\n", tikzString);
 
-	// Since we no longer neexd tikzString, we should free the memory that it is being stored in.
+	/* Since we no longer need tikzString, 
+	*  we should free the memory that it is being stored in.
+	*/
 	free( tikzString );
 
-	// Add a small red marker to indicate the point the text string is being aligned to.
+	/* Add a small red marker to indicate the 
+	*  point the text string is being aligned to.
+	*/
 	if( DEBUG == TRUE )
-		printOutput(tikzInfo->console, tikzInfo->outputFile, "\n\\draw[color=red, fill=red] (%6.2f,%6.2f) circle (0.5pt);\n", x, y);
+		printOutput(tikzInfo, 
+			"\n\\draw[color=red, fill=red] (%6.2f,%6.2f) circle (0.5pt);\n", 
+			x, y);
 
 }
 
@@ -942,7 +960,7 @@ static void TikZ_Line( double x1, double y1,
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
 			x1,y1,x2,y2);
 
@@ -950,7 +968,7 @@ static void TikZ_Line( double x1, double y1,
 	StyleDef(TRUE, plotParams, deviceInfo);
 
 	/* Start drawing a line, open an options bracket. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile,"\n\\draw[");
+	printOutput(tikzInfo,"\n\\draw[");
 	
 	/*Define the draw styles*/
 	StyleDef(FALSE, plotParams, deviceInfo);
@@ -958,7 +976,7 @@ static void TikZ_Line( double x1, double y1,
 	/* More options would go here such as line thickness, style, color etc. */
 	
 	/* End options, print coordinates. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile, "] (%6.2f,%6.2f) -- (%6.2f,%6.2f);\n",
+	printOutput(tikzInfo, "] (%6.2f,%6.2f) -- (%6.2f,%6.2f);\n",
 		x1,y1,x2,y2);
 
 }
@@ -971,7 +989,7 @@ static void TikZ_Circle( double x, double y, double r,
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% Drawing Circle at x = %f, y = %f, r = %f\n",
 			x,y,r);
 
@@ -979,7 +997,7 @@ static void TikZ_Circle( double x, double y, double r,
 	StyleDef(TRUE, plotParams, deviceInfo);
 
 	/* Start drawing, open an options bracket. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile,"\n\\draw[");
+	printOutput(tikzInfo,"\n\\draw[");
 
 	/* 
 	 * More options would go here such as line thickness, style, line 
@@ -991,7 +1009,7 @@ static void TikZ_Circle( double x, double y, double r,
 
 	
 	/* End options, print coordinates. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile, "] (%6.2f,%6.2f) circle (%6.2f);\n",
+	printOutput(tikzInfo, "] (%6.2f,%6.2f) circle (%6.2f);\n",
 		x,y,r);
 }
 
@@ -1003,7 +1021,7 @@ static void TikZ_Rectangle( double x0, double y0,
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f\n",
 			x0,y0,x1,y1);
 
@@ -1011,7 +1029,7 @@ static void TikZ_Rectangle( double x0, double y0,
 	StyleDef(TRUE, plotParams, deviceInfo);
 
 	/* Start drawing, open an options bracket. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile,"\n\\draw[");
+	printOutput(tikzInfo,"\n\\draw[");
 
 	/*Define the draw styles*/
 	StyleDef(FALSE, plotParams, deviceInfo);
@@ -1022,7 +1040,7 @@ static void TikZ_Rectangle( double x0, double y0,
 	*/
 	
 	/* End options, print coordinates. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile, 
+	printOutput(tikzInfo, 
 		"] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
 		x0,y0,x1,y1);
 
@@ -1036,14 +1054,14 @@ static void TikZ_Polyline( int n, double *x, double *y,
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% Starting Polyline\n");
 
 	/*Define the colors for fill and border*/
 	StyleDef(TRUE, plotParams, deviceInfo);
 
 	/* Start drawing, open an options bracket. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile,"\n\\draw[");
+	printOutput(tikzInfo,"\n\\draw[");
 
 	/* More options would go here such as line thickness, style and color */
 	/*Define the draw styles*/
@@ -1053,25 +1071,25 @@ static void TikZ_Polyline( int n, double *x, double *y,
 	tikzInfo->polyLine = FALSE;
 
 	/* End options, print first set of coordinates. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile, "] (%6.2f,%6.2f) --\n",
+	printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
 		x[0],y[0]);
 	
 	/* Print coordinates for the middle segments of the line. */
 	int i;
 	for ( i = 1; i < n-1; i++ ){
 		
-		printOutput(tikzInfo->console, tikzInfo->outputFile, "\t(%6.2f,%6.2f) --\n",
+		printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n",
 			x[i],y[i]);
 
 	}
 
 	/* Print last set of coordinates. End path. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile, "\t(%6.2f,%6.2f);\n",
+	printOutput(tikzInfo, "\t(%6.2f,%6.2f);\n",
 		x[n-1],y[n-1]);
 		
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% End Polyline\n");
 
 }
@@ -1084,14 +1102,14 @@ static void TikZ_Polygon( int n, double *x, double *y,
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% Starting Polygon\n");
 			
 	/*Define the colors for fill and border*/
 	StyleDef(TRUE, plotParams, deviceInfo);
 	
 	/* Start drawing, open an options bracket. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile,"\n\\draw[");
+	printOutput(tikzInfo,"\n\\draw[");
 	
 	/* 
 	 * More options would go here such as line thickness, style, line 
@@ -1102,24 +1120,24 @@ static void TikZ_Polygon( int n, double *x, double *y,
 	StyleDef(FALSE, plotParams, deviceInfo);
 
 	/* End options, print first set of coordinates. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile, "] (%6.2f,%6.2f) --\n",
+	printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
 		x[0],y[0]);
 	
 	/* Print coordinates for the middle segments of the line. */
 	int i;
 	for ( i = 1; i < n; i++ ){
 		
-		printOutput(tikzInfo->console, tikzInfo->outputFile, "\t(%6.2f,%6.2f) --\n",
+		printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n",
 			x[i],y[i]);
 
 	}
 
 	/* End path by cycling to first set of coordinates. */
-	printOutput(tikzInfo->console, tikzInfo->outputFile, "\tcycle;\n" );
+	printOutput(tikzInfo, "\tcycle;\n" );
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo->console,tikzInfo->outputFile,
+		printOutput(tikzInfo,
 			"%% End Polyline\n");
 
 }
@@ -1178,7 +1196,7 @@ static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo){
 	if(def == TRUE){
 		if(color != tikzInfo->oldFillColor){
 			tikzInfo->oldFillColor = color;
-			printOutput(tikzInfo->console,tikzInfo->outputFile,
+			printOutput(tikzInfo,
 				"\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
 				R_RED(color)/255.0,
 				R_GREEN(color)/255.0,
@@ -1187,7 +1205,7 @@ static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo){
 	}else{
 		//Quick hack to not show fill colors with polylines
 		if(tikzInfo->polyLine == FALSE)
-			printOutput(tikzInfo->console, tikzInfo->outputFile, "fill=fillColor,");
+			printOutput(tikzInfo, "fill=fillColor,");
 	}
 	
 }
@@ -1198,14 +1216,14 @@ static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo){
 	if(def == TRUE){
 		if(color != tikzInfo->oldDrawColor){
 			tikzInfo->oldDrawColor = color;
-			printOutput(tikzInfo->console,tikzInfo->outputFile,
+			printOutput(tikzInfo,
 				"\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
 				R_RED(color)/255.0,
 				R_GREEN(color)/255.0,
 				R_BLUE(color)/255.0);
 		}
 	}else{
-		printOutput(tikzInfo->console, tikzInfo->outputFile, "color=drawColor,");
+		printOutput(tikzInfo, "color=drawColor,");
 	}
 }
 
@@ -1249,25 +1267,25 @@ static void SetDashPattern(int lty, tikzDevDesc *tikzInfo){
 	}
 	nlty = i; i = 0; 
 	
-	printOutput(tikzInfo->console, tikzInfo->outputFile, "dash pattern=");
+	printOutput(tikzInfo, "dash pattern=");
 	
 	/*Set the dash pattern*/
 	while(i < nlty){
 		if( (i % 2) == 0 ){
-			printOutput(tikzInfo->console, tikzInfo->outputFile, "on %dpt ", dashlist[i]);
+			printOutput(tikzInfo, "on %dpt ", dashlist[i]);
 		}else{
-			printOutput(tikzInfo->console, tikzInfo->outputFile, "off %dpt ", dashlist[i]);
+			printOutput(tikzInfo, "off %dpt ", dashlist[i]);
 		}
 		i++;
 	}
-	printOutput(tikzInfo->console,tikzInfo->outputFile, ",");
+	printOutput(tikzInfo, ",");
 }
 
 static void SetLineWeight(int lwd, tikzDevDesc *tikzInfo){
 	
 	/*Set the line width, 0.4pt is the TikZ default so scale lwd=1 to that*/
 	if(lwd != 1)
-		printOutput(tikzInfo->console, tikzInfo->outputFile,"line width=%4.1fpt,",0.4*lwd);
+		printOutput(tikzInfo,"line width=%4.1fpt,",0.4*lwd);
 }
 
 static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo){
@@ -1281,9 +1299,9 @@ static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo){
 	/*draw opacity and fill opacity separately here*/
 	if(!R_OPAQUE(color)){
 		if(fill == TRUE)
-			printOutput(tikzInfo->console,tikzInfo->outputFile,"fill opacity=%4.2f,",alpha/255.0);
+			printOutput(tikzInfo,"fill opacity=%4.2f,",alpha/255.0);
 		else
-			printOutput(tikzInfo->console,tikzInfo->outputFile,"draw opacity=%4.2f,",alpha/255.0);
+			printOutput(tikzInfo,"draw opacity=%4.2f,",alpha/255.0);
 	}
 	
 }
@@ -1294,21 +1312,21 @@ static void SetLineJoin(R_GE_linejoin ljoin, double lmitre,
 	
 	switch (ljoin) {
 		case GE_ROUND_JOIN:
-			printOutput(tikzInfo->console,tikzInfo->outputFile, "line join=round,");
+			printOutput(tikzInfo, "line join=round,");
 			break;
 		case GE_MITRE_JOIN:
 			/*Default if nothing is specified*/
 			SetMitreLimit(lmitre, tikzInfo);
 			break;
 		case GE_BEVEL_JOIN:
-			printOutput(tikzInfo->console,tikzInfo->outputFile, "line join=bevel,");
+			printOutput(tikzInfo, "line join=bevel,");
 	}
 }
 
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo){
 	
 	if(lmitre != 10)
-		printOutput(tikzInfo->console,tikzInfo->outputFile, "mitre limit=%4.2f,",lmitre);
+		printOutput(tikzInfo, "mitre limit=%4.2f,",lmitre);
 	
 }
 
@@ -1317,13 +1335,13 @@ static void SetLineEnd(R_GE_linejoin lend, tikzDevDesc *tikzInfo){
 	
 	switch (lend) {
 		case GE_ROUND_CAP:
-			printOutput(tikzInfo->console,tikzInfo->outputFile, "line cap=round,");
+			printOutput(tikzInfo, "line cap=round,");
 			break;
 		case GE_BUTT_CAP:
 			/*Default if nothing is specified*/
 			break;
 		case GE_SQUARE_CAP:
-			printOutput(tikzInfo->console,tikzInfo->outputFile, "line cap=rect,");
+			printOutput(tikzInfo, "line cap=rect,");
 	}
 }
 
@@ -1339,23 +1357,41 @@ void tikzAnnotate(const char **annotation, int *size){
 	int i = 0;
 		
 	if(tikzInfo->debug == TRUE)
-		printOutput(tikzInfo->console,tikzInfo->outputFile,"\n%% Annotating Graphic\n");
+		printOutput(tikzInfo,"\n%% Annotating Graphic\n");
 	
 	for(i == 0; i < size[0]; ++i)
-		printOutput(tikzInfo->console,tikzInfo->outputFile, "%s\n", annotation[i] );
+		printOutput(tikzInfo, "%s\n", annotation[i] );
 }
 
-void printOutput(Rboolean console, FILE *outputFile, const char *format, ...){
+void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
 	
 	va_list(ap);
 	va_start(ap, format);
 	
-	if(console == TRUE)
+	if(tikzInfo->console == TRUE)
 		Rvprintf(format, ap);
 	else
-		vfprintf(outputFile, format, ap);
+		vfprintf(tikzInfo->outputFile, format, ap);
 	
 	va_end(ap);
+	
+}
+
+static char *Sanitize(char *str){
+	
+	int nSpecial = CountSpecialChars(str); 
+	char *cleanString = (char *) calloc( strlen(str) + nSpecial, sizeof(char) );
+	
+	//Splice in escaped charaters
+	
+	return cleanString;
+	
+}
+
+int CountSpecialChars(char *str){
+	
+	//Count the number of $, %, {, }, ^, _
+	return 0;
 	
 }
 

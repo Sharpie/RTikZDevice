@@ -1,6 +1,6 @@
 tikz <-
 function (file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black",
-	standAlone = FALSE, bareBones = FALSE, console = FALSE,
+	standAlone = FALSE, bareBones = FALSE, console = FALSE, sanitize = FALSE,
 	documentDeclaration = getOption("tikzDocumentDeclaration"),
 	packages = getOption("tikzLatexPackages"),
 	footer = getOption("tikzFooter"))
@@ -19,7 +19,7 @@ function (file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black",
 	footer <- paste( paste( footer,collapse='\n'), collapse='\n')
 	
 	.External('tikzDevice', file, width, height, bg, fg, standAlone, 
-		bareBones, documentDeclaration, packages, footer, console,
+		bareBones, documentDeclaration, packages, footer, console, sanitize,
 		PACKAGE='tikzDevice') 
 	
 	invisible()	

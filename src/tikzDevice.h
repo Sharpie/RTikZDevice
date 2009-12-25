@@ -45,6 +45,7 @@ typedef struct{
 	const char *footer;
 	Rboolean polyLine;
 	Rboolean console;
+	Rboolean sanitize;
 } tikzDevDesc;
 
 
@@ -58,7 +59,7 @@ static Rboolean TikZ_Setup(
 		Rboolean standAlone, Rboolean bareBones,
 		const char *documentDeclaration,
 		const char *packages, const char *footer,
-		Rboolean console );
+		Rboolean console, Rboolean sanitize );
 
 double dim2dev( double length );
 
@@ -118,6 +119,8 @@ static void TikZ_Mode( int mode, pDevDesc deviceInfo );
 
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
-void printOutput(Rboolean console, FILE *outputFile, const char *format, ...);
+void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
+static char *Sanitize(char *str);
+int CountSpecialChars(char *str);
 
 #endif // End of Once Only header
