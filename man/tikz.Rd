@@ -10,11 +10,12 @@ language. TikZ code may be used inside a LaTeX document by specifying \code{\\us
 in the document header.
 }
 \usage{
-tikz(file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black", 
-	standAlone = FALSE, bareBones = FALSE, console = FALSE, sanitize = FALSE,
-	documentDeclaration = getOption("tikzDocumentDeclaration"),
-	packages = getOption("tikzLatexPackages"),
-	footer = getOption("tikzFooter"))
+tikz(file = "Rplots.tex", width = 7, height = 7,
+	  bg="transparent", fg="black", pointsize = 10, standAlone = FALSE, 
+	  bareBones = FALSE, console = FALSE, sanitize = FALSE,
+	  documentDeclaration = getOption("tikzDocumentDeclaration"),
+	  packages = getOption("tikzLatexPackages"),
+	  footer = getOption("tikzFooter"))
 }
 \arguments{
   \item{file}{A character string indicating the desired path to the output file.}
@@ -22,6 +23,9 @@ tikz(file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black",
   \item{height}{The height of the output figure, in \bold{inches}.}
   \item{bg}{The starting background color for the plot.}
   \item{fg}{The starting foreground color for the plot.}
+  \item{pointsize}{Starting point size for use in metric calculations. Please 
+			note that the final displayed pointsize depends on the base 
+			pointsize in the LaTeX document.}
   \item{standAlone}{A logical value indicating whether the resulting file 
 			should be suitable for direct processing by LaTeX. A value of 
 			\code{FALSE} indicates that the file is intended for inclusion in 
@@ -32,22 +36,24 @@ tikz(file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black",
 			\code{TRUE} multipage output will be drawn on a single page.}
   \item{console}{Should the output of tikzDevice be directed to the R console 
 			(default FALSE). This is useful for dumping tikz output directly 
-			into a LaTeX document.  If TRUE, the \code{file} argument is 
-			ignored.}
+			into a LaTeX document via \code{\link{sink}}.  If TRUE, the 
+			\code{file} argument is ignored. Setting \code{file=''} is 
+			equivalent to setting \code{console=TRUE}.}
   \item{sanitize}{Should special latex characters be replaced (Default FALSE). 
 			See the section ``Options That Affect Package Behavior'' for which
-			characters are escaped.}
-  \item{documentDeclaration}{See the section ``Options That Affect Package Behavior.''}
+			characters are replaced.}
+  \item{documentDeclaration}{See the section ``Options That Affect Package 
+			Behavior.''}
   \item{packages}{See the section ``Options That Affect Package Behavior.''}
   \item{footer}{See the section ``Options That Affect Package Behavior.''}
   }
 
 \details{
-The TikZ device enables LaTeX-ready output from R graphics functions. This is done by producing code that 
+The TikZ device enables LaTeX-ready output from \R{} graphics functions. This is done by producing code that 
 can be understood by the TikZ graphics language. All text in a graphic output with \code{tikz} will be typeset by LaTeX and therefore will match whatever fonts are currently used in the document. This also means that \strong{LaTeX mathematics can be typeset directly into labels and annotations}.
 
-The TikZ device currently supports two modes of output depending on the value of the parameter \code{standAlone}.
-If \code{standAlone} is set to \code{FALSE}, the default, the resulting file will only contain the \code{tikzpicture}
+The TikZ device currently supports three modes of output depending on the value of the parameter \code{standAlone} and \code{bareBones}.
+If \code{standAlone} and \code{bareBones} are set to \code{FALSE}, the default, the resulting file will only contain the \code{tikzpicture}
 environment and the commands to build your graphic. Since this file is not a complete LaTeX document, it will need to
 be included in another LaTeX document using the \code{\\input} command. For example,
 \preformatted{
@@ -62,9 +68,11 @@ be included in another LaTeX document using the \code{\\input} command. For exam
 \end{document}
 }
 
-When \code{standAlone} is set to \code{TRUE}, the device wraps the \code{tikzpicture} environment in a complete LaTeX
+When \code{standAlone} is set to \code{TRUE} (The value of \code{bareBones} is ignored in this case), the device wraps the \code{tikzpicture} environment in a complete LaTeX
 document suitable for direct compilation. In this mode the \code{preview} package is used to crop the resulting output 
-to the bounding box of the graphic.
+to the bounding box of the graphic.  
+
+When \code{bareBones} is set to \code{TRUE} and \code{standAlone} is set to \code{FALSE}, the output is not wrapped in a document or a \code{tikzpicture} environment.  This is useful for embedding an \R{} generated graphic within an existing TikZ picture. 
 }
 \value{
 \code{tikz()} returns no values.
@@ -88,12 +96,12 @@ Multiple plots will be placed as separate environments in the output file.
 }
 
 \section{Options That Affect Package Behavior}{
-The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \R\ scripts, in the \R\ console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, LaTeX packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
+The \pkg{tikzDevice} package is currently influenced by a number of global options that may be set your \R{} scripts, in the \R{} console or in your in a \code{.Rprofile} file. All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, LaTeX packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
 
 \describe{
 \item{\code{tikzLatex}}{ Specifies the location of the LaTeX compiler to be used by \pkg{tikzDevice}. Setting this option may help the package locate a missing compiler. The default is searched for when the package is loaded, otherwise it can be set manually.   This option may be set as follows: \code{options( tikzLatex = '/path/to/latex/compiler' )}.}
 
-\item{\code{tikzMetricsDictionary}}{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \R\ appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the LaTeX compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \R\ becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \R\ is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}.}
+\item{\code{tikzMetricsDictionary}}{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \R{} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the LaTeX compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \R{} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \R{} is shut down. A location for a permanent cache file may be specified by setting the value of \code{tikzMetricsDictionary} in \code{.Rprofile} with \code{options( tikzMetricsDictionary = '/path/to/dictionary/location' )}.}
 
 \item{\code{tikzDocumentDeclaration}}{A string. The documentclass declaration when \code{standAlone == TRUE} as well. as when font metrics are calculated. The default value is:
 \preformatted{
@@ -117,14 +125,12 @@ options( tikzLatexPackagesDefault = c(
 }
 }
 
-\item{\code{tikzMetricPackages}}{ A character vector. These are the packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of LaTeX and \R\ match up. The default value is:
+\item{\code{tikzMetricPackages}}{ A character vector. These are the packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of LaTeX and \R{} match up. The default value is:
 \preformatted{
 options( tikzMetricPackages = c(
 		"\\\\usepackage[utf8]{inputenc}",
 		"\\\\usepackage[T1]{fontenc}",
 		"\\\\usetikzlibrary{calc}"))
-		
-		
 }}
 
 \item{\code{tikzSanitizeCharacters}}{ A character vector of special latex characters to replace. These values should correspond to the replacement values from the \code{tikzReplacementCharacters} option The default value is:
@@ -132,7 +138,7 @@ options( tikzMetricPackages = c(
 options( tikzSanitizeCharacters = c('\%','\$','\}','\{','^') )
 }}
 
-\item{\code{tikzReplacementCharacters}}{ A character vector of replacements for special latex characters. These values should correspond to the replacement values from the \code{tikzSanitizeCharacters} option The default value is:
+\item{\code{tikzReplacementCharacters}}{ A character vector of replacements for special latex characters. These values should correspond to the values from the \code{tikzSanitizeCharacters} option The default value is:
 \preformatted{
 options( tikzReplacementCharacters = c('\\\\\%','\\\\\$','\\\\}','\\\\{','\\\\^{}'))
 }}
@@ -141,7 +147,7 @@ options( tikzReplacementCharacters = c('\\\\\%','\\\\\$','\\\\}','\\\\{','\\\\^{
 } 
 
 \seealso{
-\code{\link{pictex}}, \code{\link{getLatexCharMetrics}}, \code{\link{getLatexStrWidth}}, \code{\link{setTikzDefaults}}, \code{\link{tikzAnnotate}}
+\code{\link{pictex}}, \code{\link{getLatexCharMetrics}}, \code{\link{getLatexStrWidth}}, \code{\link{setTikzDefaults}}, \code{\link{tikzAnnotate}}, \code{\link{sanitizeTexString}}
 }
 \examples{
 \dontrun{

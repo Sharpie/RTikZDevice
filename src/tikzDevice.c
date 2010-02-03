@@ -1487,7 +1487,7 @@ static char *Sanitize(const char *str){
 
 	// Place the function into the first slot of the SEXP.
 	SETCAR( RCallBack, sanitizeFun );
-
+	
 	// Place the string into the second slot of the SEXP.
 	SETCADR( RCallBack, mkString( str ) );
 	// Tag the string with a name, this name coressponds to the
@@ -1500,15 +1500,17 @@ static char *Sanitize(const char *str){
 	SEXP RSanitizedString;
 	PROTECT( RSanitizedString = eval( RCallBack, R_GlobalEnv ) );
 
-	char *cleanString = CHAR(asChar(RSanitizedString));
-	
-	//Rprintf("%s",cleanString);
+	const char *cleanString = CHAR(asChar(RSanitizedString));
 
 	// Since we called PROTECT twice, we must call UNPROTECT
 	// and pass the number 2.
 	UNPROTECT(2);
 	
-	return cleanString;
+	//This is really stupid but create a copy of cleanString to 
+	// avoid warning: "discards qualifiers from pointer target type"
+	char *cleanStringCP = (char *) calloc( strlen(cleanString), sizeof(char) );
+	
+	return cleanStringCP;
 	//library(tikzDevice)
 	//tikz(sanitize=T,standAlone=T)
 	//plot(1:10,axes=F,type='n',xlab='',ylab='')

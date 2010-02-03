@@ -1,8 +1,7 @@
 tikz <-
 function (file = "Rplots.tex", width = 7, height = 7,
-  bg="transparent", fg="black", pointsize = 10,
-  standAlone = FALSE, bareBones = FALSE, console = FALSE, 
-  sanitize = FALSE,
+  bg="transparent", fg="black", pointsize = 10, standAlone = FALSE, 
+  bareBones = FALSE, console = FALSE, sanitize = FALSE,
   documentDeclaration = getOption("tikzDocumentDeclaration"),
   packages = getOption("tikzLatexPackages"),
   footer = getOption("tikzFooter")
