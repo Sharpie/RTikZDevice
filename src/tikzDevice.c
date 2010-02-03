@@ -43,10 +43,10 @@
  * the programmer to order the code in any sequence they choose.
  *
  * NOTE:
- *	This is the first effort of a dyed-in-the-wool Fortran programmer
- *	to write C code. Hence the comments in this file will make many
- *	observations that may seem obvious. There also may be a generous
- *	amount of snide comments concerning the syntax of the C language.
+ * 	This is the first effort of dyed-in-the-wool Fortran programmers
+ * 	to write C code. Hence the comments in this file will make many
+ * 	observations that may seem obvious. There also may be a generous
+ * 	amount of snide comments concerning the syntax of the C language.
 */
 
 /*
@@ -57,7 +57,9 @@
 
 // We are writing to files so we need stdio.h
 #include <stdio.h>
-#define DEBUG TRUE
+#define DEBUG FALSE
+
+#define TIKZ_DEVICE_VERSION "0.4.8"
 
 SEXP tikzDevice ( SEXP args ){
 
@@ -74,30 +76,32 @@ SEXP tikzDevice ( SEXP args ){
 	double width, height;
 	Rboolean standAlone, bareBones;
 	const char *documentDeclaration, *packages, *footer;
+	double baseSize;
 	Rboolean console, sanitize;
 
 	/* 
 	 * pGEDevDesc is a variable provided by the R Graphics Engine
-	 * that contains all device information required by the parent
-	 * R system. It contains one important componant of type pDevDesc
-	 * which containts information specific to the implementation of
-	 * the tikz device. The creation and initialization of this component
-	 * is one of the main tasks of this routine.
-  */
+	 * that represents a graphics device to the rest of the R system.
+   * It contains one important componant of type pDevDesc
+	 * which contains information specific to the implementation of
+	 * the TikZ Device. The creation and initialization of this component
+	 * is the main task of this routine.
+    */
 	pGEDevDesc tikzDev;
 
 
 	/* Retrieve function arguments from input SEXP. */
 
+	
 	/*
 	 * Skip first argument. It holds the name of the R function
 	 * that called this C routine.
-  */ 
+    */ 
 	args = CDR(args);
 
 	/* Recover file name. */
 	fileName = translateChar(asChar(CAR(args)));
-	/* Advance to next argument stored in SEXPR. */
+	/* Advance to next argument stored in the args SEXP. */
 	args = CDR(args);
 
 	/* Recover figure dimensions. */
@@ -109,6 +113,9 @@ SEXP tikzDevice ( SEXP args ){
 	bg = CHAR(asChar(CAR(args))); args = CDR(args);
 	fg = CHAR(asChar(CAR(args))); args = CDR(args);
 
+	/* Recover the base fontsize */
+	baseSize = asReal(CAR(args)); args = CDR(args);
+
 	/* 
 	 * Set the standAlone parameter for wrapping the picture in a LaTeX 
 	 * document
@@ -116,8 +123,8 @@ SEXP tikzDevice ( SEXP args ){
 	standAlone = asLogical(CAR(args)); args = CDR(args);
 
 	/* 
-	 * Set the bareBones parameter for direct output of TikZ code withou
-	 * wrapping it in the tikzpicture environment.
+	 * Set the bareBones parameter for direct output of TikZ code without
+	 * wrapping it a LaTeX document or the tikzpicture environment.
 	 * 
 	*/
 	bareBones = asLogical(CAR(args)); args = CDR(args);
@@ -137,8 +144,8 @@ SEXP tikzDevice ( SEXP args ){
 	BEGIN_SUSPEND_INTERRUPTS{
 
 		/* 
-		 * The pDevDesc variable specifies which funtions and components 
-		 * which describe the specifics of this graphics device. After
+		 * The pDevDesc variable specifies the funtions and components 
+		 * that describe the specifics of this graphics device. After
 		 * setup, this information will be incorporated into the pGEDevDesc
 		 * variable tikzDev.
 		*/ 
@@ -149,15 +156,16 @@ SEXP tikzDevice ( SEXP args ){
 		 * a 0 is returned in order to cause R to shut down due to the
 		 * possibility of corrupted memory.
 		*/
-		if( !( deviceInfo = (pDevDesc) calloc(1, sizeof(DevDesc))) )
+		if( !( deviceInfo = (pDevDesc) calloc(1, sizeof(DevDesc))) ) {
 			return 0;
+		}
 
 		/*
 		 * Call setup routine to initialize deviceInfo and associate
 		 * R graphics function hooks with the appropriate C routines
 		 * in this file.
 		*/
-		if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, 
+		if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, baseSize, 
 				standAlone, bareBones, documentDeclaration, packages, 
 				footer, console, sanitize ) ){
 			/* 
@@ -171,8 +179,11 @@ SEXP tikzDevice ( SEXP args ){
 		/* Create tikzDev as a Graphics Engine device using deviceInfo. */
 		tikzDev = GEcreateDevDesc( deviceInfo );
 
-		// Register the device as an avaiable graphics device in the R
-		// Session.
+    /*
+		 * Register the device as an avaiable graphics device in the R
+		 * Session.  The user will now see a device labeled "tikz output"
+     * when running functions such as dev.list().
+    */ 
 		GEaddDevice2( tikzDev, "tikz output" );
 
 	} END_SUSPEND_INTERRUPTS;
@@ -196,7 +207,7 @@ static Rboolean TikZ_Setup(
 	pDevDesc deviceInfo,
 	const char *fileName,
 	double width, double height,
-	const char *bg, const char *fg,
+	const char *bg, const char *fg, double baseSize,
 	Rboolean standAlone, Rboolean bareBones,
 	const char *documentDeclaration,
 	const char *packages, const char *footer, 
@@ -214,7 +225,6 @@ static Rboolean TikZ_Setup(
 	 * struct _DevDesc in the R header file GraphicsDevice.h
 	 *
 	 * tikzInfo is a structure which is defined in the file tikzDevice.h
-	 *
 	*/
 	tikzDevDesc *tikzInfo;
 	
@@ -227,15 +237,17 @@ static Rboolean TikZ_Setup(
 	 * to anything. This causes nasty crashes- for some reason
 	 * only on Windows and Linux...
   */	
-	if( !( plotParams = (pGEcontext) malloc(sizeof(pGEcontext)) ) )
+	if( !( plotParams = (pGEcontext) malloc(sizeof(pGEcontext)) ) ){
 		return FALSE;
+  }
 
 	/* 
 	 * Initialize tikzInfo, return false if this fails. A false return
 	 * value will cause the whole device initialization routine to fail.
 	*/
-	if( !( tikzInfo = (tikzDevDesc *) malloc(sizeof(tikzDevDesc)) ) )
+	if( !( tikzInfo = (tikzDevDesc *) malloc(sizeof(tikzDevDesc)) ) ){
 		return FALSE;
+  }
 
 	/* Copy TikZ-specific information to the tikzInfo variable. */
 	strcpy( tikzInfo->outFileName, fileName);
@@ -273,19 +285,20 @@ static Rboolean TikZ_Setup(
 	 * Define the gamma factor- used to adjust the luminosity of an image. 
 	 * Set to 1 since there is no gamma correction in the TikZ device. Also,
 	 * canChangeGamma is set to FALSE to disallow user adjustment of this
-	 * default
+	 * default.
 	*/
 	deviceInfo->startgamma = 1;
 	deviceInfo->canChangeGamma = FALSE;
 
 	/*
 	 * canHAdj is an integer specifying the level of horizontal adjustment
-	 * or justification provided by this device. Currently set to 0 as this
-	 * is not implemented. Level 1 would be possible by having the device
-	 * insert /raggedleft, /raggedright and /centering directives. Level 2
-	 * represents support for continuous variation between left aligned and
-	 * right aligned- this is certainly possible in TeX but would take some
-	 * though to implement.
+	 * or justification provided by this device. Currently set to 1 as this
+	 * is implemented by having the device insert /raggedleft, /raggedright
+   * and /centering directives.
+   *
+   * Level 2 represents support for continuous variation between left aligned 
+   * and right aligned- this is certainly possible in TeX but would take some
+	 * thought to implement.
 	*/
 	deviceInfo->canHAdj = 1;
 
@@ -298,13 +311,8 @@ static Rboolean TikZ_Setup(
 	deviceInfo->useRotatedTextInContour = TRUE; 
 
 	/*
-	 * canClip specifies whether the device implements routines for filtering
-	 * plotting input such that it falls within a rectangular clipping area.
-	 * Implementing this leads to an interesting design choice- to implement
-	 * clipping here in the C code or hand it off to the TikZ clipping 
-	 * routines.  Clipping at the C level may reduce  and simplify the final 
-	 * output file by not printing objects that fall outside the plot 
-	 * boundaries. 
+	 * canClip specifies whether the device implements routines for trimming
+	 * plotting output such that it falls within a rectangular clipping area.
 	*/
 	deviceInfo->canClip = TRUE;
 
@@ -331,8 +339,8 @@ static Rboolean TikZ_Setup(
 	 * this device useful for an international audience. For now only
 	 * the ASCII character set will be used as it is easy to implement.
 	 * 
-	 * wantSymbolUTF8 indicates if mathematical symbols should be treated
-	 * as UTF8 characters.
+	 * wantSymbolUTF8 indicates if mathematical symbols should be sent to
+   * the device as UTF8 characters.
 	*/
 	deviceInfo->hasTextUTF8 = FALSE;
 	deviceInfo->wantSymbolUTF8 = FALSE;
@@ -361,8 +369,8 @@ static Rboolean TikZ_Setup(
 	/* Set initial font. */
 	deviceInfo->startfont = 1;
 
-	/* Set initial font size. */
-	deviceInfo->startps = 10;
+	/* Set base font size. */
+	deviceInfo->startps = baseSize;
 
 	/* 
 	 * Apparently these are supposed to center text strings over the points at
@@ -418,8 +426,9 @@ static Rboolean TikZ_Setup(
 	deviceInfo->mode = TikZ_Mode;
 
 	/* Call TikZ_Open to create and initialize the output file. */
-	if( !TikZ_Open( deviceInfo ) )
+	if( !TikZ_Open( deviceInfo ) ){
 		return FALSE;
+  }
 
 	return TRUE;
 
@@ -437,6 +446,44 @@ double dim2dev( double length ){
 }
 
 
+/*
+ * This function is responsible for writing header information
+ * to the output file. Currently this header information includes:
+ *
+ *   - The current version number of TikZ device.
+ *   - The date on which the graphic was created.
+ *
+*/
+static void Print_TikZ_Header( FILE* outputFile ){
+
+  /* Call back to R to retrieve current date */
+
+  /*
+   * Recover package namespace as the date formatting function
+   * is not exported
+  */
+  SEXP TikZ_namespace;
+  PROTECT( 
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+          ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
+
+
+  SEXP currentDate;
+  PROTECT( 
+    currentDate = eval(lang1( install("getDateStampForTikz") ), 
+      TikZ_namespace )
+  );
+
+
+
+  fprintf( outputFile, "%% Created by tikzDevice version %s on %s\n",
+    TIKZ_DEVICE_VERSION, CHAR(STRING_ELT(currentDate,0)) );
+
+	UNPROTECT(2);
+
+}
+
 static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/* 
@@ -452,6 +499,9 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 	}
 	if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
 		return FALSE;
+
+  /* Print header comment */
+  Print_TikZ_Header( tikzInfo->outputFile );
 
 	/* Header for a standalone LaTeX document*/
 	if(tikzInfo->standAlone == TRUE){
@@ -624,6 +674,25 @@ static void TikZ_Size( double *left, double *right,
 
 }
 
+/*
+ * This function calculates an appropriate scaling factor for text by
+ * first calculating the ratio of the requested font size to the LaTeX
+ * base font size. The ratio is then further scaled by the value of
+ * the character expansion factor cex.
+*/
+double
+TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
+
+	// These parameters all affect the font size.
+	double baseSize = deviceInfo->startps;
+	double fontSize = plotParams->ps;
+	double cex = plotParams->cex;
+
+	double fontScale = ( fontSize / baseSize ) * cex;
+
+	return( fontScale );
+
+}
 
 /*
  * This function is supposed to calculate character metrics (such as raised 
@@ -652,6 +721,9 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 		return;
 	}
 
+	// Calculate font scaling factor.
+	double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+
 	// Prepare to call back to R in order to retrieve character metrics.
 	
 	// Call out to R to retrieve the latexParseCharForMetrics function.
@@ -671,7 +743,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 	SET_TAG( CDR( RCallBack ), install("charCode") );
 
 	// Pass graphics parameters cex and fontface.
-	SETCADDR( RCallBack,  ScalarReal( plotParams->cex ) );
+	SETCADDR( RCallBack,  ScalarReal( fontScale ) );
 	SET_TAG( CDDR( RCallBack ), install("cex") );
 	SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
 	SET_TAG( CDR(CDDR( RCallBack )), install("face") );
@@ -724,12 +796,15 @@ static double TikZ_StrWidth( const char *str,
 	/* Shortcut pointers to variables of interest. */
 	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
+	// Calculate font scaling factor.
+	double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+
 	/*
-	 * New string with calculation method: call back to R
+	 * New string width calculation method: call back to R
 	 * and run the R function getLatexStrWidth.
 	 *
 	 * This used to be implemented as a C function, but
-	 * the nuts and bolts were re-implemented on back
+	 * the nuts and bolts were re-implemented back
 	 * on the R side of this package. There seems to
 	 * have been no major performance penalty associated
 	 * with doing this.
@@ -753,7 +828,7 @@ static double TikZ_StrWidth( const char *str,
 	 *	 R. If a LaTeX parser ever gets stolen from
 	 *	 something like python's matplotlib, R will
 	 *	 probably provide the interface. Therefore
-	 *	 a callback to R is necessary anyway.
+	 *	 a callback to R may be necessary anyway.
 	 *
 	 * - Having C code called by R call R code is 
 	 *	 fucking wicked.
@@ -795,7 +870,7 @@ static double TikZ_StrWidth( const char *str,
 	SET_TAG( CDR( RCallBack ), install("texString") );
 
 	// Pass graphics parameters cex and fontface.
-	SETCADDR( RCallBack,  ScalarReal( plotParams->cex ) );
+	SETCADDR( RCallBack,  ScalarReal( fontScale ) );
 	SET_TAG( CDDR( RCallBack ), install("cex") );
 	SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
 	SET_TAG( CDR(CDDR( RCallBack )), install("face") );
@@ -897,6 +972,9 @@ static void TikZ_Text( double x, double y, const char *str,
 
 	// Form final output string.
 	strcat( tikzString, str );
+
+	// Calculate font scaling factor.
+	double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
 	
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 

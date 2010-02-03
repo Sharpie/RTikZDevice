@@ -55,13 +55,11 @@ static Rboolean TikZ_Setup(
 		pDevDesc deviceInfo,
 		const char *fileName,
 		double width, double height,
-		const char *bg, const char *fg,
+		const char *bg, const char *fg, double baseSize,
 		Rboolean standAlone, Rboolean bareBones,
 		const char *documentDeclaration,
 		const char *packages, const char *footer,
 		Rboolean console, Rboolean sanitize );
-
-double dim2dev( double length );
 
 static Rboolean TikZ_Open( pDevDesc deviceInfo );
 
@@ -97,6 +95,17 @@ static void TikZ_Polyline( int n, double *x, double *y,
 static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 		
+
+/* Dummy routines. */
+static void TikZ_Activate( pDevDesc deviceInfo );
+static void TikZ_Deactivate( pDevDesc deviceInfo );
+static Rboolean TikZ_Locator( double *x, double *y, pDevDesc deviceInfo );
+static void TikZ_Mode( int mode, pDevDesc deviceInfo );
+
+/* End R Graphics engin function hooks. */
+
+
+
 /*Internal style definition routines*/
 static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
 	pDevDesc deviceInfo);
@@ -110,15 +119,10 @@ static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInf
 static void SetLineEnd(R_GE_linejoin lend, tikzDevDesc *tikzInfo);
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 
-
-/* Dummy routines. */
-static void TikZ_Activate( pDevDesc deviceInfo );
-static void TikZ_Deactivate( pDevDesc deviceInfo );
-static Rboolean TikZ_Locator( double *x, double *y, pDevDesc deviceInfo );
-static void TikZ_Mode( int mode, pDevDesc deviceInfo );
-
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
+double dim2dev( double length );
+static void Print_TikZ_Header( FILE *outputFIle );
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
 static char *Sanitize(const char *str);
 
