@@ -11,7 +11,7 @@ in the document header.
 }
 \usage{
 tikz(file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black", 
-	standAlone = FALSE, bareBones = FALSE, console = FALSE, 
+	standAlone = FALSE, bareBones = FALSE, console = FALSE, sanitize = FALSE,
 	documentDeclaration = getOption("tikzDocumentDeclaration"),
 	packages = getOption("tikzLatexPackages"),
 	footer = getOption("tikzFooter"))
@@ -34,6 +34,9 @@ tikz(file = "Rplots.tex", width = 7, height = 7, bg="white", fg="black",
 			(default FALSE). This is useful for dumping tikz output directly 
 			into a LaTeX document.  If TRUE, the \code{file} argument is 
 			ignored.}
+  \item{sanitize}{Should special latex characters be replaced (Default FALSE). 
+			See the section ``Options That Affect Package Behavior'' for which
+			characters are escaped.}
   \item{documentDeclaration}{See the section ``Options That Affect Package Behavior.''}
   \item{packages}{See the section ``Options That Affect Package Behavior.''}
   \item{footer}{See the section ``Options That Affect Package Behavior.''}
@@ -123,6 +126,17 @@ options( tikzMetricPackages = c(
 		
 		
 }}
+
+\item{\code{tikzSanitizeCharacters}}{ A character vector of special latex characters to replace. These values should correspond to the replacement values from the \code{tikzReplacementCharacters} option The default value is:
+\preformatted{
+options( tikzSanitizeCharacters = c('\%','\$','\}','\{','^') )
+}}
+
+\item{\code{tikzReplacementCharacters}}{ A character vector of replacements for special latex characters. These values should correspond to the replacement values from the \code{tikzSanitizeCharacters} option The default value is:
+\preformatted{
+options( tikzReplacementCharacters = c('\\\\\%','\\\\\$','\\\\}','\\\\{','\\\\^{}'))
+}}
+
 } 
 } 
 

@@ -57,7 +57,7 @@
 
 // We are writing to files so we need stdio.h
 #include <stdio.h>
-#define DEBUG FALSE
+#define DEBUG TRUE
 
 SEXP tikzDevice ( SEXP args ){
 
@@ -451,6 +451,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 		tikzInfo->console = TRUE;	
 	}
 	if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
+		return FALSE;
 
 	/* Header for a standalone LaTeX document*/
 	if(tikzInfo->standAlone == TRUE){
@@ -777,8 +778,18 @@ static double TikZ_StrWidth( const char *str,
 	// Place the function into the first slot of the SEXP.
 	SETCAR( RCallBack, widthFun );
 
-	// Place the string into the second slot of the SEXP.
-	SETCADR( RCallBack, mkString( str ) );
+	//If using the sanitize option call back to R for the sanitized string
+	if(tikzInfo->sanitize == TRUE){
+		char *cleanString = Sanitize( str );
+		// Place the sanitized string into the second slot of the SEXP.
+		SETCADR( RCallBack, mkString( cleanString ) );
+		
+	}else{
+		
+		// Place the string into the second slot of the SEXP.
+		SETCADR( RCallBack, mkString( str ) );
+		
+	}
 	// Tag the string with a name, this name coressponds to the
 	// dummy argument of the R function getLatexStringWidth.
 	SET_TAG( CDR( RCallBack ), install("texString") );
@@ -864,7 +875,6 @@ static void TikZ_Text( double x, double y, const char *str,
 	
 	// Append font face commands depending on which font R is using.
 	char *tikzString = (char *) calloc( strlen(str) + 20, sizeof(char) );
-	char *cleanString;
 
 	switch( plotParams->fontface ){
 	
@@ -887,8 +897,6 @@ static void TikZ_Text( double x, double y, const char *str,
 
 	// Form final output string.
 	strcat( tikzString, str );
-	
-	cleanString = Sanitize(tikzString);
 	
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
@@ -931,10 +939,13 @@ static void TikZ_Text( double x, double y, const char *str,
 		"inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
 		plotParams->cex, x, y);
 	
-	if(tikzInfo->sanitize == TRUE)
+	if(tikzInfo->sanitize == TRUE){
+		//If using the sanitize option call back to R for the sanitized string
+		char *cleanString = Sanitize( tikzString );
 		printOutput(tikzInfo, "%s%%\n};\n", cleanString);
-	else 
+	}else{
 		printOutput(tikzInfo, "%s%%\n};\n", tikzString);
+	}
 
 	/* Since we no longer need tikzString, 
 	*  we should free the memory that it is being stored in.
@@ -1377,22 +1388,54 @@ void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
 	
 }
 
-static char *Sanitize(char *str){
+static char *Sanitize(const char *str){
+
 	
-	int nSpecial = CountSpecialChars(str); 
-	char *cleanString = (char *) calloc( strlen(str) + nSpecial, sizeof(char) );
+	//Splice in escaped charaters via a callback to R
 	
-	//Splice in escaped charaters
+	//Call out to R to retrieve the sanitizeTexString function.
+	SEXP sanitizeFun = findFun( install("sanitizeTexString"), R_GlobalEnv );
+
+	/*
+	 * Create a SEXP that will be the R function call. The SEXP will
+	 * have four components- the R function being calledand the string 
+	 * being passed. Therefore it is allocated as a	 LANGSXP
+	 * vector of length 2. This is done inside a PROTECT() function
+	 * to keep the R garbage collector from saying "Hmmm... what's
+	 * this? Looks like noone is using it so I guess I will nuke it."
+  */
+	SEXP RCallBack;
+	PROTECT( RCallBack = allocVector(LANGSXP,2) );
+
+	// Place the function into the first slot of the SEXP.
+	SETCAR( RCallBack, sanitizeFun );
+
+	// Place the string into the second slot of the SEXP.
+	SETCADR( RCallBack, mkString( str ) );
+	// Tag the string with a name, this name coressponds to the
+	// dummy argument of the R function sanitizeTexString.
+	SET_TAG( CDR( RCallBack ), install("string") );
+
+	/*
+	 * Call the R function, capture the result.
+	*/
+	SEXP RSanitizedString;
+	PROTECT( RSanitizedString = eval( RCallBack, R_GlobalEnv ) );
+
+	char *cleanString = CHAR(asChar(RSanitizedString));
+	
+	//Rprintf("%s",cleanString);
+
+	// Since we called PROTECT twice, we must call UNPROTECT
+	// and pass the number 2.
+	UNPROTECT(2);
 	
 	return cleanString;
-	
-}
-
-int CountSpecialChars(char *str){
-	
-	//Count the number of $, %, {, }, ^, _
-	return 0;
-	
+	//library(tikzDevice)
+	//tikz(sanitize=T,standAlone=T)
+	//plot(1:10,axes=F,type='n',xlab='',ylab='')
+	//text(1:5,c('%','$','}','{','^'))
+	//dev.off()
 }
 
 /* 

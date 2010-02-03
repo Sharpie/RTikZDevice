@@ -120,7 +120,6 @@ static void TikZ_Mode( int mode, pDevDesc deviceInfo );
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
-static char *Sanitize(char *str);
-int CountSpecialChars(char *str);
+static char *Sanitize(const char *str);
 
 #endif // End of Once Only header

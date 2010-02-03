@@ -31,6 +31,8 @@ setTikzDefaults <- function(){
 	options( tikzDocumentDeclaration = getOption("tikzDocumentDeclarationDefault") )
 	options( tikzLatexPackages = getOption("tikzLatexPackagesDefault"))
 	options( tikzFooter = getOption('tikzFooterDefault') )
+	options( tikzSanitizeCharacters = c('%','$','}','{','^') )
+	options( tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}'))
 	
 	
 }
