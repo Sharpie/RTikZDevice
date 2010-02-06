@@ -122,7 +122,7 @@ static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
 double dim2dev( double length );
-static void Print_TikZ_Header( FILE *outputFIle );
+static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
 static char *Sanitize(const char *str);
 

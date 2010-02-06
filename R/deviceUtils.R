@@ -12,6 +12,14 @@ getDateStampForTikz <- function(){
 
 }
 
+getTikzDeviceVersion <- function(){
+	
+	# Returns the version of the currently install tikzDevice 
+	# for use in Print_TikZ_Header.
+	
+	return(packageDescription('tikzDevice')[['Version']])
+}
+
 getDocumentPointsize <- function( docString ){
 
   # This function scans a LaTeX document declaration

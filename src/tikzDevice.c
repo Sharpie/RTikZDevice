@@ -59,8 +59,6 @@
 #include <stdio.h>
 #define DEBUG FALSE
 
-#define TIKZ_DEVICE_VERSION "0.4.8"
-
 SEXP tikzDevice ( SEXP args ){
 
 	/*
@@ -239,7 +237,7 @@ static Rboolean TikZ_Setup(
   */	
 	if( !( plotParams = (pGEcontext) malloc(sizeof(pGEcontext)) ) ){
 		return FALSE;
-  }
+	}
 
 	/* 
 	 * Initialize tikzInfo, return false if this fails. A false return
@@ -247,7 +245,7 @@ static Rboolean TikZ_Setup(
 	*/
 	if( !( tikzInfo = (tikzDevDesc *) malloc(sizeof(tikzDevDesc)) ) ){
 		return FALSE;
-  }
+	}
 
 	/* Copy TikZ-specific information to the tikzInfo variable. */
 	strcpy( tikzInfo->outFileName, fileName);
@@ -428,7 +426,7 @@ static Rboolean TikZ_Setup(
 	/* Call TikZ_Open to create and initialize the output file. */
 	if( !TikZ_Open( deviceInfo ) ){
 		return FALSE;
-  }
+	}
 
 	return TRUE;
 
@@ -454,31 +452,35 @@ double dim2dev( double length ){
  *   - The date on which the graphic was created.
  *
 */
-static void Print_TikZ_Header( FILE* outputFile ){
+static void Print_TikZ_Header( tikzDevDesc *tikzInfo ){
 
-  /* Call back to R to retrieve current date */
+  /* Call back to R to retrieve current date and version num*/
 
   /*
    * Recover package namespace as the date formatting function
    * is not exported
   */
-  SEXP TikZ_namespace;
-  PROTECT( 
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-          ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
+	SEXP TikZ_namespace;
+	PROTECT( 
+		TikZ_namespace = eval(lang2( install("getNamespace"),
+			ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+	);
 
 
-  SEXP currentDate;
-  PROTECT( 
-    currentDate = eval(lang1( install("getDateStampForTikz") ), 
-      TikZ_namespace )
-  );
+	SEXP currentDate;
+	PROTECT( 
+		currentDate = eval(lang1( install("getDateStampForTikz") ), 
+			TikZ_namespace )
+	);
 
+	SEXP currentVersion;
+	PROTECT( 
+		currentVersion = eval(lang1( install("getTikzDeviceVersion") ), 
+			TikZ_namespace )
+	);
 
-
-  fprintf( outputFile, "%% Created by tikzDevice version %s on %s\n",
-    TIKZ_DEVICE_VERSION, CHAR(STRING_ELT(currentDate,0)) );
+	printOutput( tikzInfo, "%% Created by tikzDevice version %s on %s\n",
+		CHAR(STRING_ELT(currentVersion,0)), CHAR(STRING_ELT(currentDate,0)) );
 
 	UNPROTECT(2);
 
@@ -496,12 +498,13 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 	if(tikzInfo->outFileName[0] == '\0'){
 		//If empty file name output to console
 		tikzInfo->console = TRUE;	
+	}else{	
+		if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
+			return FALSE;
 	}
-	if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
-		return FALSE;
 
-  /* Print header comment */
-  Print_TikZ_Header( tikzInfo->outputFile );
+	/* Print header comment */
+	Print_TikZ_Header( tikzInfo );
 
 	/* Header for a standalone LaTeX document*/
 	if(tikzInfo->standAlone == TRUE){
@@ -512,11 +515,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE)
-		printOutput(tikzInfo,
-			"%% Beginning tikzpicture, this file is %s\n",
-			R_ExpandFileName(tikzInfo->outFileName));
-			
-	printOutput(tikzInfo,"%% Created by tikzDevice\n");
+		printOutput(tikzInfo,"%% Beginning tikzpicture");
 		
 	/* Start the tikz environment if we have not specified a bare bones plot. */
 	if( tikzInfo->bareBones != TRUE ){
@@ -1511,11 +1510,6 @@ static char *Sanitize(const char *str){
 	char *cleanStringCP = (char *) calloc( strlen(cleanString), sizeof(char) );
 	
 	return cleanStringCP;
-	//library(tikzDevice)
-	//tikz(sanitize=T,standAlone=T)
-	//plot(1:10,axes=F,type='n',xlab='',ylab='')
-	//text(1:5,c('%','$','}','{','^'))
-	//dev.off()
 }
 
 /* 
