@@ -234,6 +234,27 @@ function(main){
 	print(qplot(carat, price, data = diamonds, geom = "smooth", 
 	colour = color, main = main))
 	
+},
+
+# Test of ggplot2 logrithmic legends.
+function(main){
+
+	sink(tempfile())
+	suppressPackageStartupMessages(require(ggplot2))
+	sink()
+
+  soilSample <- structure(list(`Grain Diameter` = c(8, 5.6, 4, 2.8, 2, 1, 0.5, 0.355, 0.25),
+    `Percent Finer` = c(0.951603145795523, 0.945553539019964, 
+       0.907239362774753, 0.86771526517443, 0.812865497076023, 0.642064932446058, 
+       0.460375075620085, 0.227465214761041, 0.0389191369227667)), 
+    .Names = c("Grain Diameter", "Percent Finer"), row.names = c(NA, 9L), 
+    class = "data.frame")
+
+  testPlot <- qplot( `Grain Diameter`, `Percent Finer`, data = soilSample, main = main ) +
+    scale_x_log10() + scale_y_probit() + theme_bw()
+
+  print( testPlot )
+
 }
 
 ## ADD NEW TESTS HERE
