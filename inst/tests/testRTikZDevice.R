@@ -211,19 +211,6 @@ function(main){
     
 },
 
-# Neat example of image.plot using the fields package.
-#function(main){
-#
-#	sink('/dev/null')
-#	suppressPackageStartupMessages(require(spam))
-#	suppressPackageStartupMessages(require(fields))
-#	sink()
-#	data(RCMexample)
-#
-#	image.plot( RCMexample$x, RCMexample$y, RCMexample$z[,,8], main=main )
-#
-#},
-
 # from the ggplot2 book section "Fitting multiple models"
 function(main){
 	

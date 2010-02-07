@@ -31,6 +31,8 @@ function(libname, pkgname) {
 		# symbol codes consistant for both systems.
 		"\\usepackage[T1]{fontenc}\n",
 		"\\usetikzlibrary{calc}\n"))
+	options( tikzSanitizeCharacters = c('%','$','}','{','^') )
+	options( tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}'))
 	
 
 	versionInfo <- read.dcf(file.path( libname, pkgname, "DESCRIPTION"))

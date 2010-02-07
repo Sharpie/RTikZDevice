@@ -1,7 +1,7 @@
 tikz <-
 function (file = "Rplots.tex", width = 7, height = 7,
-  bg="transparent", fg="black", pointsize = 10,
-  standAlone = FALSE, bareBones = FALSE, console = FALSE,
+  bg="transparent", fg="black", pointsize = 10, standAlone = FALSE, 
+  bareBones = FALSE, console = FALSE, sanitize = FALSE,
   documentDeclaration = getOption("tikzDocumentDeclaration"),
   packages = getOption("tikzLatexPackages"),
   footer = getOption("tikzFooter")
@@ -32,7 +32,7 @@ function (file = "Rplots.tex", width = 7, height = 7,
   footer <- paste( paste( footer,collapse='\n'), collapse='\n')
   
   .External('tikzDevice', file, width, height, bg, fg, baseSize, 
-    standAlone, bareBones, documentDeclaration, packages, footer, console,
+    standAlone, bareBones, documentDeclaration, packages, footer, console, sanitize,
     PACKAGE='tikzDevice') 
   
   invisible()  
@@ -40,10 +40,13 @@ function (file = "Rplots.tex", width = 7, height = 7,
 }
 
 setTikzDefaults <- function(){
-  
-  options( tikzLatex = getOption('tikzLatexDefault') )
-  options( tikzDocumentDeclaration = getOption("tikzDocumentDeclarationDefault") )
-  options( tikzLatexPackages = getOption("tikzLatexPackagesDefault"))
-  options( tikzFooter = getOption('tikzFooterDefault') )
-  
+	
+	options( tikzLatex = getOption('tikzLatexDefault') )
+	options( tikzDocumentDeclaration = getOption("tikzDocumentDeclarationDefault") )
+	options( tikzLatexPackages = getOption("tikzLatexPackagesDefault"))
+	options( tikzFooter = getOption('tikzFooterDefault') )
+	options( tikzSanitizeCharacters = c('%','$','}','{','^') )
+	options( tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}'))
+	
+	
 }

@@ -45,6 +45,7 @@ typedef struct{
 	const char *footer;
 	Rboolean polyLine;
 	Rboolean console;
+	Rboolean sanitize;
 } tikzDevDesc;
 
 
@@ -58,7 +59,7 @@ static Rboolean TikZ_Setup(
 		Rboolean standAlone, Rboolean bareBones,
 		const char *documentDeclaration,
 		const char *packages, const char *footer,
-		Rboolean console );
+		Rboolean console, Rboolean sanitize );
 
 static Rboolean TikZ_Open( pDevDesc deviceInfo );
 
@@ -121,8 +122,8 @@ static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
 double dim2dev( double length );
-static void Print_TikZ_Header( FILE *outputFIle );
-double TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
-void printOutput(Rboolean console, FILE *outputFile, const char *format, ...);
+static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
+void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
+static char *Sanitize(const char *str);
 
 #endif // End of Once Only header
