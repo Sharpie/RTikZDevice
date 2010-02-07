@@ -1,3 +1,5 @@
+% !TEX TS-program = Sweave
+
 \documentclass{article}
 
 % \VignetteIndexEntry{The tikzDevice Package}
@@ -104,7 +106,7 @@
 	{\large\url{http://r-forge.r-project.org/projects/tikzdevice}}
 }
 \author{Charlie Sharpsteen and Cameron Bracken}
-\date{Version \tikzDeviceVersion\qquad July 25, 2009}
+\date{Version \tikzDeviceVersion\qquad February, 2010}
 
 
 \begin{document}
@@ -238,13 +240,11 @@
 % A friendly reminder that this package is currently unstable.
 \tikzDocDisclaim{Caveat Utilitor}
 {
-This is a friendly reminder that the \pkg{tikzDevice} package is currently considered by it's designers to be a {\bfseries beta work}. This package has been released in the hopes that it will help users produce exceptional graphics, leading to an increase in the quality of reports and other materials using those graphics.\\[1em]
+This is a friendly reminder that the \pkg{tikzDevice} package is currently considered by it's designers to be a {\bfseries beta work}. This package has been released in the hopes that it will help users produce exceptional graphics, leading to an increase in the quality of reports and other materials using those graphics.  It has been used for over 6 months by the authors in order to produce figures for academic reports and has proven to be reasonably stable.\\[1em]
 
-However, the package has not been tested in an extensive variety of situations beyond those that have been dreamed up by the designers. Therefore, it is very likely that this package will help produce exceptional crashes, leading to an increase in the quantity of swearing by \lang{R} and users affected by those crashes.\\[1em]
+The package will remain in Beta for some period of time to allow the authors to consider design decisions underlying the package.  {\bfseries This means the authors are currently reserving the right to alter the package interface in ways that may break existing code that uses the package.}  The stability of the package interface is a priority to us but currently we are allowing other concerns to outrank it.  When we commit to maintaining a given package structure, the beta flag will be removed and consistency of interface will become a top priority. \\[1em]
 
-We hope this package will improve with time and attain a level of usability and trustability at which point it may be labeled ``stable". Until then the package, including this documentation, may undergo significant changes in form and function. During the beta period the actual implementation of the package may differ significantly from what is described in this documentation.\\[1em]
-
-In fact, the documentation may differ significantly from what is described in the documentation.\\[1em]
+During the beta period the actual implementation of the package may differ significantly from what is described in this documentation.\\[1em]
 
 Thanks for giving it a try!\\
 \quad{\itshape --The tikzDevice Team}
