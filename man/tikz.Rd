@@ -6,7 +6,7 @@ TikZ Graphics Device
 }
 \description{
 \code{tikz} is used to open a R graphics device which supports output in the TikZ graphics 
-language. TikZ code may be used inside a LaTeX document by specifying \code{\\usepackage\{tikz\}} 
+language. TikZ code may be included inside a LaTeX document by specifying \code{\\usepackage\{tikz\}} 
 in the document header.
 }
 \usage{
@@ -23,10 +23,10 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
   \item{height}{The height of the output figure, in \bold{inches}.}
   \item{bg}{The starting background color for the plot.}
   \item{fg}{The starting foreground color for the plot.}
-  \item{pointsize}{Starting point size for use in metric calculations. Please 
-			note that the final displayed pointsize depends on the base 
-			pointsize in the LaTeX document.}
-  \item{standAlone}{A logical value indicating whether the resulting file 
+  \item{pointsize}{Base pointsize used in the LaTeX document.  This option is
+      only used if a valid pointsize cannot be extracted from the value of
+      \code{getOption("tikzDocumentDeclaration")}. }
+  \item{standAlone}{A logical value indicating whether the output file 
 			should be suitable for direct processing by LaTeX. A value of 
 			\code{FALSE} indicates that the file is intended for inclusion in 
 			a larger document. See \sQuote{Details}.}
@@ -49,8 +49,8 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
   }
 
 \details{
-The TikZ device enables LaTeX-ready output from \R{} graphics functions. This is done by producing code that 
-can be understood by the TikZ graphics language. All text in a graphic output with \code{tikz} will be typeset by LaTeX and therefore will match whatever fonts are currently used in the document. This also means that \strong{LaTeX mathematics can be typeset directly into labels and annotations}.
+The TikZ device enables LaTeX-ready output from \R{} graphics functions. This is
+done by encoding graphics commands using TikZ markup.  All text in a graphic output with \code{tikz} will be typeset by LaTeX and therefore will match whatever fonts are currently used in the document. This also means that \strong{LaTeX mathematics can be typeset directly into labels and annotations}.
 
 The TikZ device currently supports three modes of output depending on the value of the parameter \code{standAlone} and \code{bareBones}.
 If \code{standAlone} and \code{bareBones} are set to \code{FALSE}, the default, the resulting file will only contain the \code{tikzpicture}
