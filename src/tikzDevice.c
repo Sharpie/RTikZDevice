@@ -482,7 +482,7 @@ static void Print_TikZ_Header( tikzDevDesc *tikzInfo ){
 	printOutput( tikzInfo, "%% Created by tikzDevice version %s on %s\n",
 		CHAR(STRING_ELT(currentVersion,0)), CHAR(STRING_ELT(currentDate,0)) );
 
-	UNPROTECT(2);
+	UNPROTECT(3);
 
 }
 
