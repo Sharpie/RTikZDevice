@@ -1014,7 +1014,7 @@ static void TikZ_Text( double x, double y, const char *str,
 		
 	printOutput(tikzInfo, 
 		"inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
-		plotParams->cex, x, y);
+		fontScale, x, y);
 	
 	if(tikzInfo->sanitize == TRUE){
 		//If using the sanitize option call back to R for the sanitized string
