@@ -3,8 +3,8 @@
 library(tikzDevice)
 library(getopt)
 
-#Run separate XeLaTeX test
-source('testXeLaTeX.R')
+#Run separate XeLaTeX test (currently broken)
+#source('testXeLaTeX.R')
 setTikzDefaults()
 
 #Column 3: Argument mask of the flag. An integer. Possible values: 
@@ -211,29 +211,37 @@ function(main){
     
 },
 
-# Neat example of image.plot using the fields package.
-#function(main){
-#
-#	sink('/dev/null')
-#	suppressPackageStartupMessages(require(spam))
-#	suppressPackageStartupMessages(require(fields))
-#	sink()
-#	data(RCMexample)
-#
-#	image.plot( RCMexample$x, RCMexample$y, RCMexample$z[,,8], main=main )
-#
-#},
-
 # from the ggplot2 book section "Fitting multiple models"
 function(main){
 	
-	sink('/dev/null')
+	sink(tempfile())
 	suppressPackageStartupMessages(require(mgcv))
 	suppressPackageStartupMessages(require(ggplot2))
 	sink()
 	print(qplot(carat, price, data = diamonds, geom = "smooth", 
 	colour = color, main = main))
 	
+},
+
+# Test of ggplot2 logrithmic legends.
+function(main){
+
+	sink(tempfile())
+	suppressPackageStartupMessages(require(ggplot2))
+	sink()
+
+  soilSample <- structure(list(`Grain Diameter` = c(8, 5.6, 4, 2.8, 2, 1, 0.5, 0.355, 0.25),
+    `Percent Finer` = c(0.951603145795523, 0.945553539019964, 
+       0.907239362774753, 0.86771526517443, 0.812865497076023, 0.642064932446058, 
+       0.460375075620085, 0.227465214761041, 0.0389191369227667)), 
+    .Names = c("Grain Diameter", "Percent Finer"), row.names = c(NA, 9L), 
+    class = "data.frame")
+
+  testPlot <- qplot( `Grain Diameter`, `Percent Finer`, data = soilSample, main = main ) +
+    scale_x_log10() + scale_y_probit() + theme_bw()
+
+  print( testPlot )
+
 }
 
 ## ADD NEW TESTS HERE
@@ -269,7 +277,11 @@ for(i in 1:length(tests)){
 	cat("Compiling Test",sprintf('%02d',i),"... ")
 	t <- system.time(
     {
-		silence <- system( paste(Sys.getenv("R_PDFLATEXCMD"),
+	    pdflatex <- Sys.getenv("R_PDFLATEXCMD")
+		if (pdflatex == "") {
+			pdflatex <- "pdflatex"
+		}
+		silence <- system( paste(pdflatex,
 			'-output-directory', prefix, this.testfile), intern =T)
 	})
 	cat("Done, took ",t[['elapsed']],"seconds.\n")
@@ -308,9 +320,14 @@ newsizes <- file.info(file.path(prefix,texfiles))$size
 cat(paste(texfiles,newsizes,sep='\t'),sep='\n',file=f)
 
 # Combine the output files into summary PDFs.
-silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=compares.pdf -dBATCH',
+gs <- Sys.getenv("GSCMD")
+if (gs == "") {
+	gs <- if (.Platform$OS.type == "windows") "gswin32c.exe" else "gs"
+}
+
+silence <- system( paste(gs, '-dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=compares.pdf -dBATCH',
 	paste(output.list,collapse=' ') ), intern=T, ignore.stderr=T)
 
 # Combine only the test files.
-silence <- system( paste('gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH',
+silence <- system( paste(gs, '-dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=tests.pdf -dBATCH',
 	paste(output.list[seq(1,length(output.list),2)],collapse=' ')), intern=T, ignore.stderr=T)

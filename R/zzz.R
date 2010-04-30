@@ -1,4 +1,4 @@
-.onLoad<-
+.onLoad <-
 function(libname, pkgname) {
 
 	# Perform a search for an executable LaTeX program.
@@ -13,7 +13,7 @@ function(libname, pkgname) {
 	}
 	
 	# Set Header and Footer options
-	options( tikzDocumentDeclarationDefault = "\\documentclass{article}\n" )
+	options( tikzDocumentDeclarationDefault = "\\documentclass[10pt]{article}\n" )
 	options( tikzDocumentDeclaration = getOption("tikzDocumentDeclarationDefault") )
 	options( tikzLatexPackagesDefault = c(
 		"\\usepackage{tikz}\n",
@@ -31,6 +31,8 @@ function(libname, pkgname) {
 		# symbol codes consistant for both systems.
 		"\\usepackage[T1]{fontenc}\n",
 		"\\usetikzlibrary{calc}\n"))
+	options( tikzSanitizeCharacters = c('%','$','}','{','^') )
+	options( tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}'))
 	
 
 	versionInfo <- read.dcf(file.path( libname, pkgname, "DESCRIPTION"))

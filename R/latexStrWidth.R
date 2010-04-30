@@ -11,7 +11,7 @@ function( texString, cex = 1, face= 1){
 	# Check to see if we have a width stored in
 	# our dictionary for this string.
 	width <- queryMetricsDictionary( TeXMetrics )
-
+	
 	if( width > 0 ){
 
 		# Positive string width means there was a
@@ -198,7 +198,7 @@ function( TeXMetrics ){
 
 	)# End switch for  metric type.
 
-	writeLines( paste( nodeOpts, ' (TeX) {', nodeContent, "};", sep=''), texIn)
+	writeLines( paste( nodeOpts, ' (TeX) {', nodeContent, "%\n};", sep=''), texIn)
 
 	# We calculate width for both characters and strings.
 	writeLines("\\path let \\p1 = ($(TeX.east) - (TeX.west)$), 
