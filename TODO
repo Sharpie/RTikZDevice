@@ -7,6 +7,15 @@
 - Output to raw R objects
     
 ## FIXED ##
+- Fontsize and ps parameters are not taken into account when calculating scaling factors.
+
+  [solution]
+    Scaling factors are now calculated using:
+
+      (font size / base font size ) * cex
+
+    As opposed to the old way which was just the value of cex.
+
 - Polylines are filled as white
 
     [Solution]
