@@ -94,6 +94,23 @@ static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 		
 
+/* Raster routines are only defined for R >= 2.11.0, Graphics Engine >= 6 */
+#if R_GE_version >= 6
+
+static void TikZ_Raster( 
+  unsigned int *raster,
+  int w, int h,
+  double x, double y,
+  double width, double height,
+  double rot,
+  Rboolean interpolate,
+  const pGEcontext plotParams, pDevDesc deviceInfo
+);
+
+static void TikZ_Cap( pDevDesc deviceInfo );
+
+#endif
+
 /* Dummy routines. */
 static void TikZ_Activate( pDevDesc deviceInfo );
 static void TikZ_Deactivate( pDevDesc deviceInfo );
