@@ -9,7 +9,7 @@ function (file = "Rplots.tex", width = 7, height = 7,
 
   # Ensure the standAlone option will trump the bareBones option.
   if( standAlone ) { bareBones = F }
-  if( footer != getOption("tikzFooterDefault") && !standAlone)
+  if( footer != getOption("tikzFooter") && !standAlone)
     warning( "Footers are ignored when standAlone is set to FALSE" )
 
   # Extract the document pointsize from the documentDeclaration
@@ -37,16 +37,4 @@ function (file = "Rplots.tex", width = 7, height = 7,
   
   invisible()  
 
-}
-
-setTikzDefaults <- function(){
-	
-	options( tikzLatex = getOption('tikzLatexDefault') )
-	options( tikzDocumentDeclaration = getOption("tikzDocumentDeclarationDefault") )
-	options( tikzLatexPackages = getOption("tikzLatexPackagesDefault"))
-	options( tikzFooter = getOption('tikzFooterDefault') )
-	options( tikzSanitizeCharacters = c('%','$','}','{','^') )
-	options( tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}'))
-	
-	
 }

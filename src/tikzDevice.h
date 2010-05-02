@@ -1,6 +1,3 @@
-/* Declarations for functions provided by the R language */
-
-
 /*
  * There probably won't be more than one C source file using
  * this header, but it's still a good idea to make sure the
@@ -15,6 +12,7 @@
 /* Use default graphics engine function declarations. */
 #define R_USE_PROTOTYPES 1
 
+/* Declarations for functions provided by the R language */
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/GraphicsEngine.h>
@@ -72,7 +70,7 @@ static void TikZ_Clip( double x0, double x1,
 		double y0, double y1, pDevDesc deviceInfo );
 static void TikZ_Size( double *left, double *right,
 		double *bottom, double *top, pDevDesc deviceInfo);
-
+double TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
 
 /* Text routines. */
 static void TikZ_MetricInfo( int c, const pGEcontext plotParams,
@@ -95,6 +93,23 @@ static void TikZ_Polyline( int n, double *x, double *y,
 static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 		
+
+/* Raster routines are only defined for R >= 2.11.0, Graphics Engine >= 6 */
+#if R_GE_version >= 6
+
+static void TikZ_Raster( 
+  unsigned int *raster,
+  int w, int h,
+  double x, double y,
+  double width, double height,
+  double rot,
+  Rboolean interpolate,
+  const pGEcontext plotParams, pDevDesc deviceInfo
+);
+
+static void TikZ_Cap( pDevDesc deviceInfo );
+
+#endif
 
 /* Dummy routines. */
 static void TikZ_Activate( pDevDesc deviceInfo );

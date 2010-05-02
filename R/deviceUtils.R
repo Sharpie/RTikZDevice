@@ -13,11 +13,11 @@ getDateStampForTikz <- function(){
 }
 
 getTikzDeviceVersion <- function(){
-	
-	# Returns the version of the currently install tikzDevice 
-	# for use in Print_TikZ_Header.
-	
-	return(packageDescription('tikzDevice')[['Version']])
+  
+  # Returns the version of the currently install tikzDevice 
+  # for use in Print_TikZ_Header.
+  
+  return(packageDescription('tikzDevice')[['Version']])
 }
 
 getDocumentPointsize <- function( docString ){
@@ -51,5 +51,62 @@ getDocumentPointsize <- function( docString ){
     return( as.numeric( pointsize ) )
 
   }
+
+}
+
+
+setTikzDefaults <- function( overwrite = TRUE ){
+
+  tikzDefaults <- list(
+
+    tikzLatex = getOption( 'tikzLatexDefault' ),
+ 
+    tikzDocumentDeclaration = "\\documentclass[10pt]{article}\n",
+ 
+    tikzLatexPackages = c(
+      "\\usepackage{tikz}\n",
+      "\\usepackage[active,tightpage,psfixbb]{preview}\n",
+      "\\PreviewEnvironment{pgfpicture}\n",
+      "\\setlength\\PreviewBorder{0pt}\n"
+    ),
+ 
+    tikzFooter = "\\end{document}\n",
+ 
+    tikzMetricPackages = c(
+      "\\usepackage[utf8]{inputenc}\n",
+      # The fontenc package is very important here! 
+      # R assumes the output device is uing T1 encoding.
+      # LaTeX defaults to OT1. This package makes the
+      # symbol codes consistant for both systems.
+      "\\usepackage[T1]{fontenc}\n",
+      "\\usetikzlibrary{calc}\n"
+    ),
+ 
+    tikzSanitizeCharacters = c('%','$','}','{','^'), 
+ 
+    tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}')
+
+  )
+
+  if( !overwrite ){
+
+    # We don't want to overwrite options that have allready been set.
+    # Figure out which those are.
+    tikzSetOptions <- sapply( do.call( options, as.list(names(tikzDefaults)) ),
+      is.null )
+
+    tikzSetOptions <- names( tikzDefaults )[ tikzSetOptions ]
+
+  }else{
+
+    tikzSetOptions <- names( tikzDefaults )
+
+  }
+
+  # Set defaults
+  do.call( options, tikzDefaults[ tikzSetOptions ] )
+
+  # Return a list of the options that were modified.
+  invisible( tikzSetOptions )
 
 }
