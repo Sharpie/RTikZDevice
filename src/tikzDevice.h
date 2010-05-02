@@ -1,6 +1,3 @@
-/* Declarations for functions provided by the R language */
-
-
 /*
  * There probably won't be more than one C source file using
  * this header, but it's still a good idea to make sure the
@@ -15,6 +12,7 @@
 /* Use default graphics engine function declarations. */
 #define R_USE_PROTOTYPES 1
 
+/* Declarations for functions provided by the R language */
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/GraphicsEngine.h>
@@ -72,7 +70,7 @@ static void TikZ_Clip( double x0, double x1,
 		double y0, double y1, pDevDesc deviceInfo );
 static void TikZ_Size( double *left, double *right,
 		double *bottom, double *top, pDevDesc deviceInfo);
-
+double TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
 
 /* Text routines. */
 static void TikZ_MetricInfo( int c, const pGEcontext plotParams,
