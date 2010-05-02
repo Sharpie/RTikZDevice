@@ -1,38 +1,47 @@
 /*
- *	tikzDevice, (C) 2009 Charlie Sharpsteen and Cameron Bracken
+ *  tikzDevice, (C) 2009 Charlie Sharpsteen and Cameron Bracken
  *
- *	A graphics device for R : 
- *		A Computer Language for Statistical Data Analysis
+ *  A graphics device for R : 
+ *    A Computer Language for Statistical Data Analysis
  *
- *	Copyright (C) 1995, 1996  Robert Gentleman and Ross Ihaka
- *	Copyright (C) 2001-8  The R Development Core Team
+ *  Copyright (C) 1995, 1996  Robert Gentleman and Ross Ihaka
+ *  Copyright (C) 2001-8  The R Development Core Team
  *
- *	This program is free software; you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License as published by
- *	the Free Software Foundation; either version 2 of the License, or
- *	(at your option) any later version.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *	This program is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *	GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *	You should have received a copy of the GNU General Public License
- *	along with this program; if not, a copy is available at
- *	http://www.r-project.org/Licenses/
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, a copy is available at
+ *  http://www.r-project.org/Licenses/
  *
- *	The C code in this project started as a fork of:
- *		A PicTeX Device, (C) 1996 Valerio Aimale
+ *  The C code in this project started as a fork of:
+ *    A PicTeX Device, (C) 1996 Valerio Aimale
  *
  *
- *	"If I have seen further, it is only by standing on 
- *	 the shoulders of giants." 
+ *  "If I have seen further, it is only by standing on 
+ *   the shoulders of giants." 
  *
- *	 -I. Newton
- *	
+ *   -I. Newton
+ *  
 */
 
 /********************************************************************/
+
+/*
+ * NOTE:
+ *   This is the first effort of dyed-in-the-wool Fortran programmers
+ *   to write C code. Hence the comments in this file will make many
+ *   observations that may seem obvious or inane. There also may be a
+ *   generous amount of snide comments concerning the syntax of the 
+ *   C language.
+*/
 
 /* 
  * Function prototypes are defined in here. Apparently in C
@@ -41,12 +50,6 @@
  * files do not present code in the order in which that code
  * is used. Using a header file with function declarations allows
  * the programmer to order the code in any sequence they choose.
- *
- * NOTE:
- * 	This is the first effort of dyed-in-the-wool Fortran programmers
- * 	to write C code. Hence the comments in this file will make many
- * 	observations that may seem obvious. There also may be a generous
- * 	amount of snide comments concerning the syntax of the C language.
 */
 
 /*
@@ -59,135 +62,146 @@
 #include <stdio.h>
 #define DEBUG FALSE
 
+
+/*
+ * Main entry point from the R environment, called by the R function
+ * tikz() to open a new TikZ graphics device.
+*/
 SEXP tikzDevice ( SEXP args ){
 
-	/*
-	 * Make sure the version number of the R running this
-	 * routine is compatible with the version number of 
-	 * the R that compiled this routine.
-	*/
-	R_GE_checkVersionOrDie(R_GE_version);
+  /*
+   * Make sure the version number of the R running this
+   * routine is compatible with the version number of 
+   * the R that compiled this routine.
+  */
+  R_GE_checkVersionOrDie(R_GE_version);
 
-	/* Declare local variabls for holding the components of the args SEXP */
-	const char *fileName;
-	const char *bg, *fg;
-	double width, height;
-	Rboolean standAlone, bareBones;
-	const char *documentDeclaration, *packages, *footer;
-	double baseSize;
-	Rboolean console, sanitize;
+  /* Declare local variabls for holding the components of the args SEXP */
+  const char *fileName;
+  const char *bg, *fg;
+  double width, height;
+  Rboolean standAlone, bareBones;
+  const char *documentDeclaration, *packages, *footer;
+  double baseSize;
+  Rboolean console, sanitize;
 
-	/* 
-	 * pGEDevDesc is a variable provided by the R Graphics Engine
-	 * that represents a graphics device to the rest of the R system.
+  /* 
+   * pGEDevDesc is a variable provided by the R Graphics Engine
+   * that represents a graphics device to the rest of the R system.
    * It contains one important componant of type pDevDesc
-	 * which contains information specific to the implementation of
-	 * the TikZ Device. The creation and initialization of this component
-	 * is the main task of this routine.
-    */
-	pGEDevDesc tikzDev;
+   * which contains information specific to the implementation of
+   * the TikZ Device. The creation and initialization of this component
+   * is the main task of this routine.
+  */
+  pGEDevDesc tikzDev;
 
 
-	/* Retrieve function arguments from input SEXP. */
+  /* Retrieve function arguments from input SEXP. */
 
-	
-	/*
-	 * Skip first argument. It holds the name of the R function
-	 * that called this C routine.
+  
+  /*
+   * Skip first argument. It holds the name of the R function
+   * that called this C routine.
+  */ 
+  args = CDR(args);
+
+  /* Recover file name. */
+  fileName = translateChar(asChar(CAR(args)));
+  /* Advance to next argument stored in the args SEXP. */
+  args = CDR(args);
+
+  /* Recover figure dimensions. */
+  /* For now these are assumed to be in inches. */
+  width = asReal(CAR(args)); args = CDR(args);
+  height = asReal(CAR(args)); args = CDR(args);
+  
+  /* Recover initial background and foreground colors. */
+  bg = CHAR(asChar(CAR(args))); args = CDR(args);
+  fg = CHAR(asChar(CAR(args))); args = CDR(args);
+
+  /* Recover the base fontsize */
+  baseSize = asReal(CAR(args)); args = CDR(args);
+
+  /* 
+   * Set the standAlone parameter which specifies if the TikZ
+   * pictures generated by this device should be wrapped in their
+   * own LaTeX Document
+  */
+  standAlone = asLogical(CAR(args)); args = CDR(args);
+
+  /* 
+   * Set the bareBones parameter which specifies if TikZ code 
+   * should be output directly without wrapping it a LaTeX document
+   * or the tikzpicture environment.
+  */
+  bareBones = asLogical(CAR(args)); args = CDR(args);
+  
+  /* Grab the latex header and footers*/
+  documentDeclaration = CHAR(asChar(CAR(args))); args = CDR(args);
+  packages = CHAR(asChar(CAR(args))); args = CDR(args);
+  footer = CHAR(asChar(CAR(args))); args = CDR(args);
+  
+  // Should the output be sent to the R console?
+  console = asLogical(CAR(args)); args = CDR(args);
+  /*
+   * Should text strings passed to the plotting device be sent
+   * to a sanitization function- i.e. to provide automatic
+   * escaping of TeX special characters such as %,_,\, etc?
+  */ 
+  sanitize = asLogical(CAR(args)); args = CDR(args);
+
+  /* Ensure there is an empty slot avaliable for a new device. */
+  R_CheckDeviceAvailable();
+
+  BEGIN_SUSPEND_INTERRUPTS{
+
+    /* 
+     * The pDevDesc variable specifies the funtions and components 
+     * that describe the specifics of this graphics device. After
+     * setup, this information will be incorporated into the pGEDevDesc
+     * variable tikzDev.
     */ 
-	args = CDR(args);
+    pDevDesc deviceInfo;
 
-	/* Recover file name. */
-	fileName = translateChar(asChar(CAR(args)));
-	/* Advance to next argument stored in the args SEXP. */
-	args = CDR(args);
-
-	/* Recover figure dimensions. */
-	/* For now these are assumed to be in inches. */
-	width = asReal(CAR(args)); args = CDR(args);
-	height = asReal(CAR(args)); args = CDR(args);
-	
-	/* Recover initial background and foreground colors. */
-	bg = CHAR(asChar(CAR(args))); args = CDR(args);
-	fg = CHAR(asChar(CAR(args))); args = CDR(args);
-
-	/* Recover the base fontsize */
-	baseSize = asReal(CAR(args)); args = CDR(args);
-
-	/* 
-	 * Set the standAlone parameter for wrapping the picture in a LaTeX 
-	 * document
-	*/
-	standAlone = asLogical(CAR(args)); args = CDR(args);
-
-	/* 
-	 * Set the bareBones parameter for direct output of TikZ code without
-	 * wrapping it a LaTeX document or the tikzpicture environment.
-	 * 
-	*/
-	bareBones = asLogical(CAR(args)); args = CDR(args);
-	
-	/* Grab the latex header and footers*/
-	documentDeclaration = CHAR(asChar(CAR(args))); args = CDR(args);
-	packages = CHAR(asChar(CAR(args))); args = CDR(args);
-	footer = CHAR(asChar(CAR(args))); args = CDR(args);
-	
-	/*Should the output be sent to the R console*/
-	console = asLogical(CAR(args)); args = CDR(args);
-	sanitize = asLogical(CAR(args)); args = CDR(args);
-
-	/* Ensure there is an empty slot avaliable for a new device. */
-	R_CheckDeviceAvailable();
-
-	BEGIN_SUSPEND_INTERRUPTS{
-
-		/* 
-		 * The pDevDesc variable specifies the funtions and components 
-		 * that describe the specifics of this graphics device. After
-		 * setup, this information will be incorporated into the pGEDevDesc
-		 * variable tikzDev.
-		*/ 
-		pDevDesc deviceInfo;
-
-		/* 
-		 * Create the deviceInfo variable. If this operation fails, 
-		 * a 0 is returned in order to cause R to shut down due to the
-		 * possibility of corrupted memory.
-		*/
-		if( !( deviceInfo = (pDevDesc) calloc(1, sizeof(DevDesc))) ) {
-			return 0;
-		}
-
-		/*
-		 * Call setup routine to initialize deviceInfo and associate
-		 * R graphics function hooks with the appropriate C routines
-		 * in this file.
-		*/
-		if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, baseSize, 
-				standAlone, bareBones, documentDeclaration, packages, 
-				footer, console, sanitize ) ){
-			/* 
-			 * If setup was unsuccessful, destroy the device and return
-			 * an error message.
-			*/
-			free( deviceInfo );
-			error("TikZ device setup was unsuccessful!");
-		}
-
-		/* Create tikzDev as a Graphics Engine device using deviceInfo. */
-		tikzDev = GEcreateDevDesc( deviceInfo );
+    /* 
+     * Create the deviceInfo variable. If this operation fails, 
+     * a 0 is returned in order to cause R to shut down due to the
+     * possibility of corrupted memory.
+    */
+    if( !( deviceInfo = (pDevDesc) calloc(1, sizeof(DevDesc))) ) {
+      return 0;
+    }
 
     /*
-		 * Register the device as an avaiable graphics device in the R
-		 * Session.  The user will now see a device labeled "tikz output"
+     * Call setup routine to initialize deviceInfo and associate
+     * R graphics function hooks with the appropriate C routines
+     * in this file.
+    */
+    if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, baseSize, 
+        standAlone, bareBones, documentDeclaration, packages, 
+        footer, console, sanitize ) ){
+      /* 
+       * If setup was unsuccessful, destroy the device and return
+       * an error message.
+      */
+      free( deviceInfo );
+      error("TikZ device setup was unsuccessful!");
+    }
+
+    /* Create tikzDev as a Graphics Engine device using deviceInfo. */
+    tikzDev = GEcreateDevDesc( deviceInfo );
+
+    /*
+     * Register the device as an avaiable graphics device in the R
+     * Session.  The user will now see a device labeled "tikz output"
      * when running functions such as dev.list().
     */ 
-		GEaddDevice2( tikzDev, "tikz output" );
+    GEaddDevice2( tikzDev, "tikz output" );
 
-	} END_SUSPEND_INTERRUPTS;
+  } END_SUSPEND_INTERRUPTS;
 
 
-	return R_NilValue;
+  return R_NilValue;
 
 }
 
@@ -1024,13 +1038,15 @@ static void TikZ_Text( double x, double y, const char *str,
 		printOutput(tikzInfo, "%s%%\n};\n", tikzString);
 	}
 
-	/* Since we no longer need tikzString, 
-	*  we should free the memory that it is being stored in.
+	/* 
+   * Since we no longer need tikzString, 
+	 * we should free the memory that it is being stored in.
 	*/
 	free( tikzString );
 
-	/* Add a small red marker to indicate the 
-	*  point the text string is being aligned to.
+	/* 
+   * Add a small red marker to indicate the 
+	 * point the text string is being aligned to.
 	*/
 	if( DEBUG == TRUE )
 		printOutput(tikzInfo, 
