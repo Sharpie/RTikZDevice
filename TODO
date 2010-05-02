@@ -4,7 +4,8 @@
   affect the output but is inefficient.      
 - Line endings are still shown for circles and squares; This does not 
   affect the output but is inefficient.
-- Output to raw R objects
+- Output to raw R objects.
+- Support for raster images.
     
 ## FIXED ##
 - Fontsize and ps parameters are not taken into account when calculating scaling factors.

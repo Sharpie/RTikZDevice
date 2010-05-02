@@ -15,6 +15,7 @@
 - Proper calculation of fontsize taking into account ps from par() and fontsize from gpar()
 - % signs in labels
 - Loading the package no longer overwrites options set in places like .Rprofile
+- Attempting to use new graphics functions such as rasterImage() produces error messages instead of fatal crashes in R 2.11.0 and above.
 
 ### VERSION 0.4.0 Beta ###
 
