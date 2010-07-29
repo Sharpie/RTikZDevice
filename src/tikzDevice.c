@@ -60,7 +60,7 @@
 
 // We are writing to files so we need stdio.h
 #include <stdio.h>
-#define DEBUG FALSE
+#define DEBUG TRUE
 
 
 /*
@@ -544,7 +544,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE)
-		printOutput(tikzInfo,"%% Beginning tikzpicture");
+		printOutput(tikzInfo,"%% Beginning tikzpicture\n");
 		
 	/* Start the tikz environment if we have not specified a bare bones plot. */
 	if( tikzInfo->bareBones != TRUE ){
@@ -946,7 +946,7 @@ static double TikZ_StrWidth( const char *str,
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE) 
 		printOutput(tikzInfo,
-			"%% Calculated string width of %s as %f\n",str,width);
+			"%% Calculated string width of \"%s\" as %f\n",str,width);
 	
 	/*
 	 * Increment the number of times this function has been called
