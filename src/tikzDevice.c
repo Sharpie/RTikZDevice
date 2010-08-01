@@ -60,8 +60,6 @@
 
 // We are writing to files so we need stdio.h
 #include <stdio.h>
-#define DEBUG FALSE
-
 
 /*
  * Main entry point from the R environment, called by the R function
@@ -544,7 +542,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE)
-		printOutput(tikzInfo,"%% Beginning tikzpicture");
+		printOutput(tikzInfo,"%% Beginning tikzpicture\n");
 		
 	/* Start the tikz environment if we have not specified a bare bones plot. */
 	if( tikzInfo->bareBones != TRUE ){
@@ -783,6 +781,11 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
 	*ascent = REAL(RMetrics)[0];
 	*descent = REAL(RMetrics)[1];
 	*width = REAL(RMetrics)[2];
+
+	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  if( tikzInfo->debug == TRUE )
+  printOutput( tikzInfo, "%% Calculated character metrics. ascent: %f, descent: %f, width: %f\n",
+    *ascent, *descent, *width);
 
 	UNPROTECT(2);
 
@@ -1585,7 +1588,7 @@ static void TikZ_Raster(
  * Argument for implementation: could be useful for "previewing" the 
  * current* state of the tikzDevice output.
 */
-static void TikZ_Cap( pDevDesc deviceInfo ){
+static SEXP TikZ_Cap( pDevDesc deviceInfo ){
 
   error("The tikzDevice does not currently support capturing device output to a raster image.");
 
