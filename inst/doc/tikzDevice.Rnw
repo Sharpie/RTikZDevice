@@ -470,7 +470,7 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
 \item[\code{height}]{ The height of the output figure, in {\bfseries inches}. }
 \item[\code{bg}]{ The starting background color for the plot. }
 \item[\code{fg}]{ The starting foreground color for the plot. }
-\item[\code{pointsize}]{ Base pointsize used in the LaTeX document.  This option is only referenced if a valid pointsize cannot be extracted from the value of \code{getOption("tikzDocumentDeclaration")}.  See the section ``Font Size Calculations'' for more details.}
+\item[\code{pointsize}]{ Base pointsize used in the LaTeX document.  This option is only referenced if a valid pointsize cannot be extracted from the value of \code{getOption("tikzDocumentDeclaration")}.  See \autoref{subsec:fontCalc} for more details.}
 \item[\code{standAlone}]{ A logical value indicating whether the resulting file should be suitable for direct processing by \LaTeX .}
 \item[\code{bareBones}]{ A logical value indicating whether the resulting \TikZ{} code produced without being placed within a \LaTeX{} \code{tikzpicture} environment.}
 \item[\code{console}]{Should the output of \code{tikz} be directed to the \lang{R} console (default FALSE). This is useful for dumping tikz output directly into a \LaTeX{} document via sink. If \code{TRUE}, the file argument is ignored. Setting \code{file=''} is equivalent to setting \code{console=TRUE}.}
@@ -492,7 +492,35 @@ The first five options should be familiar to anyone who has used the default gra
 
 \end{itemize}
 
-The next section provides examples of how to use each type of output.
+\subsection{Font Size Calculations}
+\label{subsec:fontCalc}
+The overarching goal of the ‘tikzDevice’ is to provide seamless integration between text in R graphics and the text of LaTeX documents that contain those graphics.  In order to achieve this integration the device must translate font sizes specified in R to corresponding font sizes in LaTeX.  The issue is that font sizes in LaTeX are controlled by a ``base font size'' that is specified at the beginning of the document- typically 10pt.  There is no easy way in LaTeX to change the font size to a new numerical value, such as 16pt for a plot title.  Fortunately, the TikZ graphics system allows text to be resized using a scaling factor.  The \code{tikzDevice} calculates a scaling factor used to approximate other font sizes using the following three inputs:
+
+\begin{itemize}
+
+  \item{The ``base font size'' specified when the graphics device is
+          created.}
+
+  \item{The ``character expansion factor'' parameter, specified using the ‘cex’ argument to functions such as described in the documentation of the \lang{R} function \code{par()}.}
+  
+  \item{The ``font size'' parameter, specified using the `ps’ argument to functions such as \code{par()} or the `fontsize’ argument to functions such as \code{gpar()}.}
+
+\end{itemize}
+
+The calculation used is:
+
+\[
+\mbox{Scaling Factor} = \mbox{cex} \cdot \frac{\mbox{ps}}{\mbox{base font size}}
+\]
+
+The tricky bit is the specification of the ``base font size''.  By default the tikzDevice will attempt to determine this parameter by scanning the value of \code{options( "tikzDocumentDeclaration" )} using the regular expression \code{\textbackslash d+[pt]}.  With the default header:
+
+
+\quad\code{\textbackslash documentclass[10pt]{article}}
+
+
+This regular expression will return 10 as the base pointsize to be used by the device.  If the regular expression fails to produce a match, the value of the \code{pointsize} argument to the \code{tikz()} function will be used.
+
 
 \subsection{Examples}
 
