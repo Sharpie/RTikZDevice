@@ -30,8 +30,8 @@ Cameron Bracken \email{cameron.bracken@gmail.com}
 \code{\link{tikz}}
 }
 \examples{
-	# Although we may want -1 to be a superscrip it gets sanitized away with 
+	# Although we may want -1 to be a superscript it gets sanitized away with 
 	# the other default special characters
-	sanitizeTexString('10\% of 10\$ is 10^{-1}\$')
+	# sanitizeTexString('10\% of 10\$ is 10^{-1}\$')
 }
 \keyword{ character }
