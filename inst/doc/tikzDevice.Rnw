@@ -240,7 +240,7 @@
 % A friendly reminder that this package is currently unstable.
 \tikzDocDisclaim{Caveat Utilitor}
 {
-This is a friendly reminder that the \pkg{tikzDevice} package is currently considered by it's designers to be a {\bfseries beta work}. The package will remain in Beta until the 1.0 release to allow the authors to consider design decisions underlying the package.  {\bfseries This means the authors are currently reserving the right to alter the package interface in ways that may break existing code that uses the package.}  Two open issues that may necessitate such a change are:
+This is a friendly reminder that the \pkg{tikzDevice} package is currently considered by its designers to be a {\bfseries beta work}. The package will remain in Beta until the 1.0 release to allow the authors to consider design decisions underlying the package.  {\bfseries This means the authors are currently reserving the right to alter the package interface in ways that may break existing code that uses the package.}  Two open issues that may necessitate such a change are:
 
 \vskip\baselineskip
 
@@ -718,7 +718,7 @@ The resulting code may then be used inside a \code{tikzpicture} environment usin
 
 \subsubsection{\code{standAlone} Mode}
 
-When the \code{standAlone} option is passed to \code{tikz()}, the resulting \code{.tex} file will be a complete \LaTeX document designed to be compiled on it's own. This means that in addition to \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` the file will also contain \verb`\begin{document}`, \verb`\end{document}` and a \LaTeX{} preamble. The \code{preview} package is also used in files produced by \code{standAlone} and is used to crop the pages in the resulting document to the bounding boxes of the figures that it contains. Stand-alone output may be produced in the following manner:
+When the \code{standAlone} option is passed to \code{tikz()}, the resulting \code{.tex} file will be a complete \LaTeX document designed to be compiled on its own.  This means that in addition to \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` the file will also contain \verb`\begin{document}`, \verb`\end{document}` and a \LaTeX{} preamble.  The \code{preview} package is also used in files produced by \code{standAlone} and is used to crop the pages in the resulting document to the bounding boxes of the figures that it contains.  Stand-alone output may be produced in the following manner:
 
 <<standAloneExample,echo=T,results=hide,keep.source=T>>=
 require(tikzDevice)
@@ -860,7 +860,7 @@ dev.off()
 
 Compiling the resulting file \code{xelatexEx.tex} like so:
 
-\begin{tikzCodeBlock}[title={Compileing with Xe\LaTeX{}},listing style=bashsource]
+\begin{tikzCodeBlock}[title={Compiling with Xe\LaTeX{}},listing style=bashsource]
 xelatex xelatexEx.tex
 \end{tikzCodeBlock}
 
