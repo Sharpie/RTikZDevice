@@ -8,21 +8,21 @@ Reset tikzDevice options.
 Reset all the \pkg{tikzDevice} options to their default values.
 }
 \usage{
-	setTikzDefaults() 
+	setTikzDefaults( overwrite = TRUE ) 
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
-  None.
+  \item{ overwrite }{Should values that are allready set in \code{options()} be overwritten?}  
 }
 \details{
-Specifically resets the options \code{tikzLatex}, \code{tikzDocumentDeclaration}, \code{tikzLatexPackages} and \code{tikzFooter} 
+Specifically resets the options \code{tikzLatex}, \code{tikzDocumentDeclaration}, \code{tikzLatexPackages} and \code{tikzFooter}. 
 }
 
 \value{
 Nothing returned.
 }
 \author{
-Cameron Bracken <cameron.bracken@gmail.com>
+Cameron Bracken \email{cameron.bracken@gmail.com} and Charlie Sharpsteen \email{source@sharpsteen.net}
 }
 
 \seealso{
