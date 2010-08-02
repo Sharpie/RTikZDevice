@@ -5,9 +5,13 @@
  * otherwise.
 */
 
-#ifndef HAVE_TIKZDEV_H
+#ifndef HAVE_TIKZDEV_H // Begin once-only header
 
 #define HAVE_TIKZDEV_H 
+
+#ifndef DEBUG
+#define DEBUG FALSE
+#endif
 
 /* Use default graphics engine function declarations. */
 #define R_USE_PROTOTYPES 1
@@ -107,7 +111,7 @@ static void TikZ_Raster(
   const pGEcontext plotParams, pDevDesc deviceInfo
 );
 
-static void TikZ_Cap( pDevDesc deviceInfo );
+static SEXP TikZ_Cap( pDevDesc deviceInfo );
 
 #endif
 

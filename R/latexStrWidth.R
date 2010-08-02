@@ -128,7 +128,7 @@ function( TeXMetrics ){
 	writeLines("\\batchmode", texIn)
 
 	# Begin a tikz picture.
-	writeLines("\\begin{tikzpicture}", texIn)
+	writeLines("\\begin{document}\n\\begin{tikzpicture}", texIn)
 
 	# Insert the value of cex into the node options.
 	nodeOpts <- paste('\\node[inner sep=0pt, outer sep=0pt, scale=',
