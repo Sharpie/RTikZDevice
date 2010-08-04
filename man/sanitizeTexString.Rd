@@ -30,8 +30,12 @@ Cameron Bracken \email{cameron.bracken@gmail.com}
 \code{\link{tikz}}
 }
 \examples{
-	# Although we may want -1 to be a superscript it gets sanitized away with 
-	# the other default special characters
-	# sanitizeTexString('10\% of 10\$ is 10^{-1}\$')
+	# Be careful with sanitizing, it may lead to unexpected behavior. 
+	# For example, we may want -1 to be a superscript it gets 
+	# sanitized away with the other default special characters.
+	# The string appears in LaTeX exactly as shown.
+\dontrun{
+	sanitizeTexString('10% of 10$ is 10^{-1}$')
+}
 }
 \keyword{ character }
