@@ -100,7 +100,7 @@ function( TeXMetrics ){
 	# Create the TeX file in a temporary directory so
 	# it doesn't clutter anything.
 	texDir <- tempdir()
-	texLog <- file.path( texDir,'tikzStringWidthCalc.log' )
+	texOut <- file.path( texDir,'tikzMetrics.out' )
 	texFile <- file.path( texDir,'tikzStringWidthCalc.tex' )
 
 	# Open the TeX file for writing.
@@ -128,6 +128,12 @@ function( TeXMetrics ){
 
 	# Begin a tikz picture.
 	writeLines("\\begin{document}\n\\begin{tikzpicture}", texIn)
+
+  # Open a file for metrics output.
+  writeLines(
+    "\\immediate\\openout\\tikzMetrics tikzMetrics.out",
+    texIn
+  )
 
 	# Insert the value of cex into the node options.
 	nodeOpts <- paste('\\node[inner sep=0pt, outer sep=0pt, scale=',
@@ -202,7 +208,7 @@ function( TeXMetrics ){
 	# We calculate width for both characters and strings.
 	writeLines("\\path let \\p1 = ($(TeX.east) - (TeX.west)$), 
 		\\n1 = {veclen(\\x1,\\y1)} in (TeX.east) -- (TeX.west)
-		node{ \\typeout{tikzTeXWidth=\\n1} };", texIn)
+		node{ \\immediate\\write\\tikzMetrics{\\n1} };", texIn)
 
   # We only want to calculate ascent and descent when dealing with
   # single characters.
@@ -211,14 +217,20 @@ function( TeXMetrics ){
 		# Calculate the ascent and print it to the log.
 		writeLines("\\path let \\p1 = ($(TeX.north) - (TeX.base)$), 
 			\\n1 = {veclen(\\x1,\\y1)} in (TeX.north) -- (TeX.base)
-			node{ \\typeout{tikzTeXAscent=\\n1} };", texIn)
+			node{ \\immediate\\write\\tikzMetrics{\\n1} };", texIn)
 
 		# Calculate the descent and print it to the log.
 		writeLines("\\path let \\p1 = ($(TeX.base) - (TeX.south)$), 
 			\\n1 = {veclen(\\x1,\\y1)} in (TeX.base) -- (TeX.south)
-			node{ \\typeout{tikzTeXDescent=\\n1} };", texIn)
+			node{ \\immediate\\write\\tikzMetrics{\\n1} };", texIn)
 
 	}
+
+  # Close output file.
+  writeLines(
+    "\\immediate\\close\\tikzMetrics",
+    texIn
+  )
 
 	# Stop before creating output
 	writeLines("\\makeatletter", texIn)
@@ -238,16 +250,9 @@ function( TeXMetrics ){
 	# Run that shit.
 	silence <- system( latexCmd, intern=T, ignore.stderr=T)
 
-	# Open the log file.
-	texOut <- file( texLog, 'r' )
-
 	# Read the contents of the log file.
-	logContents <- readLines( texOut )
-	close( texOut )
+	metrics <- readLines( texOut )
 
-	# Recover width by finding the line containing
-	# tikzTeXWidth in the logfile.
-	match <- logContents[ grep('tikzTeXWidth=', logContents) ]
 
 	# Remove all parts of the string besides the
 	# number.
@@ -261,6 +266,9 @@ function( TeXMetrics ){
   ******** See the LaTeX log file above for details.')
 	}
 
+	width <- extractNum( metrics[1] )
+  message(width)
+
 	# If we're dealing with a string, we're done.
 	if( TeXMetrics$type == 'string' ){
 		
@@ -269,14 +277,20 @@ function( TeXMetrics ){
 	}else{
 
 		# For a character, we want ascent and descent too.
-		match <- logContents[ grep('tikzTeXAscent=', logContents) ]
-		ascent <- gsub('[=A-Za-z]','',match)
-
-		match <- logContents[ grep('tikzTeXDescent=', logContents) ]
-		descent <- gsub('[=A-Za-z]','',match)
+		ascent <- extractNum( metrics[2] )
+		descent <- extractNum( metrics[3] )
 
 		return( as.double( c(ascent,descent,width) ) )
 
 	}
+
+}
+
+extractNum <-
+function( string ){
+
+  string <- gsub( '[A-Za-z]', '', string )
+
+  return( string )
 
 }
