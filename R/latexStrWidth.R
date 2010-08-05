@@ -28,7 +28,6 @@ function( texString, cex = 1, face= 1){
 		# have to do this again.
 		storeMetricsInDictionary( TeXMetrics, width )
 
-		# Return the width.
 		return( width )
 
 	}
@@ -85,7 +84,7 @@ function( charCode, cex = 1, face = 1 ){
 getMetricsFromLatex <-
 function( TeXMetrics ){
 	
-	# Reimplementation of the origonal C function since
+	# Reimplementation of the original C function since
 	# the C function causes all kinds of gibberish to
 	# hit the screen when called under Windows and
 	# Linux. 
@@ -95,7 +94,7 @@ function( TeXMetrics ){
 	# to take even longer.
 	#
 	# Oh. And Windows couldn't nut up and make it through
-	# the C process so it shit it's self and died.
+	# the C process so it shat its self and died.
 
 
 	# Create the TeX file in a temporary directory so
@@ -196,7 +195,7 @@ function( TeXMetrics ){
 
 		}
 
-	)# End switch for  metric type.
+	)# End switch for metric type.
 
 	writeLines( paste( nodeOpts, ' (TeX) {', nodeContent, "%\n};", sep=''), texIn)
 
@@ -205,7 +204,8 @@ function( TeXMetrics ){
 		\\n1 = {veclen(\\x1,\\y1)} in (TeX.east) -- (TeX.west)
 		node{ \\typeout{tikzTeXWidth=\\n1} };", texIn)
 
-	# We only want ascent and descent for characters.
+  # We only want to calculate ascent and descent when dealing with
+  # single characters.
 	if( TeXMetrics$type == 'char' ){
 
 		# Calculate the ascent and print it to the log.
