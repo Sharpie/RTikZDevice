@@ -2,7 +2,7 @@
 \alias{sanitizeTexString}
 
 \title{
-Replace LaTeX Spacial Characters in a String
+Replace LaTeX Special Characters in a String
 }
 
 \description{
@@ -30,7 +30,7 @@ generated text.
 string replacing each occurrence of a special character contained in
 \code{strip[i]} with the corresponding replacement value in
 \code{replacement[i]}.  tikzDevice calls back this function for every
-pice of text when the sanitize option is TRUE. See \code{\link{tikz}}
+piece of text when the sanitize option is TRUE. See \code{\link{tikz}}
 for more information on the default special characters and replacement
 values.
 }
