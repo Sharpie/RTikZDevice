@@ -88,6 +88,9 @@ The following people contributed to this release of the tikzDevice:
 - Vivianne Vilar for spotting spelling and grammar errors in the
   vignette.
 
+- Gabor Grothendieck for the idea for sending output to the screen 
+  for use with sink() (i.e. the "console" option)
+
 #### New Features
 
 - "console" option for directing tikz() output back into the R console
