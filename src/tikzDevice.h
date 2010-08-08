@@ -96,7 +96,21 @@ static void TikZ_Polyline( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
-		
+
+/*
+ * Path routine, a polygon with "holes", was added in R 2.12.0,
+ * Graphics Engine version 8.  No idea what happened to version 7,
+ * guess it was internal
+*/ 
+#if R_GE_version >= 8
+static void
+TikZ_Path( double *x, double *y,
+  int npoly, int *nper,
+  Rboolean winding,
+  const pGEcontext plotParams, pDevDesc deviceInfo
+);
+#endif
+
 
 /* Raster routines are only defined for R >= 2.11.0, Graphics Engine >= 6 */
 #if R_GE_version >= 6
