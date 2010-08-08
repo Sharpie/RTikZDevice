@@ -2,34 +2,49 @@
 \Rdversion{1.1}
 \alias{tikzAnnotate}
 \alias{tikzCoord}
+
 \title{
-Annotate an active tikz device
+Add Custom TikZ Code to an Active Device
 }
+
 \description{
-This function allows (LaTeX) commands to be added to an active tikzDevice.  
+This function allows custom (LaTeX) commands to be added to the output of an active tikzDevice.  
 }
+
+
 \usage{
 	tikzAnnotate( annotation ) 
 	tikzCoord( x, y, name ) 
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
   \item{annotation}{A character vector, one element per line to be added to the open tikz device.}
   \item{x}{numeric, x location for a named coordinate in user coordinates}
   \item{y}{numeric, y location for a named coordinate in user coordinates}
   \item{name}{Character string giving a name for the coordinate (as seen by TikZ)}
 }
-\details{
-\code{tikzAnnotate} is intended to allow the drawing of TikZ commands for annotating graphics. If you annotate a graphic with a command that needs a coordinate \strong{you must convert user coordinates to device coordinates with the \code{\link{grconvertX}} or \code{\link{grconvertY}} function}.
 
-\code{tikzCoord} provides a way to reference a specific location in the graphic by name for annotation purposes. 
+\details{
+\code{tikzAnnotate()} is intended to allow the drawing of TikZ commands
+for annotating graphics. If you annotate a graphic with a command that
+needs a coordinate \strong{you must convert user coordinates to device
+coordinates with the \code{\link{grconvertX}} or
+\code{\link{grconvertY}} function}.
+
+\code{tikzCoord()} is a wrapper for \code{tikzAnnotate()} that
+inserts TikZ \code{\\coordinate} commands into the output.  Coordinates are
+named locations that may be referred to by other TikZ drawing
+commands.
+
+See the TikZ manual for more information. 
 }
 
 \value{
 Nothing returned.
 }
+
 \author{
-Cameron Bracken <cameron.bracken@gmail.com>
+Cameron Bracken <cameron.bracken@gmail.com> and Charlie Sharpsteen \email{source@sharpsteen.net}
 }
 
 \seealso{
