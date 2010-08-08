@@ -13,7 +13,7 @@ friends written by Till Tantau.
 The tikzDevice supports three main modes of output:
 
   - Figure chunks: placed in .tex files and suitable for inclusion in
-    LaTeX documents via \input{}
+    LaTeX documents via the \input{} command.
 
   - Stand alone figures: Complete LaTeX documents containing figure
     code that can be compiled into stand-alone images.  Pages are
@@ -27,7 +27,7 @@ The tikzDevice supports three main modes of output:
 The tikzDevice is currently flagged as a beta work.  The package is
 reasonably stable and has been used by the authors to produce graphics
 for academic publications for over a year.  The reason for beta status
-is that there are several open design issues such as:
+is that there are several open design issues- two of which are:
 
   - Providing support for UTF8 text.
 
@@ -38,7 +38,7 @@ break backwards compatibility with previous versions.  The beta flag
 is a reminder that such changes may occur- although we will strive to
 avoid them if possible.
 
-The beta flag will be removed upon release of version 1.0- at this
+The beta flag will be removed upon release of version 1.0. At this
 time maintaining backwards compatibility will become a primary concern.
 
 ## Obtaining the Package
@@ -52,11 +52,12 @@ Development versions may be obtained from R-Forge:
     install.packages( 'tikzDevice', 
       repos='http://r-forge.r-project.net' )
 
+
 ## Reporting Bugs and Getting Help
 
 The tikzDevice has a dedicated mailing list courtesy of R-Forge.  The
 mailing list is the easiest way to get answers for questions related
-to using the device:
+to usage:
 
   tikzdevice-bugs @at@ lists.r-forge.r-project.org 
 
@@ -77,27 +78,44 @@ to the development of the device!
 
 ---
 
+#### Contributors
+The following people contributed to this release of the tikzDevice:
+
+- Lorenzo Isella contributed bug reports and examples that led to the
+  discovery of a bug in fontsize calculations that appeared when
+  certain LaTeX commands were used to change the active font.
+
+- Vivianne Vilar for spotting spelling and grammar errors in the
+  vignette.
+
 #### New Features
 
-- "console" option
+- "console" option for directing tikz() output back into the R console
+  instead of to a file.
 
-- "sanitize" option (and new options)
+- Preliminary support for a "sanitize" option which allows automatic
+  escaping of characters that have special meaning to TeX like "$" and
+  "%".
 
-- tikzCoord
+- tikzAnnotate() and tikzCoord() functions.  tikzAnnotate() allows
+  arbitrary LaTeX code to be injected into the output stream of an
+  active tikz() graphics device.  tikzCoord() is a wrapper for
+  tikzAnnotate() that inserts named locations into the graphics code.
+  These locations may be referenced by other TikZ drawing commands.
 
 
 #### Bug Fixes
 
-- Bad colon in the DESCRIPTION file.
+- Removed bad colon in the DESCRIPTION file.
 
 - Proper fontsize calculations now include ps from par() and fontsize
   from gpar().  This fixes issues with lattice-based graphics such as
   ggplot2.
 
-- Metrics are now calculated properly for fonts other than Computer
-  Modern.
+- Metrics are now calculated properly when commands like
+  \renewcommand\rmdefault are used to adjust the active font.
 
-- % signs in labels.
+- Sanitization of % signs in labels.
 
 - The package no longer overwrites user customizations set in places like
   .Rprofile with default values when loaded.
