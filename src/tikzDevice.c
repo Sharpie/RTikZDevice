@@ -428,6 +428,13 @@ static Rboolean TikZ_Setup(
   deviceInfo->rect = TikZ_Rectangle;
   deviceInfo->polyline = TikZ_Polyline;
   deviceInfo->polygon = TikZ_Polygon;
+  /*
+   * The following function was added in R 2.12.0, Graphics Engine
+   * version 8. See tikzDevice.h for more details.
+  */
+#if R_GE_version >= 8
+  deviceInfo->path = TikZ_Path;
+#endif
 
   /*
    * The following functions were added in R 2.11.0, Graphics Engine
@@ -1264,6 +1271,22 @@ static void TikZ_Polygon( int n, double *x, double *y,
 
 }
 
+
+#if R_GE_version >= 8
+/* Currently a non-functional stub. */
+static void
+TikZ_Path( double *x, double *y,
+  int npoly, int *nper,
+  Rboolean winding,
+  const pGEcontext plotParams, pDevDesc deviceInfo
+){
+
+  warning( "This version of the TikZ graphics device does not support polypath rendering" );
+
+}
+#endif
+
+
 /* This function either prints out the color definitions for outline and fill 
  * colors or the style tags in the \draw[] command, the defineColor parameter 
  * tells if the color/style is being defined or used.
@@ -1572,7 +1595,7 @@ static void TikZ_Raster(
   const pGEcontext plotParams, pDevDesc deviceInfo
 ){
 
-  error("The tikzDevice does not currently support including raster images in graphics output.");
+  warning( "The tikzDevice does not currently support including raster images in graphics output." );
 
 }
 
@@ -1590,7 +1613,8 @@ static void TikZ_Raster(
 */
 static SEXP TikZ_Cap( pDevDesc deviceInfo ){
 
-  error("The tikzDevice does not currently support capturing device output to a raster image.");
+  warning( "The tikzDevice does not currently support capturing device output to a raster image." );
+  return R_NilValue;
 
 }
 
