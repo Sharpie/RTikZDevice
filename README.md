@@ -74,7 +74,8 @@ to the development of the device!
 
 ---
 
-### Version 0.5.1 Beta
+### Version 0.5.1 Beta 
+**(Unstable- under active development)**
 
 ---
 
@@ -84,4 +85,7 @@ The following people contributed to this release of the tikzDevice:
 #### New Features
 
 #### Bug Fixes
+
+- A stub function has been added so that the `polypath()` function
+  introduced in R 2.12.0 won't crash the device.
 
