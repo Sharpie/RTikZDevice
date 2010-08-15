@@ -74,7 +74,7 @@ to the development of the device!
 
 ---
 
-### Version 0.5.1 Beta 
+### Version: 0.5.1
 **(Unstable- under active development)**
 
 ---
