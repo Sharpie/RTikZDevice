@@ -106,7 +106,7 @@
 	{\large\url{http://r-forge.r-project.org/projects/tikzdevice}}
 }
 \author{Charlie Sharpsteen and Cameron Bracken}
-\date{Version \tikzDeviceVersion\qquad August, 2010}
+\date{Version \Sexpr{tikzDevice:::getTikzDeviceVersion()}\qquad August, 2010}
 
 
 \begin{document}

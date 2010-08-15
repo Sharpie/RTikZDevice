@@ -17,8 +17,8 @@ function(libname, pkgname) {
 
   versionInfo <- read.dcf(file.path( libname, pkgname, "DESCRIPTION"))
 
-  versionInfo <- gettextf("%s: %s (v%s)", versionInfo[, "Package"], versionInfo[, "Title"],
-    as.character(versionInfo[, "Version"]))
+  versionInfo <- gettextf( "%s: %s (v%s)", versionInfo[, "Package"], versionInfo[, "Title"],
+    getTikzDeviceVersion() )
 
   versionInfo <- c( paste(strwrap(versionInfo),collapse='\n'), "Checking for a LaTeX compiler...\n")
 
