@@ -79,7 +79,7 @@ function(){
 
 			# Create the database file if it does not exist.
 			if( !file.exists( dbFile ) ){
-				message("Creating new tikz metrics dictionary in:\n\t",dbFile)
+				message("Creating new TikZ metrics dictionary in:\n\t",dbFile)
 				dbCreate( dbFile, type='DB1' )
 			}
 
@@ -88,6 +88,7 @@ function(){
 			# Create a temporary dictionary- it will disappear after
 			# the R session finishes.
 			dbFile <- file.path( tempdir(), 'tikzMetricsDictionary' ) 
+      message("Creating temporary TikZ metrics dictionary at:\n\t",dbFile)
 			dbCreate( dbFile, type='DB1' )
 		}
 

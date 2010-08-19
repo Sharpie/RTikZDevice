@@ -1,34 +1,91 @@
-# tikzDevice NEWS #
+# tikzDevice
 
-### VERSION 0.5.0 Beta ###
+---
 
-#### New Features ####
+## Description
 
-- "console" option
-- "sanitize" option (and new options)
-- tikzCoord
+The tikzDevice package new graphics device for R which enables direct
+output of graphics in a LaTeX-friendly way.  Plotting commands issued
+by R functions are transformed into LaTeX code blocks.  These blocks
+are interpreted with the help of TikZ-- a graphics library for TeX and
+friends written by Till Tantau.
+
+The tikzDevice supports three main modes of output:
+
+  - Figure chunks: placed in .tex files and suitable for inclusion in
+    LaTeX documents via the \input{} command.
+
+  - Stand alone figures: Complete LaTeX documents containing figure
+    code that can be compiled into stand-alone images.  Pages are
+    cropped to the size of the figure using the preview package.
+
+  - Console output: TikZ code is returned directly to the R console
+    as a character vector for further manipulation.
+
+## Beta Notice
+
+The tikzDevice is currently flagged as a beta work.  The package is
+reasonably stable and has been used by the authors to produce graphics
+for academic publications for over a year.  The reason for beta status
+is that there are several open design issues- two of which are:
+
+  - Providing support for UTF8 text.
+
+  - Supporting TeX variants other than LaTeX.
+
+Resolving these issues may require changes to the tikzDevice that
+break backwards compatibility with previous versions.  The beta flag
+is a reminder that such changes may occur- although we will strive to
+avoid them if possible.
+
+The beta flag will be removed upon release of version 1.0. At this
+time maintaining backwards compatibility will become a primary concern.
+
+## Obtaining the Package
+
+Stable versions of the tikzDevice may be downloaded from CRAN:
+
+    install.packages( 'tikzDevice' )
+
+Development versions may be obtained from R-Forge:
+
+    install.packages( 'tikzDevice', 
+      repos='http://r-forge.r-project.net' )
 
 
-#### Bug Fixes ####
+## Reporting Bugs and Getting Help
 
-- Colon in the DESCRIPTION file 
-- Proper calculation of fontsize taking into account ps from par() and fontsize from gpar()
-- % signs in labels
-- Loading the package no longer overwrites options set in places like .Rprofile
-- Attempting to use new graphics functions such as rasterImage() produces error messages instead of fatal crashes in R 2.11.0 and above.
+The tikzDevice has a dedicated mailing list courtesy of R-Forge.  The
+mailing list is the easiest way to get answers for questions related
+to usage:
 
-### VERSION 0.4.0 Beta ###
+  tikzdevice-bugs @at@ lists.r-forge.r-project.org 
 
-- Initial Beta Release
-- Support for all essential graphical parameters: colors, line types, 
-  line weights, semi-transparency, line endings and line joining.
-- String width and character metrics are calculated by direct calls to a LaTeX
-  compiler. This is an inefficient but robust method. Some of the inefficiency 
-  of this method is compensated for by storing calculated string widths in a 
-  database managed by the filehash package. This way if we pay a computational 
-  price to compute the width of a string, we 
-  hopefully only pay it once.
+Primary development takes place on GitHub.  Bugs and feature requests
+may be made by opening issues at the primary repository:
 
-### VERSION <= 0.3.0 Alpha/Pre-Alpha ###
+  http://github.com/Sharpie/RTikZDevice/issues
 
-- Internal Alpha/Pre-Alpha
+Adventurous users are encouraged to fork the repository and contribute
+to the development of the device!
+
+## Latest Changes
+*See the CHANGELOG for changes that occurred in previous releases*
+
+---
+
+### Version: 0.5.1
+**(Unstable- under active development)**
+
+---
+
+#### Contributors
+The following people contributed to this release of the tikzDevice:
+
+#### New Features
+
+#### Bug Fixes
+
+- A stub function has been added so that the `polypath()` function
+  introduced in R 2.12.0 won't crash the device.
+

@@ -5,9 +5,13 @@
  * otherwise.
 */
 
-#ifndef HAVE_TIKZDEV_H
+#ifndef HAVE_TIKZDEV_H // Begin once-only header
 
 #define HAVE_TIKZDEV_H 
+
+#ifndef DEBUG
+#define DEBUG FALSE
+#endif
 
 /* Use default graphics engine function declarations. */
 #define R_USE_PROTOTYPES 1
@@ -92,7 +96,21 @@ static void TikZ_Polyline( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
-		
+
+/*
+ * Path routine, a polygon with "holes", was added in R 2.12.0,
+ * Graphics Engine version 8.  No idea what happened to version 7,
+ * guess it was internal
+*/ 
+#if R_GE_version >= 8
+static void
+TikZ_Path( double *x, double *y,
+  int npoly, int *nper,
+  Rboolean winding,
+  const pGEcontext plotParams, pDevDesc deviceInfo
+);
+#endif
+
 
 /* Raster routines are only defined for R >= 2.11.0, Graphics Engine >= 6 */
 #if R_GE_version >= 6
@@ -107,7 +125,7 @@ static void TikZ_Raster(
   const pGEcontext plotParams, pDevDesc deviceInfo
 );
 
-static void TikZ_Cap( pDevDesc deviceInfo );
+static SEXP TikZ_Cap( pDevDesc deviceInfo );
 
 #endif
 

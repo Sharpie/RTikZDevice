@@ -1,5 +1,5 @@
 /*
- *  tikzDevice, (C) 2009 Charlie Sharpsteen and Cameron Bracken
+ *  tikzDevice, (C) 2009-2010 Charlie Sharpsteen and Cameron Bracken
  *
  *  A graphics device for R : 
  *    A Computer Language for Statistical Data Analysis
@@ -60,8 +60,6 @@
 
 // We are writing to files so we need stdio.h
 #include <stdio.h>
-#define DEBUG TRUE
-
 
 /*
  * Main entry point from the R environment, called by the R function
@@ -430,6 +428,13 @@ static Rboolean TikZ_Setup(
   deviceInfo->rect = TikZ_Rectangle;
   deviceInfo->polyline = TikZ_Polyline;
   deviceInfo->polygon = TikZ_Polygon;
+  /*
+   * The following function was added in R 2.12.0, Graphics Engine
+   * version 8. See tikzDevice.h for more details.
+  */
+#if R_GE_version >= 8
+  deviceInfo->path = TikZ_Path;
+#endif
 
   /*
    * The following functions were added in R 2.11.0, Graphics Engine
@@ -489,216 +494,216 @@ static void Print_TikZ_Header( tikzDevDesc *tikzInfo ){
    * Recover package namespace as the date formatting function
    * is not exported
   */
-	SEXP TikZ_namespace;
-	PROTECT( 
-		TikZ_namespace = eval(lang2( install("getNamespace"),
-			ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-	);
+  SEXP TikZ_namespace;
+  PROTECT( 
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
 
 
-	SEXP currentDate;
-	PROTECT( 
-		currentDate = eval(lang1( install("getDateStampForTikz") ), 
-			TikZ_namespace )
-	);
+  SEXP currentDate;
+  PROTECT( 
+    currentDate = eval(lang1( install("getDateStampForTikz") ), 
+      TikZ_namespace )
+  );
 
-	SEXP currentVersion;
-	PROTECT( 
-		currentVersion = eval(lang1( install("getTikzDeviceVersion") ), 
-			TikZ_namespace )
-	);
+  SEXP currentVersion;
+  PROTECT( 
+    currentVersion = eval(lang1( install("getTikzDeviceVersion") ), 
+      TikZ_namespace )
+  );
 
-	printOutput( tikzInfo, "%% Created by tikzDevice version %s on %s\n",
-		CHAR(STRING_ELT(currentVersion,0)), CHAR(STRING_ELT(currentDate,0)) );
+  printOutput( tikzInfo, "%% Created by tikzDevice version %s on %s\n",
+    CHAR(STRING_ELT(currentVersion,0)), CHAR(STRING_ELT(currentDate,0)) );
 
-	UNPROTECT(3);
+  UNPROTECT(3);
 
 }
 
 static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
-	/* 
-	 * Shortcut pointers to variables of interest. 
-	 * It seems like there HAS to be a more elegent way of accesing
-	 * these...
-	*/
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-	
-	if(tikzInfo->outFileName[0] == '\0'){
-		//If empty file name output to console
-		tikzInfo->console = TRUE;	
-	}else{	
-		if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
-			return FALSE;
-	}
+  /* 
+   * Shortcut pointers to variables of interest. 
+   * It seems like there HAS to be a more elegent way of accesing
+   * these...
+  */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  
+  if(tikzInfo->outFileName[0] == '\0'){
+    //If empty file name output to console
+    tikzInfo->console = TRUE; 
+  }else{  
+    if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
+      return FALSE;
+  }
 
-	/* Print header comment */
-	Print_TikZ_Header( tikzInfo );
+  /* Print header comment */
+  Print_TikZ_Header( tikzInfo );
 
-	/* Header for a standalone LaTeX document*/
-	if(tikzInfo->standAlone == TRUE){
-		printOutput(tikzInfo,"%s",tikzInfo->documentDeclaration);
-		printOutput(tikzInfo,"%s",tikzInfo->packages);
-		printOutput(tikzInfo,"\\begin{document}\n\n");
-	}
+  /* Header for a standalone LaTeX document*/
+  if(tikzInfo->standAlone == TRUE){
+    printOutput(tikzInfo,"%s",tikzInfo->documentDeclaration);
+    printOutput(tikzInfo,"%s",tikzInfo->packages);
+    printOutput(tikzInfo,"\\begin{document}\n\n");
+  }
 
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE)
-		printOutput(tikzInfo,"%% Beginning tikzpicture\n");
-		
-	/* Start the tikz environment if we have not specified a bare bones plot. */
-	if( tikzInfo->bareBones != TRUE ){
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE)
+    printOutput(tikzInfo,"%% Beginning tikzpicture\n");
+    
+  /* Start the tikz environment if we have not specified a bare bones plot. */
+  if( tikzInfo->bareBones != TRUE ){
 
-		printOutput(tikzInfo, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
+    printOutput(tikzInfo, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
 
-		/* 
-		 * For now, print an invisible rectangle to ensure all of the plotting 
-		 * area is used. Once color options are implemented, this could be 
-		 * replaced with a call to TikZ_Rectangle, if feasible.
-		*/
-		printOutput(tikzInfo, 
-				"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
-				deviceInfo->right,deviceInfo->top);
+    /* 
+     * For now, print an invisible rectangle to ensure all of the plotting 
+     * area is used. Once color options are implemented, this could be 
+     * replaced with a call to TikZ_Rectangle, if feasible.
+    */
+    printOutput(tikzInfo, 
+        "\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
+        deviceInfo->right,deviceInfo->top);
 
-	}
+  }
 
-	return TRUE;
+  return TRUE;
 
 }
 
 static void TikZ_Close( pDevDesc deviceInfo){
 
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	printOutput(tikzInfo, "\\end{scope}\n");
+  printOutput(tikzInfo, "\\end{scope}\n");
 
-	/* End the tikz environment if we're not doing a bare bones plot. */
-	if( tikzInfo->bareBones != TRUE )
-		printOutput(tikzInfo, "\\end{tikzpicture}\n");
-	
-	/* Close off the standalone document*/
-	if(tikzInfo->standAlone == TRUE)
-		printOutput(tikzInfo,"\n\\end{document}\n");
-	
-	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo,
-			"%% Calculated string width %d times\n",
-			tikzInfo->stringWidthCalls);
+  /* End the tikz environment if we're not doing a bare bones plot. */
+  if( tikzInfo->bareBones != TRUE )
+    printOutput(tikzInfo, "\\end{tikzpicture}\n");
+  
+  /* Close off the standalone document*/
+  if(tikzInfo->standAlone == TRUE)
+    printOutput(tikzInfo,"\n\\end{document}\n");
+  
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% Calculated string width %d times\n",
+      tikzInfo->stringWidthCalls);
 
-	/* Close the file and destroy the tikzInfo structure. */
-	if(tikzInfo->console == FALSE)
-		fclose(tikzInfo->outputFile);
-	free(tikzInfo);
+  /* Close the file and destroy the tikzInfo structure. */
+  if(tikzInfo->console == FALSE)
+    fclose(tikzInfo->outputFile);
+  free(tikzInfo);
 
 }
 
 static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	if ( tikzInfo->firstPage ){
-		tikzInfo->firstPage = FALSE;
-	}else{
+  if ( tikzInfo->firstPage ){
+    tikzInfo->firstPage = FALSE;
+  }else{
 
-		/* End the current TikZ environment, unless we are making bare bones code. */
-		if( tikzInfo->bareBones != TRUE ){
-			
-			printOutput(tikzInfo, "\\end{scope}\n");
-			printOutput(tikzInfo, "\\end{tikzpicture}\n");
-			
-			/*Next clipping region will be the first on the page*/
-			tikzInfo->firstClip = TRUE;
+    /* End the current TikZ environment, unless we are making bare bones code. */
+    if( tikzInfo->bareBones != TRUE ){
+      
+      printOutput(tikzInfo, "\\end{scope}\n");
+      printOutput(tikzInfo, "\\end{tikzpicture}\n");
+      
+      /*Next clipping region will be the first on the page*/
+      tikzInfo->firstClip = TRUE;
 
-			/*Show only for debugging*/
-			if(tikzInfo->debug == TRUE) 
-				printOutput(tikzInfo,
-					"%% Beginning new tikzpicture 'page'\n");
+      /*Show only for debugging*/
+      if(tikzInfo->debug == TRUE) 
+        printOutput(tikzInfo,
+          "%% Beginning new tikzpicture 'page'\n");
 
-			/* Start a new TikZ envioronment. */
-			printOutput(tikzInfo, 
-				"\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-			
-			/* 
-			 * For now, print an invisible rectangle to ensure all of the plotting 
-			 * area is used. Once color options are implemented, this could be 
-			 * replaced with a call to TikZ_Rectangle, if feasible.
-			*/
-			printOutput(tikzInfo, 
-				"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
-				deviceInfo->right,deviceInfo->top);
+      /* Start a new TikZ envioronment. */
+      printOutput(tikzInfo, 
+        "\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
+      
+      /* 
+       * For now, print an invisible rectangle to ensure all of the plotting 
+       * area is used. Once color options are implemented, this could be 
+       * replaced with a call to TikZ_Rectangle, if feasible.
+      */
+      printOutput(tikzInfo, 
+        "\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
+        deviceInfo->right,deviceInfo->top);
 
-		} // End if not bare bones.
-				
-		/*Define default colors*/
-		SetColor(plotParams->col, TRUE, tikzInfo);
-		SetFill(plotParams->fill, TRUE, tikzInfo);
-		
-	}
+    } // End if not bare bones.
+        
+    /*Define default colors*/
+    SetColor(plotParams->col, TRUE, tikzInfo);
+    SetFill(plotParams->fill, TRUE, tikzInfo);
+    
+  }
 
 }
 
 static void TikZ_Clip( double x0, double x1, 
-		double y0, double y1, pDevDesc deviceInfo ){
-	
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+    double y0, double y1, pDevDesc deviceInfo ){
+  
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	deviceInfo->clipBottom = y0;
-	deviceInfo->clipLeft = x0;
-	deviceInfo->clipTop = y1;
-	deviceInfo->clipRight = x1;
-	
-	if(tikzInfo->firstClip == FALSE){
-		printOutput(tikzInfo, "\\end{scope}\n");
-	}else{
-		tikzInfo->firstClip = FALSE;
-	}
-	
-	printOutput(tikzInfo, "\\begin{scope}\n");
-	printOutput(tikzInfo,
-		"\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-		x0,y0,x1,y1);
-	
-	/*
-	 *	   *** UGLY HACK ***
-	 * 
-	 * So, the device was building fine on Linux and Windows,
-	 * but when it came time to comple the output- pdflatex
-	 * barfed on both systems, complaining about fillColor or
-	 * drawColor not being defined. I'm pretty sure this is
-	 * because those color values are not preserved accross
-	 * scopes.
-	 *
-	 * I'm too tired to figure out the StyleDef code in detail
-	 * right now, so i'm tweaking the stored values here in
-	 * the hopes that it will force a reprint of style after
-	 * we begin a new scope.
-	 *
-	 * Seems to work.
-	*/
-	tikzInfo->oldFillColor = -999;
-	tikzInfo->oldDrawColor = -999;
-	tikzInfo->oldLineType = -999;
+  deviceInfo->clipBottom = y0;
+  deviceInfo->clipLeft = x0;
+  deviceInfo->clipTop = y1;
+  deviceInfo->clipRight = x1;
+  
+  if(tikzInfo->firstClip == FALSE){
+    printOutput(tikzInfo, "\\end{scope}\n");
+  }else{
+    tikzInfo->firstClip = FALSE;
+  }
+  
+  printOutput(tikzInfo, "\\begin{scope}\n");
+  printOutput(tikzInfo,
+    "\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+    x0,y0,x1,y1);
+  
+  /*
+   *     *** UGLY HACK ***
+   * 
+   * So, the device was building fine on Linux and Windows,
+   * but when it came time to comple the output- pdflatex
+   * barfed on both systems, complaining about fillColor or
+   * drawColor not being defined. I'm pretty sure this is
+   * because those color values are not preserved accross
+   * scopes.
+   *
+   * I'm too tired to figure out the StyleDef code in detail
+   * right now, so i'm tweaking the stored values here in
+   * the hopes that it will force a reprint of style after
+   * we begin a new scope.
+   *
+   * Seems to work.
+  */
+  tikzInfo->oldFillColor = -999;
+  tikzInfo->oldDrawColor = -999;
+  tikzInfo->oldLineType = -999;
 
-	if(tikzInfo->debug == TRUE)
-		printOutput(tikzInfo,
-			"\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-			x0,y0,x1,y1);
-			
-	/*Define the colors for fill and border*/
-	StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
+  if(tikzInfo->debug == TRUE)
+    printOutput(tikzInfo,
+      "\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+      x0,y0,x1,y1);
+      
+  /*Define the colors for fill and border*/
+  StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
 }
 
 static void TikZ_Size( double *left, double *right,
-		double *bottom, double *top, pDevDesc deviceInfo){
-	
-	/* Return canvas size. */
-	*bottom = deviceInfo->bottom;
-	*left = deviceInfo->left;
-	*top = deviceInfo->top;
-	*right = deviceInfo->right;
+    double *bottom, double *top, pDevDesc deviceInfo){
+  
+  /* Return canvas size. */
+  *bottom = deviceInfo->bottom;
+  *left = deviceInfo->left;
+  *top = deviceInfo->top;
+  *right = deviceInfo->right;
 
 }
 
@@ -711,14 +716,14 @@ static void TikZ_Size( double *left, double *right,
 double
 TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
-	// These parameters all affect the font size.
-	double baseSize = deviceInfo->startps;
-	double fontSize = plotParams->ps;
-	double cex = plotParams->cex;
+  // These parameters all affect the font size.
+  double baseSize = deviceInfo->startps;
+  double fontSize = plotParams->ps;
+  double cex = plotParams->cex;
 
-	double fontScale = ( fontSize / baseSize ) * cex;
+  double fontScale = ( fontSize / baseSize ) * cex;
 
-	return( fontScale );
+  return( fontScale );
 
 }
 
@@ -734,59 +739,64 @@ TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
  *
 */ 
 static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
-		double *ascent, double *descent, double *width, pDevDesc deviceInfo ){
+    double *ascent, double *descent, double *width, pDevDesc deviceInfo ){
 
-	/* 
-	 * Assuming we are dealing with ASCII characters, check the character
-	 * code c to see if it falls outside the range of printable characters
-	 * which are: 32-126
-	*/
-	if( c < 32 || c > 126 ){
-		// Non-printable character. Set metrics to zero and return.
-		*ascent = 0.0;
-		*descent = 0.0;
-		*width = 0.0;
-		return;
-	}
+  /* 
+   * Assuming we are dealing with ASCII characters, check the character
+   * code c to see if it falls outside the range of printable characters
+   * which are: 32-126
+  */
+  if( c < 32 || c > 126 ){
+    // Non-printable character. Set metrics to zero and return.
+    *ascent = 0.0;
+    *descent = 0.0;
+    *width = 0.0;
+    return;
+  }
 
-	// Calculate font scaling factor.
-	double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+  // Calculate font scaling factor.
+  double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
 
-	// Prepare to call back to R in order to retrieve character metrics.
-	
-	// Call out to R to retrieve the latexParseCharForMetrics function.
-	// Note: this code will eventually call a different function that provides
-	// caching of the results. Right now we're directly calling the function
-	// that activates LaTeX.
-	SEXP metricFun = findFun( install("getLatexCharMetrics"), R_GlobalEnv );
+  // Prepare to call back to R in order to retrieve character metrics.
+  
+  // Call out to R to retrieve the latexParseCharForMetrics function.
+  // Note: this code will eventually call a different function that provides
+  // caching of the results. Right now we're directly calling the function
+  // that activates LaTeX.
+  SEXP metricFun = findFun( install("getLatexCharMetrics"), R_GlobalEnv );
 
-	SEXP RCallBack;
-	PROTECT( RCallBack = allocVector(LANGSXP,4) );
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP,4) );
 
-	// Place the function into the first slot of the SEXP.
-	SETCAR( RCallBack, metricFun );
+  // Place the function into the first slot of the SEXP.
+  SETCAR( RCallBack, metricFun );
 
-	// Place the character code into the second slot of the SEXP.
-	SETCADR( RCallBack, ScalarInteger( c ) );
-	SET_TAG( CDR( RCallBack ), install("charCode") );
+  // Place the character code into the second slot of the SEXP.
+  SETCADR( RCallBack, ScalarInteger( c ) );
+  SET_TAG( CDR( RCallBack ), install("charCode") );
 
-	// Pass graphics parameters cex and fontface.
-	SETCADDR( RCallBack,  ScalarReal( fontScale ) );
-	SET_TAG( CDDR( RCallBack ), install("cex") );
-	SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
-	SET_TAG( CDR(CDDR( RCallBack )), install("face") );
+  // Pass graphics parameters cex and fontface.
+  SETCADDR( RCallBack,  ScalarReal( fontScale ) );
+  SET_TAG( CDDR( RCallBack ), install("cex") );
+  SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
+  SET_TAG( CDR(CDDR( RCallBack )), install("face") );
 
-	SEXP RMetrics;
-	PROTECT( RMetrics = eval( RCallBack, R_GlobalEnv ) );
+  SEXP RMetrics;
+  PROTECT( RMetrics = eval( RCallBack, R_GlobalEnv ) );
 
-	// Recover the metrics.
-	*ascent = REAL(RMetrics)[0];
-	*descent = REAL(RMetrics)[1];
-	*width = REAL(RMetrics)[2];
+  // Recover the metrics.
+  *ascent = REAL(RMetrics)[0];
+  *descent = REAL(RMetrics)[1];
+  *width = REAL(RMetrics)[2];
 
-	UNPROTECT(2);
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  if( tikzInfo->debug == TRUE )
+  printOutput( tikzInfo, "%% Calculated character metrics. ascent: %f, descent: %f, width: %f\n",
+    *ascent, *descent, *width);
 
-	return;
+  UNPROTECT(2);
+
+  return;
 
 }
 
@@ -798,7 +808,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
  * in whatever font is being used in the the TeX document. The end font that
  * the user decides to typeset their document in may also be unknown to the
  * device. The problem is further complicated by the fact that TeX strings 
- * can be used directly in annotations.	 For example the string \textit{x} 
+ * can be used directly in annotations.  For example the string \textit{x} 
  * literaly has 10 characters but when it is actually typeset it only has
  * one. Given this difficulty the function currently writes the string
  * to a temporary file and calls LaTeX in order to obtain an authoratative
@@ -819,144 +829,144 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
  *
 */
 static double TikZ_StrWidth( const char *str,
-		const pGEcontext plotParams, pDevDesc deviceInfo ){
-			
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+    const pGEcontext plotParams, pDevDesc deviceInfo ){
+      
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	// Calculate font scaling factor.
-	double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+  // Calculate font scaling factor.
+  double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
 
-	/*
-	 * New string width calculation method: call back to R
-	 * and run the R function getLatexStrWidth.
-	 *
-	 * This used to be implemented as a C function, but
-	 * the nuts and bolts were re-implemented back
-	 * on the R side of this package. There seems to
-	 * have been no major performance penalty associated
-	 * with doing this.
-	 *
-	 * Why was it done?
-	 *
-	 * - Windows and Linux did not suppress the output
-	 *	 of the C system call to LaTeX which resulted 
-	 *	 in spam and lag. In the case of Windows, a
-	 *	 whole mess of CMD windows were spawned which
-	 *	 eventually crashed the system.
-	 *
-	 * - Using R's system() call we gain a level of
-	 *	 abstraction that works accross all platforms.
-	 *	 We can also use functions like tempdir() to
-	 *	 do the dirty work somewhere where the user
-	 *	 won't have to clean it up.
-	 *
-	 * - If a LaTeX parser ever gets implemented, it
-	 *	 will probably be easiest to implement it in
-	 *	 R. If a LaTeX parser ever gets stolen from
-	 *	 something like python's matplotlib, R will
-	 *	 probably provide the interface. Therefore
-	 *	 a callback to R may be necessary anyway.
-	 *
-	 * - Having C code called by R call R code is 
-	 *	 fucking wicked.
-	 *
-	*/
-	
-	// Call out to R to retrieve the getLatexStrWidth function.
-	SEXP widthFun = findFun( install("getLatexStrWidth"), R_GlobalEnv );
-
-	/*
-	 * Create a SEXP that will be the R function call. The SEXP will
-	 * have four components- the R function being called, the string 
-	 * being passed and the current value of the graphics parameters
-	 * cex and fontface. Therefore it is allocated as a	 LANGSXP
-	 * vector of length 4. This is done inside a PROTECT() function
-	 * to keep the R garbage collector from saying "Hmmm... what's
-	 * this? Looks like noone is using it so I guess I will nuke it."
+  /*
+   * New string width calculation method: call back to R
+   * and run the R function getLatexStrWidth.
+   *
+   * This used to be implemented as a C function, but
+   * the nuts and bolts were re-implemented back
+   * on the R side of this package. There seems to
+   * have been no major performance penalty associated
+   * with doing this.
+   *
+   * Why was it done?
+   *
+   * - Windows and Linux did not suppress the output
+   *   of the C system call to LaTeX which resulted 
+   *   in spam and lag. In the case of Windows, a
+   *   whole mess of CMD windows were spawned which
+   *   eventually crashed the system.
+   *
+   * - Using R's system() call we gain a level of
+   *   abstraction that works accross all platforms.
+   *   We can also use functions like tempdir() to
+   *   do the dirty work somewhere where the user
+   *   won't have to clean it up.
+   *
+   * - If a LaTeX parser ever gets implemented, it
+   *   will probably be easiest to implement it in
+   *   R. If a LaTeX parser ever gets stolen from
+   *   something like python's matplotlib, R will
+   *   probably provide the interface. Therefore
+   *   a callback to R may be necessary anyway.
+   *
+   * - Having C code called by R call R code is 
+   *   fucking wicked.
+   *
   */
-	SEXP RCallBack;
-	PROTECT( RCallBack = allocVector(LANGSXP,4) );
+  
+  // Call out to R to retrieve the getLatexStrWidth function.
+  SEXP widthFun = findFun( install("getLatexStrWidth"), R_GlobalEnv );
 
-	// Place the function into the first slot of the SEXP.
-	SETCAR( RCallBack, widthFun );
-
-	//If using the sanitize option call back to R for the sanitized string
-	if(tikzInfo->sanitize == TRUE){
-		char *cleanString = Sanitize( str );
-		// Place the sanitized string into the second slot of the SEXP.
-		SETCADR( RCallBack, mkString( cleanString ) );
-		
-	}else{
-		
-		// Place the string into the second slot of the SEXP.
-		SETCADR( RCallBack, mkString( str ) );
-		
-	}
-	// Tag the string with a name, this name coressponds to the
-	// dummy argument of the R function getLatexStringWidth.
-	SET_TAG( CDR( RCallBack ), install("texString") );
-
-	// Pass graphics parameters cex and fontface.
-	SETCADDR( RCallBack,  ScalarReal( fontScale ) );
-	SET_TAG( CDDR( RCallBack ), install("cex") );
-	SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
-	SET_TAG( CDR(CDDR( RCallBack )), install("face") );
-
-	/*
-	 * Call the R function, capture the result.
-	 * PROTECT may not be necessary here, but I'm doing
-	 * it just in case the SEXP holds a pointer to an
-	 * R function return value that the garbage collector
-	 * decides to nuke.
-	*/
-	SEXP RStrWidth;
-	PROTECT( RStrWidth = eval( RCallBack, R_GlobalEnv ) );
-
-	/*
-	 * Why REAL()[0] instead of asReal(CAR())? I have no fucking
-	 * clue...
-	 *
-	 * After browsing Rinternals.h, the location where SEXPs and
-	 * their access functions are defined, I have an explanation
-	 * that seems plausible.
-	 *
-	 * Since getLatexStrWidth returns a single variable of a single
-	 * type, it is returned as a vector SEXP. The value can be
-	 * extracted to a C variable by coercing the SEXP to real and
-	 * then accessing the first element of the resulting array.
-	 *
-	 * When a R function returns, or passes in the case of the 
-	 * .External call that leads into all of this code, a collection
-	 * of *different* objects they are passed as a list instead of
-	 * a vector. Therefore CAR is needed to access the list followed
-	 * by coercion using asReal().
-	 *
-	 * Seems like this explains what is going on here, although it
-	 * is just a wild guess on my part. Maybe I should post to
-	 * r-devel and ask for clarification...
-	 *
+  /*
+   * Create a SEXP that will be the R function call. The SEXP will
+   * have four components- the R function being called, the string 
+   * being passed and the current value of the graphics parameters
+   * cex and fontface. Therefore it is allocated as a  LANGSXP
+   * vector of length 4. This is done inside a PROTECT() function
+   * to keep the R garbage collector from saying "Hmmm... what's
+   * this? Looks like noone is using it so I guess I will nuke it."
   */
-	double width = REAL(RStrWidth)[0];
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP,4) );
 
-	// Since we called PROTECT twice, we must call UNPROTECT
-	// and pass the number 2.
-	UNPROTECT(2);
-	
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo,
-			"%% Calculated string width of \"%s\" as %f\n",str,width);
-	
-	/*
-	 * Increment the number of times this function has been called
-	 * Used for debugging purposes.
-	 *
-	*/
-	tikzInfo->stringWidthCalls++;
+  // Place the function into the first slot of the SEXP.
+  SETCAR( RCallBack, widthFun );
 
-	return(width);
-		
+  //If using the sanitize option call back to R for the sanitized string
+  if(tikzInfo->sanitize == TRUE){
+    char *cleanString = Sanitize( str );
+    // Place the sanitized string into the second slot of the SEXP.
+    SETCADR( RCallBack, mkString( cleanString ) );
+    
+  }else{
+    
+    // Place the string into the second slot of the SEXP.
+    SETCADR( RCallBack, mkString( str ) );
+    
+  }
+  // Tag the string with a name, this name coressponds to the
+  // dummy argument of the R function getLatexStringWidth.
+  SET_TAG( CDR( RCallBack ), install("texString") );
+
+  // Pass graphics parameters cex and fontface.
+  SETCADDR( RCallBack,  ScalarReal( fontScale ) );
+  SET_TAG( CDDR( RCallBack ), install("cex") );
+  SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
+  SET_TAG( CDR(CDDR( RCallBack )), install("face") );
+
+  /*
+   * Call the R function, capture the result.
+   * PROTECT may not be necessary here, but I'm doing
+   * it just in case the SEXP holds a pointer to an
+   * R function return value that the garbage collector
+   * decides to nuke.
+  */
+  SEXP RStrWidth;
+  PROTECT( RStrWidth = eval( RCallBack, R_GlobalEnv ) );
+
+  /*
+   * Why REAL()[0] instead of asReal(CAR())? I have no fucking
+   * clue...
+   *
+   * After browsing Rinternals.h, the location where SEXPs and
+   * their access functions are defined, I have an explanation
+   * that seems plausible.
+   *
+   * Since getLatexStrWidth returns a single variable of a single
+   * type, it is returned as a vector SEXP. The value can be
+   * extracted to a C variable by coercing the SEXP to real and
+   * then accessing the first element of the resulting array.
+   *
+   * When a R function returns, or passes in the case of the 
+   * .External call that leads into all of this code, a collection
+   * of *different* objects they are passed as a list instead of
+   * a vector. Therefore CAR is needed to access the list followed
+   * by coercion using asReal().
+   *
+   * Seems like this explains what is going on here, although it
+   * is just a wild guess on my part. Maybe I should post to
+   * r-devel and ask for clarification...
+   *
+  */
+  double width = REAL(RStrWidth)[0];
+
+  // Since we called PROTECT twice, we must call UNPROTECT
+  // and pass the number 2.
+  UNPROTECT(2);
+  
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% Calculated string width of %s as %f\n",str,width);
+  
+  /*
+   * Increment the number of times this function has been called
+   * Used for debugging purposes.
+   *
+  */
+  tikzInfo->stringWidthCalls++;
+
+  return(width);
+    
 }
 
 /*
@@ -968,298 +978,314 @@ static double TikZ_StrWidth( const char *str,
  * The rotation value is given in degrees.
 */
 static void TikZ_Text( double x, double y, const char *str,
-		double rot, double hadj, const pGEcontext plotParams, 
-		pDevDesc deviceInfo){
-	
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-	
-	double tol = 0.01;
-	
-	// Append font face commands depending on which font R is using.
-	char *tikzString = (char *) calloc( strlen(str) + 20, sizeof(char) );
+    double rot, double hadj, const pGEcontext plotParams, 
+    pDevDesc deviceInfo){
+  
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  
+  double tol = 0.01;
+  
+  // Append font face commands depending on which font R is using.
+  char *tikzString = (char *) calloc( strlen(str) + 20, sizeof(char) );
 
-	switch( plotParams->fontface ){
-	
-		case 2:
-			// R is requesting bold font.
-			strcat( tikzString, "\\bfseries " );
-			break;
+  switch( plotParams->fontface ){
+  
+    case 2:
+      // R is requesting bold font.
+      strcat( tikzString, "\\bfseries " );
+      break;
 
-		case 3:
-			// R is requesting italic font.
-			strcat( tikzString, "\\itshape " );
-			break;
+    case 3:
+      // R is requesting italic font.
+      strcat( tikzString, "\\itshape " );
+      break;
 
-		case 4:
-			// R is requesting bold italic font.
-			strcat( tikzString, "\\bfseries\\itshape " );
-			break;
+    case 4:
+      // R is requesting bold italic font.
+      strcat( tikzString, "\\bfseries\\itshape " );
+      break;
 
-	} // End font face switch.
+  } // End font face switch.
 
-	// Form final output string.
-	strcat( tikzString, str );
+  // Form final output string.
+  strcat( tikzString, str );
 
-	// Calculate font scaling factor.
-	double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
-	
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo,
-			"%% Drawing node at x = %f, y = %f\n",
-			x,y);
+  // Calculate font scaling factor.
+  double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+  
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% Drawing node at x = %f, y = %f\n",
+      x,y);
 
-	// Print out a definition for the text color.
-	SetColor( plotParams->col, TRUE, tikzInfo );	
+  // Print out a definition for the text color.
+  SetColor( plotParams->col, TRUE, tikzInfo );  
 
-	/* Start a node for the text, open an options bracket. */
-	printOutput(tikzInfo,"\n\\node[");
+  /* Start a node for the text, open an options bracket. */
+  printOutput(tikzInfo,"\n\\node[");
 
-	/* Rotate the text if desired. */
-	if( rot != 0 )
-		printOutput(tikzInfo, "rotate=%6.2f,", rot );
+  /* Rotate the text if desired. */
+  if( rot != 0 )
+    printOutput(tikzInfo, "rotate=%6.2f,", rot );
 
-	/* More options would go here such as scaling, color etc. */
-	
-	// Add a reference to the text color to the node options.
-	SetColor( plotParams->col, FALSE, tikzInfo );
-	/* End options, print coordinates and string. */
-	printOutput(tikzInfo, "anchor=");
-	
-	//Justify the text
-	if(fabs(hadj - 0.0) < tol){
-		//Left Justified
-		printOutput(tikzInfo, "base west,");
-	}
-	if(fabs(hadj - 0.5) < tol){
-		//Center Justified
-		printOutput(tikzInfo, "base,");
-	}
-	if(fabs(hadj - 1) < tol){
-		//Right Justified
-		printOutput(tikzInfo, "base east,");
-	}
-		
-	printOutput(tikzInfo, 
-		"inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
-		fontScale, x, y);
-	
-	if(tikzInfo->sanitize == TRUE){
-		//If using the sanitize option call back to R for the sanitized string
-		char *cleanString = Sanitize( tikzString );
-		printOutput(tikzInfo, "%s%%\n};\n", cleanString);
-	}else{
-		printOutput(tikzInfo, "%s%%\n};\n", tikzString);
-	}
+  /* More options would go here such as scaling, color etc. */
+  
+  // Add a reference to the text color to the node options.
+  SetColor( plotParams->col, FALSE, tikzInfo );
+  /* End options, print coordinates and string. */
+  printOutput(tikzInfo, "anchor=");
+  
+  //Justify the text
+  if(fabs(hadj - 0.0) < tol){
+    //Left Justified
+    printOutput(tikzInfo, "base west,");
+  }
+  if(fabs(hadj - 0.5) < tol){
+    //Center Justified
+    printOutput(tikzInfo, "base,");
+  }
+  if(fabs(hadj - 1) < tol){
+    //Right Justified
+    printOutput(tikzInfo, "base east,");
+  }
+    
+  printOutput(tikzInfo, 
+    "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
+    fontScale, x, y);
+  
+  if(tikzInfo->sanitize == TRUE){
+    //If using the sanitize option call back to R for the sanitized string
+    char *cleanString = Sanitize( tikzString );
+    printOutput(tikzInfo, "%s%%\n};\n", cleanString);
+  }else{
+    printOutput(tikzInfo, "%s%%\n};\n", tikzString);
+  }
 
-	/* 
+  /* 
    * Since we no longer need tikzString, 
-	 * we should free the memory that it is being stored in.
-	*/
-	free( tikzString );
+   * we should free the memory that it is being stored in.
+  */
+  free( tikzString );
 
-	/* 
+  /* 
    * Add a small red marker to indicate the 
-	 * point the text string is being aligned to.
-	*/
-	if( DEBUG == TRUE )
-		printOutput(tikzInfo, 
-			"\n\\draw[color=red, fill=red] (%6.2f,%6.2f) circle (0.5pt);\n", 
-			x, y);
+   * point the text string is being aligned to.
+  */
+  if( DEBUG == TRUE )
+    printOutput(tikzInfo, 
+      "\n\\draw[color=red, fill=red] (%6.2f,%6.2f) circle (0.5pt);\n", 
+      x, y);
 
 }
 
 
 static void TikZ_Line( double x1, double y1,
-		double x2, double y2, const pGEcontext plotParams, pDevDesc deviceInfo){
+    double x2, double y2, const pGEcontext plotParams, pDevDesc deviceInfo){
 
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo,
-			"%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
-			x1,y1,x2,y2);
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
+      x1,y1,x2,y2);
 
-	/*Define the colors for fill and border*/
-	StyleDef(TRUE, plotParams, deviceInfo);
+  /*Define the colors for fill and border*/
+  StyleDef(TRUE, plotParams, deviceInfo);
 
-	/* Start drawing a line, open an options bracket. */
-	printOutput(tikzInfo,"\n\\draw[");
-	
-	/*Define the draw styles*/
-	StyleDef(FALSE, plotParams, deviceInfo);
+  /* Start drawing a line, open an options bracket. */
+  printOutput(tikzInfo,"\n\\draw[");
+  
+  /*Define the draw styles*/
+  StyleDef(FALSE, plotParams, deviceInfo);
 
-	/* More options would go here such as line thickness, style, color etc. */
-	
-	/* End options, print coordinates. */
-	printOutput(tikzInfo, "] (%6.2f,%6.2f) -- (%6.2f,%6.2f);\n",
-		x1,y1,x2,y2);
+  /* More options would go here such as line thickness, style, color etc. */
+  
+  /* End options, print coordinates. */
+  printOutput(tikzInfo, "] (%6.2f,%6.2f) -- (%6.2f,%6.2f);\n",
+    x1,y1,x2,y2);
 
 }
 
 static void TikZ_Circle( double x, double y, double r,
-		const pGEcontext plotParams, pDevDesc deviceInfo){
+    const pGEcontext plotParams, pDevDesc deviceInfo){
 
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo,
-			"%% Drawing Circle at x = %f, y = %f, r = %f\n",
-			x,y,r);
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% Drawing Circle at x = %f, y = %f, r = %f\n",
+      x,y,r);
 
-	/*Define the colors for fill and border*/
-	StyleDef(TRUE, plotParams, deviceInfo);
+  /*Define the colors for fill and border*/
+  StyleDef(TRUE, plotParams, deviceInfo);
 
-	/* Start drawing, open an options bracket. */
-	printOutput(tikzInfo,"\n\\draw[");
+  /* Start drawing, open an options bracket. */
+  printOutput(tikzInfo,"\n\\draw[");
 
-	/* 
-	 * More options would go here such as line thickness, style, line 
-	 * and fill color etc. 
-	*/ 
-	
-	/*Define the draw styles*/
-	StyleDef(FALSE, plotParams, deviceInfo);
+  /* 
+   * More options would go here such as line thickness, style, line 
+   * and fill color etc. 
+  */ 
+  
+  /*Define the draw styles*/
+  StyleDef(FALSE, plotParams, deviceInfo);
 
-	
-	/* End options, print coordinates. */
-	printOutput(tikzInfo, "] (%6.2f,%6.2f) circle (%6.2f);\n",
-		x,y,r);
+  
+  /* End options, print coordinates. */
+  printOutput(tikzInfo, "] (%6.2f,%6.2f) circle (%6.2f);\n",
+    x,y,r);
 }
 
 static void TikZ_Rectangle( double x0, double y0,
-		double x1, double y1, const pGEcontext plotParams, pDevDesc deviceInfo){
+    double x1, double y1, const pGEcontext plotParams, pDevDesc deviceInfo){
 
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo,
-			"%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f\n",
-			x0,y0,x1,y1);
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f\n",
+      x0,y0,x1,y1);
 
-	/*Define the colors for fill and border*/
-	StyleDef(TRUE, plotParams, deviceInfo);
+  /*Define the colors for fill and border*/
+  StyleDef(TRUE, plotParams, deviceInfo);
 
-	/* Start drawing, open an options bracket. */
-	printOutput(tikzInfo,"\n\\draw[");
+  /* Start drawing, open an options bracket. */
+  printOutput(tikzInfo,"\n\\draw[");
 
-	/*Define the draw styles*/
-	StyleDef(FALSE, plotParams, deviceInfo);
+  /*Define the draw styles*/
+  StyleDef(FALSE, plotParams, deviceInfo);
 
-	/* 
-	 * More options would go here such as line thickness, style, line 
-	 * and fill color etc. 
-	*/
-	
-	/* End options, print coordinates. */
-	printOutput(tikzInfo, 
-		"] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-		x0,y0,x1,y1);
+  /* 
+   * More options would go here such as line thickness, style, line 
+   * and fill color etc. 
+  */
+  
+  /* End options, print coordinates. */
+  printOutput(tikzInfo, 
+    "] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+    x0,y0,x1,y1);
 
 }
 
 static void TikZ_Polyline( int n, double *x, double *y,
-		pGEcontext plotParams, pDevDesc deviceInfo ){
+    pGEcontext plotParams, pDevDesc deviceInfo ){
 
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo,
-			"%% Starting Polyline\n");
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% Starting Polyline\n");
 
-	/*Define the colors for fill and border*/
-	StyleDef(TRUE, plotParams, deviceInfo);
+  /*Define the colors for fill and border*/
+  StyleDef(TRUE, plotParams, deviceInfo);
 
-	/* Start drawing, open an options bracket. */
-	printOutput(tikzInfo,"\n\\draw[");
+  /* Start drawing, open an options bracket. */
+  printOutput(tikzInfo,"\n\\draw[");
 
-	/* More options would go here such as line thickness, style and color */
-	/*Define the draw styles*/
-	//Setting polyline is a quick hack so that the fill color is not set for poylines
-	tikzInfo->polyLine = TRUE;
-	StyleDef(FALSE, plotParams, deviceInfo);
-	tikzInfo->polyLine = FALSE;
+  /* More options would go here such as line thickness, style and color */
+  /*Define the draw styles*/
+  //Setting polyline is a quick hack so that the fill color is not set for poylines
+  tikzInfo->polyLine = TRUE;
+  StyleDef(FALSE, plotParams, deviceInfo);
+  tikzInfo->polyLine = FALSE;
 
-	/* End options, print first set of coordinates. */
-	printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
-		x[0],y[0]);
-	
-	/* Print coordinates for the middle segments of the line. */
-	int i;
-	for ( i = 1; i < n-1; i++ ){
-		
-		printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n",
-			x[i],y[i]);
+  /* End options, print first set of coordinates. */
+  printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
+    x[0],y[0]);
+  
+  /* Print coordinates for the middle segments of the line. */
+  int i;
+  for ( i = 1; i < n-1; i++ ){
+    
+    printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n",
+      x[i],y[i]);
 
-	}
+  }
 
-	/* Print last set of coordinates. End path. */
-	printOutput(tikzInfo, "\t(%6.2f,%6.2f);\n",
-		x[n-1],y[n-1]);
-		
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo,
-			"%% End Polyline\n");
+  /* Print last set of coordinates. End path. */
+  printOutput(tikzInfo, "\t(%6.2f,%6.2f);\n",
+    x[n-1],y[n-1]);
+    
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% End Polyline\n");
 
 }
 
 static void TikZ_Polygon( int n, double *x, double *y,
-		pGEcontext plotParams, pDevDesc deviceInfo ){
+    pGEcontext plotParams, pDevDesc deviceInfo ){
 
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo,
-			"%% Starting Polygon\n");
-			
-	/*Define the colors for fill and border*/
-	StyleDef(TRUE, plotParams, deviceInfo);
-	
-	/* Start drawing, open an options bracket. */
-	printOutput(tikzInfo,"\n\\draw[");
-	
-	/* 
-	 * More options would go here such as line thickness, style, line 
-	 * and fill color etc. 
-	*/
-	
-	/*Define the draw styles*/
-	StyleDef(FALSE, plotParams, deviceInfo);
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% Starting Polygon\n");
+      
+  /*Define the colors for fill and border*/
+  StyleDef(TRUE, plotParams, deviceInfo);
+  
+  /* Start drawing, open an options bracket. */
+  printOutput(tikzInfo,"\n\\draw[");
+  
+  /* 
+   * More options would go here such as line thickness, style, line 
+   * and fill color etc. 
+  */
+  
+  /*Define the draw styles*/
+  StyleDef(FALSE, plotParams, deviceInfo);
 
-	/* End options, print first set of coordinates. */
-	printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
-		x[0],y[0]);
-	
-	/* Print coordinates for the middle segments of the line. */
-	int i;
-	for ( i = 1; i < n; i++ ){
-		
-		printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n",
-			x[i],y[i]);
+  /* End options, print first set of coordinates. */
+  printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
+    x[0],y[0]);
+  
+  /* Print coordinates for the middle segments of the line. */
+  int i;
+  for ( i = 1; i < n; i++ ){
+    
+    printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n",
+      x[i],y[i]);
 
-	}
+  }
 
-	/* End path by cycling to first set of coordinates. */
-	printOutput(tikzInfo, "\tcycle;\n" );
+  /* End path by cycling to first set of coordinates. */
+  printOutput(tikzInfo, "\tcycle;\n" );
 
-	/*Show only for debugging*/
-	if(tikzInfo->debug == TRUE) 
-		printOutput(tikzInfo,
-			"%% End Polyline\n");
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% End Polyline\n");
 
 }
+
+
+#if R_GE_version >= 8
+/* Currently a non-functional stub. */
+static void
+TikZ_Path( double *x, double *y,
+  int npoly, int *nper,
+  Rboolean winding,
+  const pGEcontext plotParams, pDevDesc deviceInfo
+){
+
+  warning( "This version of the TikZ graphics device does not support polypath rendering" );
+
+}
+#endif
+
 
 /* This function either prints out the color definitions for outline and fill 
  * colors or the style tags in the \draw[] command, the defineColor parameter 
@@ -1268,279 +1294,279 @@ static void TikZ_Polygon( int n, double *x, double *y,
  * because there are no color definitions outside of the draw command. 
 */
 static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
-						pDevDesc deviceInfo){
-	
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-	
-	/*From devPS.c, PS_Circle()*/
-	int code;
-	/* code is set as follows */
-	/* code == 0, nothing to draw */
-	/* code == 1, outline only */
-	/* code == 2, fill only */
-	/* code == 3, outline and fill */
+            pDevDesc deviceInfo){
+  
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  
+  /*From devPS.c, PS_Circle()*/
+  int code;
+  /* code is set as follows */
+  /* code == 0, nothing to draw */
+  /* code == 1, outline only */
+  /* code == 2, fill only */
+  /* code == 3, outline and fill */
 
-	code = 3 - 2 * (R_TRANSPARENT(plotParams->fill)) - 
-					(R_TRANSPARENT(plotParams->col));
+  code = 3 - 2 * (R_TRANSPARENT(plotParams->fill)) - 
+          (R_TRANSPARENT(plotParams->col));
 
-	if (code) {
-		if(code & 1) {
-			/* Define outline draw color*/
-			SetColor(plotParams->col, defineColor, tikzInfo);
-			if(defineColor == FALSE){
-				SetLineStyle(plotParams->lty, plotParams->lwd, tikzInfo);
-				SetLineEnd(plotParams->lend, tikzInfo);
-				SetLineJoin(plotParams->ljoin, 
-							plotParams->lmitre, tikzInfo);
-			}
-		}
-		if(code & 2){
-			/* Define fill color*/
-			SetFill(plotParams->fill, defineColor, tikzInfo);
-		}
-	}
-	/*Set Alpha*/
-	if(defineColor == FALSE){
-		/*Set Fill opacity Alpha*/
-		SetAlpha(plotParams->fill, TRUE, tikzInfo);
-		/*Set Draw opacity Alpha*/
-		SetAlpha(plotParams->col, FALSE, tikzInfo);
-	}
-	
+  if (code) {
+    if(code & 1) {
+      /* Define outline draw color*/
+      SetColor(plotParams->col, defineColor, tikzInfo);
+      if(defineColor == FALSE){
+        SetLineStyle(plotParams->lty, plotParams->lwd, tikzInfo);
+        SetLineEnd(plotParams->lend, tikzInfo);
+        SetLineJoin(plotParams->ljoin, 
+              plotParams->lmitre, tikzInfo);
+      }
+    }
+    if(code & 2){
+      /* Define fill color*/
+      SetFill(plotParams->fill, defineColor, tikzInfo);
+    }
+  }
+  /*Set Alpha*/
+  if(defineColor == FALSE){
+    /*Set Fill opacity Alpha*/
+    SetAlpha(plotParams->fill, TRUE, tikzInfo);
+    /*Set Draw opacity Alpha*/
+    SetAlpha(plotParams->col, FALSE, tikzInfo);
+  }
+  
 }
 
 static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo){
-	
-	if(def == TRUE){
-		if(color != tikzInfo->oldFillColor){
-			tikzInfo->oldFillColor = color;
-			printOutput(tikzInfo,
-				"\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
-				R_RED(color)/255.0,
-				R_GREEN(color)/255.0,
-				R_BLUE(color)/255.0);
-		}
-	}else{
-		//Quick hack to not show fill colors with polylines
-		if(tikzInfo->polyLine == FALSE)
-			printOutput(tikzInfo, "fill=fillColor,");
-	}
-	
+  
+  if(def == TRUE){
+    if(color != tikzInfo->oldFillColor){
+      tikzInfo->oldFillColor = color;
+      printOutput(tikzInfo,
+        "\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+        R_RED(color)/255.0,
+        R_GREEN(color)/255.0,
+        R_BLUE(color)/255.0);
+    }
+  }else{
+    //Quick hack to not show fill colors with polylines
+    if(tikzInfo->polyLine == FALSE)
+      printOutput(tikzInfo, "fill=fillColor,");
+  }
+  
 }
 
 
 static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo){
-	
-	if(def == TRUE){
-		if(color != tikzInfo->oldDrawColor){
-			tikzInfo->oldDrawColor = color;
-			printOutput(tikzInfo,
-				"\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
-				R_RED(color)/255.0,
-				R_GREEN(color)/255.0,
-				R_BLUE(color)/255.0);
-		}
-	}else{
-		printOutput(tikzInfo, "color=drawColor,");
-	}
+  
+  if(def == TRUE){
+    if(color != tikzInfo->oldDrawColor){
+      tikzInfo->oldDrawColor = color;
+      printOutput(tikzInfo,
+        "\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+        R_RED(color)/255.0,
+        R_GREEN(color)/255.0,
+        R_BLUE(color)/255.0);
+    }
+  }else{
+    printOutput(tikzInfo, "color=drawColor,");
+  }
 }
 
 static void SetLineStyle(int lty, int lwd, tikzDevDesc *tikzInfo){
-		
-	SetLineWeight(lwd, tikzInfo);
-	
-	if (lty && lwd) {
-	
-		SetDashPattern(lty, tikzInfo);
-	}
+    
+  SetLineWeight(lwd, tikzInfo);
+  
+  if (lty && lwd) {
+  
+    SetDashPattern(lty, tikzInfo);
+  }
 }
 
 static void SetDashPattern(int lty, tikzDevDesc *tikzInfo){
-	char dashlist[8];
-	int i, nlty;
-	
-	/* From ?par
-	 * Line types can either be specified by giving an index into a small 
-	 * built-in table of line types (1 = solid, 2 = dashed, etc, see lty 
-	 * above) or directly as the lengths of on/off stretches of line. This 
-	 * is done with a string of an even number (up to eight) of characters, 
-	 * namely non-zero (hexadecimal) digits which give the lengths in 
-	 * consecutive positions in the string. For example, the string "33" 
-	 * specifies three units on followed by three off and "3313" specifies 
-	 * three units on followed by three off followed by one on and finally 
-	 * three off. The ‘units’ here are (on most devices) proportional to lwd, 
-	 * and with lwd = 1 are in pixels or points or 1/96 inch.
+  char dashlist[8];
+  int i, nlty;
+  
+  /* From ?par
+   * Line types can either be specified by giving an index into a small 
+   * built-in table of line types (1 = solid, 2 = dashed, etc, see lty 
+   * above) or directly as the lengths of on/off stretches of line. This 
+   * is done with a string of an even number (up to eight) of characters, 
+   * namely non-zero (hexadecimal) digits which give the lengths in 
+   * consecutive positions in the string. For example, the string "33" 
+   * specifies three units on followed by three off and "3313" specifies 
+   * three units on followed by three off followed by one on and finally 
+   * three off. The ‘units’ here are (on most devices) proportional to lwd, 
+   * and with lwd = 1 are in pixels or points or 1/96 inch.
 
-	 * The five standard dash-dot line types (lty = 2:6) correspond to 
-	 * c("44", "13", "1343", "73", "2262").
-	 * 
-	 * (0=blank, 1=solid (default), 2=dashed, 
-	 *	3=dotted, 4=dotdash, 5=longdash, 6=twodash) 
-	*/
-	
-	/*Retrieve the line type pattern*/
-	for(i = 0; i < 8 && lty & 15 ; i++) {
-		dashlist[i] = lty & 15;
-		lty = lty >> 4;
-	}
-	nlty = i; i = 0; 
-	
-	printOutput(tikzInfo, "dash pattern=");
-	
-	/*Set the dash pattern*/
-	while(i < nlty){
-		if( (i % 2) == 0 ){
-			printOutput(tikzInfo, "on %dpt ", dashlist[i]);
-		}else{
-			printOutput(tikzInfo, "off %dpt ", dashlist[i]);
-		}
-		i++;
-	}
-	printOutput(tikzInfo, ",");
+   * The five standard dash-dot line types (lty = 2:6) correspond to 
+   * c("44", "13", "1343", "73", "2262").
+   * 
+   * (0=blank, 1=solid (default), 2=dashed, 
+   *  3=dotted, 4=dotdash, 5=longdash, 6=twodash) 
+  */
+  
+  /*Retrieve the line type pattern*/
+  for(i = 0; i < 8 && lty & 15 ; i++) {
+    dashlist[i] = lty & 15;
+    lty = lty >> 4;
+  }
+  nlty = i; i = 0; 
+  
+  printOutput(tikzInfo, "dash pattern=");
+  
+  /*Set the dash pattern*/
+  while(i < nlty){
+    if( (i % 2) == 0 ){
+      printOutput(tikzInfo, "on %dpt ", dashlist[i]);
+    }else{
+      printOutput(tikzInfo, "off %dpt ", dashlist[i]);
+    }
+    i++;
+  }
+  printOutput(tikzInfo, ",");
 }
 
 static void SetLineWeight(int lwd, tikzDevDesc *tikzInfo){
-	
-	/*Set the line width, 0.4pt is the TikZ default so scale lwd=1 to that*/
-	if(lwd != 1)
-		printOutput(tikzInfo,"line width=%4.1fpt,",0.4*lwd);
+  
+  /*Set the line width, 0.4pt is the TikZ default so scale lwd=1 to that*/
+  if(lwd != 1)
+    printOutput(tikzInfo,"line width=%4.1fpt,",0.4*lwd);
 }
 
 static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo){
-	
-	/* If the parameter fill == TRUE then set the fill opacity otherwise set 
-	 * the outline opacity
-	*/
-	
-	unsigned int alpha = R_ALPHA(color);
-	
-	/*draw opacity and fill opacity separately here*/
-	if(!R_OPAQUE(color)){
-		if(fill == TRUE)
-			printOutput(tikzInfo,"fill opacity=%4.2f,",alpha/255.0);
-		else
-			printOutput(tikzInfo,"draw opacity=%4.2f,",alpha/255.0);
-	}
-	
+  
+  /* If the parameter fill == TRUE then set the fill opacity otherwise set 
+   * the outline opacity
+  */
+  
+  unsigned int alpha = R_ALPHA(color);
+  
+  /*draw opacity and fill opacity separately here*/
+  if(!R_OPAQUE(color)){
+    if(fill == TRUE)
+      printOutput(tikzInfo,"fill opacity=%4.2f,",alpha/255.0);
+    else
+      printOutput(tikzInfo,"draw opacity=%4.2f,",alpha/255.0);
+  }
+  
 }
 
 
 static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, 
-						tikzDevDesc *tikzInfo){
-	
-	switch (ljoin) {
-		case GE_ROUND_JOIN:
-			printOutput(tikzInfo, "line join=round,");
-			break;
-		case GE_MITRE_JOIN:
-			/*Default if nothing is specified*/
-			SetMitreLimit(lmitre, tikzInfo);
-			break;
-		case GE_BEVEL_JOIN:
-			printOutput(tikzInfo, "line join=bevel,");
-	}
+            tikzDevDesc *tikzInfo){
+  
+  switch (ljoin) {
+    case GE_ROUND_JOIN:
+      printOutput(tikzInfo, "line join=round,");
+      break;
+    case GE_MITRE_JOIN:
+      /*Default if nothing is specified*/
+      SetMitreLimit(lmitre, tikzInfo);
+      break;
+    case GE_BEVEL_JOIN:
+      printOutput(tikzInfo, "line join=bevel,");
+  }
 }
 
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo){
-	
-	if(lmitre != 10)
-		printOutput(tikzInfo, "mitre limit=%4.2f,",lmitre);
-	
+  
+  if(lmitre != 10)
+    printOutput(tikzInfo, "mitre limit=%4.2f,",lmitre);
+  
 }
 
 static void SetLineEnd(R_GE_linejoin lend, tikzDevDesc *tikzInfo){
-	
-	
-	switch (lend) {
-		case GE_ROUND_CAP:
-			printOutput(tikzInfo, "line cap=round,");
-			break;
-		case GE_BUTT_CAP:
-			/*Default if nothing is specified*/
-			break;
-		case GE_SQUARE_CAP:
-			printOutput(tikzInfo, "line cap=rect,");
-	}
+  
+  
+  switch (lend) {
+    case GE_ROUND_CAP:
+      printOutput(tikzInfo, "line cap=round,");
+      break;
+    case GE_BUTT_CAP:
+      /*Default if nothing is specified*/
+      break;
+    case GE_SQUARE_CAP:
+      printOutput(tikzInfo, "line cap=rect,");
+  }
 }
 
 void tikzAnnotate(const char **annotation, int *size){
-	
-	//1. Get values of tikzInfo and deviceInfo
-	//2. Print out annotation 
-	pDevDesc deviceInfo = GEcurrentDevice()->dev;
-	
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-		
-	int i = 0;
-		
-	if(tikzInfo->debug == TRUE)
-		printOutput(tikzInfo,"\n%% Annotating Graphic\n");
-	
-	for(i == 0; i < size[0]; ++i)
-		printOutput(tikzInfo, "%s\n", annotation[i] );
+  
+  //1. Get values of tikzInfo and deviceInfo
+  //2. Print out annotation 
+  pDevDesc deviceInfo = GEcurrentDevice()->dev;
+  
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+    
+  int i = 0;
+    
+  if(tikzInfo->debug == TRUE)
+    printOutput(tikzInfo,"\n%% Annotating Graphic\n");
+  
+  for(i == 0; i < size[0]; ++i)
+    printOutput(tikzInfo, "%s\n", annotation[i] );
 }
 
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
-	
-	va_list(ap);
-	va_start(ap, format);
-	
-	if(tikzInfo->console == TRUE)
-		Rvprintf(format, ap);
-	else
-		vfprintf(tikzInfo->outputFile, format, ap);
-	
-	va_end(ap);
-	
+  
+  va_list(ap);
+  va_start(ap, format);
+  
+  if(tikzInfo->console == TRUE)
+    Rvprintf(format, ap);
+  else
+    vfprintf(tikzInfo->outputFile, format, ap);
+  
+  va_end(ap);
+  
 }
 
 static char *Sanitize(const char *str){
 
-	
-	//Splice in escaped charaters via a callback to R
-	
-	//Call out to R to retrieve the sanitizeTexString function.
-	SEXP sanitizeFun = findFun( install("sanitizeTexString"), R_GlobalEnv );
+  
+  //Splice in escaped charaters via a callback to R
+  
+  //Call out to R to retrieve the sanitizeTexString function.
+  SEXP sanitizeFun = findFun( install("sanitizeTexString"), R_GlobalEnv );
 
-	/*
-	 * Create a SEXP that will be the R function call. The SEXP will
-	 * have four components- the R function being calledand the string 
-	 * being passed. Therefore it is allocated as a	 LANGSXP
-	 * vector of length 2. This is done inside a PROTECT() function
-	 * to keep the R garbage collector from saying "Hmmm... what's
-	 * this? Looks like noone is using it so I guess I will nuke it."
+  /*
+   * Create a SEXP that will be the R function call. The SEXP will
+   * have four components- the R function being calledand the string 
+   * being passed. Therefore it is allocated as a  LANGSXP
+   * vector of length 2. This is done inside a PROTECT() function
+   * to keep the R garbage collector from saying "Hmmm... what's
+   * this? Looks like noone is using it so I guess I will nuke it."
   */
-	SEXP RCallBack;
-	PROTECT( RCallBack = allocVector(LANGSXP,2) );
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP,2) );
 
-	// Place the function into the first slot of the SEXP.
-	SETCAR( RCallBack, sanitizeFun );
-	
-	// Place the string into the second slot of the SEXP.
-	SETCADR( RCallBack, mkString( str ) );
-	// Tag the string with a name, this name coressponds to the
-	// dummy argument of the R function sanitizeTexString.
-	SET_TAG( CDR( RCallBack ), install("string") );
+  // Place the function into the first slot of the SEXP.
+  SETCAR( RCallBack, sanitizeFun );
+  
+  // Place the string into the second slot of the SEXP.
+  SETCADR( RCallBack, mkString( str ) );
+  // Tag the string with a name, this name coressponds to the
+  // dummy argument of the R function sanitizeTexString.
+  SET_TAG( CDR( RCallBack ), install("string") );
 
-	/*
-	 * Call the R function, capture the result.
-	*/
-	SEXP RSanitizedString;
-	PROTECT( RSanitizedString = eval( RCallBack, R_GlobalEnv ) );
+  /*
+   * Call the R function, capture the result.
+  */
+  SEXP RSanitizedString;
+  PROTECT( RSanitizedString = eval( RCallBack, R_GlobalEnv ) );
 
-	const char *cleanString = CHAR(asChar(RSanitizedString));
+  const char *cleanString = CHAR(asChar(RSanitizedString));
 
-	// Since we called PROTECT twice, we must call UNPROTECT
-	// and pass the number 2.
-	UNPROTECT(2);
-	
-	//This is really stupid but create a copy of cleanString to 
-	// avoid warning: "discards qualifiers from pointer target type"
-	char *cleanStringCP = (char *) calloc( strlen(cleanString), sizeof(char) );
-	
-	return cleanStringCP;
+  // Since we called PROTECT twice, we must call UNPROTECT
+  // and pass the number 2.
+  UNPROTECT(2);
+  
+  //This is really stupid but create a copy of cleanString to 
+  // avoid warning: "discards qualifiers from pointer target type"
+  char *cleanStringCP = (char *) calloc( strlen(cleanString), sizeof(char) );
+  
+  return cleanStringCP;
 }
 
 
@@ -1569,7 +1595,7 @@ static void TikZ_Raster(
   const pGEcontext plotParams, pDevDesc deviceInfo
 ){
 
-  error("The tikzDevice does not currently support including raster images in graphics output.");
+  warning( "The tikzDevice does not currently support including raster images in graphics output." );
 
 }
 
@@ -1585,9 +1611,10 @@ static void TikZ_Raster(
  * Argument for implementation: could be useful for "previewing" the 
  * current* state of the tikzDevice output.
 */
-static void TikZ_Cap( pDevDesc deviceInfo ){
+static SEXP TikZ_Cap( pDevDesc deviceInfo ){
 
-  error("The tikzDevice does not currently support capturing device output to a raster image.");
+  warning( "The tikzDevice does not currently support capturing device output to a raster image." );
+  return R_NilValue;
 
 }
 

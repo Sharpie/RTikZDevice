@@ -106,7 +106,7 @@
 	{\large\url{http://r-forge.r-project.org/projects/tikzdevice}}
 }
 \author{Charlie Sharpsteen and Cameron Bracken}
-\date{Version \tikzDeviceVersion\qquad February, 2010}
+\date{Version \Sexpr{tikzDevice:::getTikzDeviceVersion()}\qquad August, 2010}
 
 
 \begin{document}
@@ -240,20 +240,30 @@
 % A friendly reminder that this package is currently unstable.
 \tikzDocDisclaim{Caveat Utilitor}
 {
-This is a friendly reminder that the \pkg{tikzDevice} package is currently considered by it's designers to be a {\bfseries beta work}. This package has been released in the hopes that it will help users produce exceptional graphics, leading to an increase in the quality of reports and other materials using those graphics.  It has been used for over 6 months by the authors in order to produce figures for academic reports and has proven to be reasonably stable.\\[1em]
+This is a friendly reminder that the \pkg{tikzDevice} package is currently considered by its designers to be a {\bfseries beta work}. The package will remain in Beta until the 1.0 release to allow the authors to consider design decisions underlying the package.  {\bfseries This means the authors are currently reserving the right to alter the package interface in ways that may break existing code that uses the package.}  Two open issues that may necessitate such a change are:
 
-The package will remain in Beta for some period of time to allow the authors to consider design decisions underlying the package.  {\bfseries This means the authors are currently reserving the right to alter the package interface in ways that may break existing code that uses the package.}  The stability of the package interface is a priority to us but currently we are allowing other concerns to outrank it.  When we commit to maintaining a given package structure, the beta flag will be removed and consistency of interface will become a top priority. \\[1em]
+\vskip\baselineskip
 
-During the beta period the actual implementation of the package may differ significantly from what is described in this documentation.\\[1em]
+\begin{itemize}
 
-Thanks for giving it a try!\\
+  \item{Handling of characters encoded using UTF8}
+  
+  \item{Compatibility with multiple \TeX\ dialects such as Con\TeX t or plain \TeX .}
+
+\end{itemize}
+  
+\vskip\baselineskip
+
+The stability of the package interface is a priority to us but currently we are allowing other concerns to outrank it.  When we commit to maintaining a given package structure, the beta flag will be removed and consistency of interface will become a top priority. \\[1em]
+
+Thanks for giving our package a try!\\
 \quad{\itshape --The tikzDevice Team}
 }
 
 
 \section{Introduction}
 
-The \pkg{tikzDevice} package allows for R graphics output in a native \LaTeX{} format. That is, the \code{tikz()} function produces plain-text files that can be interpreted using \TikZ, a package for \LaTeX. These files can be directly included in \LaTeX{} documents by way of the \verb'\input{}' statement. Allowing \LaTeX{} to handle both typesetting and figure composition bestows the resulting document with a clean, unified look as there are no discontinuities in the size and selection of fonts used in the output.
+The \pkg{tikzDevice} package allows for R graphics output in a native \LaTeX{} format. That is, the \code{tikz()} function produces plain-text files that can be interpreted using \TikZ, a package for \LaTeX. These files can be directly included in \LaTeX{} documents by way of the \verb'\input{}' statement. Allowing \LaTeX{} to handle both typesetting and figure composition bestows the resulting document with a clean, unified look as there are no discontinuities in the size and selection of fonts used in the text and those used in the figures.
 
 This document is divided into three parts. The first part describes the functions that the package makes available to the \lang{R} user and provides examples of their capabilities. Besides the \lang{R} environment, use of the \TikZ{} device device requires the user to have a working \LaTeX{} compiler along with an installed version of the \TikZ{} package-- version 2.00 or greater. The second part of this documentation offers suggestions on how to get these tools working properly.
 
@@ -265,7 +275,7 @@ This package would not have been possible without the hard work and ingenuity of
 
 First off, we would like to thank the R Core Team for creating such a wonderful, open and flexible programming environment. Compared to other languages we have used, creating packages and extensions for \lang{R} has always been a liberating experience.
 
-This package started as a fork of the Pic\TeX{} driver, created by Valerio Aimale. Without access to such a concise, compact example of implementing a \lang{R} driver we likely would have abandoned the project in it's infancy. We would also like to thank Paul Murrel for all of his work on the \lang{R} graphics system and especially for his research and documentation concerning the differences between the font systems used by \TeX{} and \lang{R}.
+This package started as a fork of the Pic\TeX{} device, created by Valerio Aimale. Without access to such a concise, compact example of implementing a \lang{R} graphics device we likely would have abandoned the project in it's infancy. We would also like to thank Paul Murrel for all of his work on the \lang{R} graphics system and especially for his research and documentation concerning the differences between the font systems used by \TeX{} and \lang{R}.
 
 This package also owes it's existence to Friedrich Leisch's work on the \code{Sweave} system and Roger D. Peng's \code{cacheSweave} extension. These two tools got us interested in the concept of Literate Programming and development of this package was driven by our desire to achieve a more seamless union between our reports and our code.
 
@@ -380,7 +390,7 @@ options( tikzDocumentDeclaration = "\\documentclass{article}" )
 options( tikzFooter = c( "\\end{document}" ) )
 \end{tikzCodeBlock} 
 
-\item[\code{tikzLatexPackages}]{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metric are calculated. }
+\item[\code{tikzLatexPackages}]{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metrics are calculated.  If you use additional packages that affect fonts, such as mathpazo which provides a Palatino-style font, these packages should be added to this list.}
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
 options( tikzLatexPackages = c(
   "\\usepackage{tikz}",
@@ -389,6 +399,14 @@ options( tikzLatexPackages = c(
   "\\setlength\\PreviewBorder{0pt}")
 )
 \end{tikzCodeBlock}
+
+\begin{tikzCodeBlock}[title={Adding a package that affects fonts},listing style=sweavechunk]
+options( tikzLatexPackages = c(
+  getOption( "tikzLatexPackages" ),
+  "\\usepackage{mathpazo}"
+))
+\end{tikzCodeBlock} 
+
 
 \item[\code{tikzMetricPackages}]{ A character vector. These are the extra packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of \LaTeX{} and \lang{R} match up.}
 
@@ -420,7 +438,7 @@ For convenience the function \code{setTikzDefaults()} is provided which sets all
 The proper placement of a \code{.Rprofile} file is explained in \code{?Startup}. For the details of why calling the \LaTeX{} compiler is necessary, see \autoref{part:three}.
 
 \tikzDocDisclaim{A Word of Caution About Setting Options.}
-{A lot of power is given to you through these global options, and with great power comes great responsibility.  For example, if you do not include the \TikZ{} package in the \code{tikzLatexPackages} option then all of the string metric calculations will fail. Or if you use a different font when compiling than you used for calculating metrics, strings may be placed incorrectly.  There are innumerable ways for packages to clash in \LaTeX{} so just be aware. 
+{A lot of power is given to you through these global options, and with great power comes great responsibility.  For example, if you do not include the \TikZ{} package in the \code{tikzLatexPackages} option then all of the string metric calculations will fail. Or if you use a different font when compiling than you used for calculating metrics, strings may be placed incorrectly.  There are innumerable ways for packages to clash in \LaTeX{} so be aware. 
 }
 
 
@@ -438,11 +456,12 @@ The \code{tikz()} function provides most of the functionality of the \pkg{tikzDe
 The \code{tikz()} function opens a new graphics device and may be called with the following arguments:
 
 \begin{Verbatim}[frame=single]
-tikz(file = "Rplots.tex", width = 7, height = 7, 
-    bg="white", fg="black", standAlone = FALSE, bareBones = FALSE, 
-    documentDeclaration = getOption("tikzDocumentDeclaration"),
-    packages = getOption("tikzLatexPackages"),
-    footer = getOption("tikzFooter")))
+tikz(file = "Rplots.tex", width = 7, height = 7,
+  bg="transparent", fg="black", pointsize = 10, standAlone = FALSE, 
+  bareBones = FALSE, console = FALSE, sanitize = FALSE,
+  documentDeclaration = getOption("tikzDocumentDeclaration"),
+  packages = getOption("tikzLatexPackages"),
+  footer = getOption("tikzFooter"))
 \end{Verbatim}
 
 \begin{description}
@@ -451,6 +470,7 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
 \item[\code{height}]{ The height of the output figure, in {\bfseries inches}. }
 \item[\code{bg}]{ The starting background color for the plot. }
 \item[\code{fg}]{ The starting foreground color for the plot. }
+\item[\code{pointsize}]{ Base pointsize used in the LaTeX document.  This option is only referenced if a valid pointsize cannot be extracted from the value of \code{getOption("tikzDocumentDeclaration")}.  See \autoref{subsec:fontCalc} for more details.}
 \item[\code{standAlone}]{ A logical value indicating whether the resulting file should be suitable for direct processing by \LaTeX .}
 \item[\code{bareBones}]{ A logical value indicating whether the resulting \TikZ{} code produced without being placed within a \LaTeX{} \code{tikzpicture} environment.}
 \item[\code{console}]{Should the output of \code{tikz} be directed to the \lang{R} console (default FALSE). This is useful for dumping tikz output directly into a \LaTeX{} document via sink. If \code{TRUE}, the file argument is ignored. Setting \code{file=''} is equivalent to setting \code{console=TRUE}.}
@@ -472,7 +492,35 @@ The first five options should be familiar to anyone who has used the default gra
 
 \end{itemize}
 
-The next section provides examples of how to use each type of output.
+\subsection{Font Size Calculations}
+\label{subsec:fontCalc}
+The overarching goal of the ‘tikzDevice’ is to provide seamless integration between text in R graphics and the text of LaTeX documents that contain those graphics.  In order to achieve this integration the device must translate font sizes specified in R to corresponding font sizes in LaTeX.  The issue is that font sizes in LaTeX are controlled by a ``base font size'' that is specified at the beginning of the document- typically 10pt.  There is no easy way in LaTeX to change the font size to a new numerical value, such as 16pt for a plot title.  Fortunately, the TikZ graphics system allows text to be resized using a scaling factor.  The \code{tikzDevice} calculates a scaling factor used to approximate other font sizes using the following three inputs:
+
+\begin{itemize}
+
+  \item{The ``base font size'' specified when the graphics device is
+          created.}
+
+  \item{The ``character expansion factor'' parameter, specified using the ‘cex’ argument to functions such as described in the documentation of the \lang{R} function \code{par()}.}
+  
+  \item{The ``font size'' parameter, specified using the `ps’ argument to functions such as \code{par()} or the `fontsize’ argument to functions such as \code{gpar()}.}
+
+\end{itemize}
+
+The calculation used is:
+
+\[
+\mbox{Scaling Factor} = \mbox{cex} \cdot \frac{\mbox{ps}}{\mbox{base font size}}
+\]
+
+The tricky bit is the specification of the ``base font size''.  By default the tikzDevice will attempt to determine this parameter by scanning the value of \code{options( "tikzDocumentDeclaration" )} using the regular expression \code{\textbackslash d+[pt]}.  With the default header:
+
+
+\quad\code{\textbackslash documentclass[10pt]{article}}
+
+
+This regular expression will return 10 as the base pointsize to be used by the device.  If the regular expression fails to produce a match, the value of the \code{pointsize} argument to the \code{tikz()} function will be used.
+
 
 \subsection{Examples}
 
@@ -670,7 +718,7 @@ The resulting code may then be used inside a \code{tikzpicture} environment usin
 
 \subsubsection{\code{standAlone} Mode}
 
-When the \code{standAlone} option is passed to \code{tikz()}, the resulting \code{.tex} file will be a complete \LaTeX document designed to be compiled on it's own. This means that in addition to \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` the file will also contain \verb`\begin{document}`, \verb`\end{document}` and a \LaTeX{} preamble. The \code{preview} package is also used in files produced by \code{standAlone} and is used to crop the pages in the resulting document to the bounding boxes of the figures that it contains. Stand-alone output may be produced in the following manner:
+When the \code{standAlone} option is passed to \code{tikz()}, the resulting \code{.tex} file will be a complete \LaTeX document designed to be compiled on its own.  This means that in addition to \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` the file will also contain \verb`\begin{document}`, \verb`\end{document}` and a \LaTeX{} preamble.  The \code{preview} package is also used in files produced by \code{standAlone} and is used to crop the pages in the resulting document to the bounding boxes of the figures that it contains.  Stand-alone output may be produced in the following manner:
 
 <<standAloneExample,echo=T,results=hide,keep.source=T>>=
 require(tikzDevice)
@@ -805,7 +853,7 @@ dev.off()
 
 Compiling the resulting file \code{xelatexEx.tex} like so:
 
-\begin{tikzCodeBlock}[title={Compileing with Xe\LaTeX{}},listing style=bashsource]
+\begin{tikzCodeBlock}[title={Compiling with Xe\LaTeX{}},listing style=bashsource]
 xelatex xelatexEx.tex
 \end{tikzCodeBlock}
 
