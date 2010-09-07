@@ -1,6 +1,6 @@
 ---
 
-### Version 0.5.0 Beta
+### Version 0.5.1 Beta
 
 ---
 
@@ -34,6 +34,8 @@ The following people contributed to this release of the tikzDevice:
 
 
 #### Bug Fixes
+
+- Fixed bug where no string output was shown when sanitize=TRUE
 
 - Removed bad colon in the DESCRIPTION file.
 

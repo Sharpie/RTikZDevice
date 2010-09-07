@@ -1058,6 +1058,8 @@ static void TikZ_Text( double x, double y, const char *str,
   if(tikzInfo->sanitize == TRUE){
     //If using the sanitize option call back to R for the sanitized string
     char *cleanString = Sanitize( tikzString );
+  	if(tikzInfo->debug == TRUE)
+    	printOutput(tikzInfo,"\n%% Sanatized %s to %s\n",tikzString,cleanString);
     printOutput(tikzInfo, "%s%%\n};\n", cleanString);
   }else{
     printOutput(tikzInfo, "%s%%\n};\n", tikzString);
@@ -1558,6 +1560,9 @@ static char *Sanitize(const char *str){
 
   const char *cleanString = CHAR(asChar(RSanitizedString));
 
+  //if(DEBUG)
+  //  printf("Clean String: %s\n",cleanString);
+
   // Since we called PROTECT twice, we must call UNPROTECT
   // and pass the number 2.
   UNPROTECT(2);
@@ -1565,6 +1570,8 @@ static char *Sanitize(const char *str){
   //This is really stupid but create a copy of cleanString to 
   // avoid warning: "discards qualifiers from pointer target type"
   char *cleanStringCP = (char *) calloc( strlen(cleanString), sizeof(char) );
+  
+  strcat(cleanStringCP, cleanString);
   
   return cleanStringCP;
 }
