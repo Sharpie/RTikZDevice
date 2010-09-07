@@ -89,3 +89,4 @@ The following people contributed to this release of the tikzDevice:
 - A stub function has been added so that the `polypath()` function
   introduced in R 2.12.0 won't crash the device.
 
+- Fixed bug where no string output was shown when sanitize=TRUE
