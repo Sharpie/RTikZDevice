@@ -1,6 +1,6 @@
 #!/bin/bash
 if test -z "$1"; then
-  vNum=`git describe`
+  vNum=`git describe master`
 else
   vNum=$1
 fi
