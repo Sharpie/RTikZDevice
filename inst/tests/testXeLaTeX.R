@@ -1,15 +1,28 @@
 #!/usr/bin/env Rscript
+require(getopt)
 require(tikzDevice)
 
-prefix <- 'output'
+#Column 3: Argument mask of the flag. An integer. Possible values: 
+# 0=no argument, 1=required argument, 2=optional argument. 
+optspec <- matrix(c('output-prefix', 'p', 2, "character"),ncol=4,byrow=T)
+
+#parse the command line arguments
+opt <- getopt(optspec)
+
+prefix <- ifelse(!is.null(opt$"output-prefix"),opt$"output-prefix",'.')
+
 this.testfile <- 'testXeLaTeX.tex'
 
 setopts <- function(){
 	options(tikzLatex = 'xelatex')
 	options(tikzDocumentDeclaration = '\\documentclass{article}')
+		# The preview package must be loaded first with the xetex driver option
 	options( tikzLatexPackages = c(
-		"\\usepackage{fontspec}"
-		,"\\usepackage[dvipdfm, colorlinks, breaklinks, pdftitle={The Beauty of LaTeX},pdfauthor={Taraborelli, Dario}]{hyperref}"
+		"\\usepackage[active,tightpage,xetex]{preview}"
+		,"\\PreviewEnvironment{pgfpicture}"
+		,"\\setlength\\PreviewBorder{0pt}"
+		,"\\usepackage{fontspec}"
+		,"\\usepackage[colorlinks, breaklinks, pdftitle={The Beauty of LaTeX},pdfauthor={Taraborelli, Dario}]{hyperref}"
 		,"\\usepackage{tikz}"
 		,"\\usepackage{color}"
 		,"\\definecolor{Gray}{rgb}{.7,.7,.7}"
@@ -34,7 +47,7 @@ setopts <- function(){
 		,"\\newcommand{\\old}[1]{"
 		,"\\fontspec[Ligatures={Common, Rare},Variant=1,Swashes={LineInitial, LineFinal}]{Zapfino}"
 		,"\\fontsize{25pt}{30pt}\\selectfont #1}%"
-		,"\\newcommand{\\smallprint}[1]{\\fontspec{Hoefler Text}\\fontsize{10pt}{13pt}\\color{Gray}\\selectfont #1}%"
+		,"\\newcommand{\\smallprint}[1]{\\fontspec{Hoefler Text}\\fontsize{10pt}{13pt}\\color{Gray}\\selectfont #1}%\n"
 		))
 	
 }

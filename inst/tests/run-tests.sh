@@ -13,6 +13,7 @@ R CMD INSTALL tikzDevice_*.tar.gz
 
 # Run the test suite
 Rscript testRTikZDevice.R --output-prefix=$OUTDIR
+Rscript testXeLaTeX.R --output-prefix=$OUTDIR
 
 echo
 echo --------------------------------------------

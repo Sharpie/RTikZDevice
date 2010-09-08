@@ -428,6 +428,13 @@ static Rboolean TikZ_Setup(
   deviceInfo->rect = TikZ_Rectangle;
   deviceInfo->polyline = TikZ_Polyline;
   deviceInfo->polygon = TikZ_Polygon;
+  /*
+   * The following function was added in R 2.12.0, Graphics Engine
+   * version 8. See tikzDevice.h for more details.
+  */
+#if R_GE_version >= 8
+  deviceInfo->path = TikZ_Path;
+#endif
 
   /*
    * The following functions were added in R 2.11.0, Graphics Engine
@@ -1051,6 +1058,8 @@ static void TikZ_Text( double x, double y, const char *str,
   if(tikzInfo->sanitize == TRUE){
     //If using the sanitize option call back to R for the sanitized string
     char *cleanString = Sanitize( tikzString );
+  	if(tikzInfo->debug == TRUE)
+    	printOutput(tikzInfo,"\n%% Sanatized %s to %s\n",tikzString,cleanString);
     printOutput(tikzInfo, "%s%%\n};\n", cleanString);
   }else{
     printOutput(tikzInfo, "%s%%\n};\n", tikzString);
@@ -1263,6 +1272,22 @@ static void TikZ_Polygon( int n, double *x, double *y,
       "%% End Polyline\n");
 
 }
+
+
+#if R_GE_version >= 8
+/* Currently a non-functional stub. */
+static void
+TikZ_Path( double *x, double *y,
+  int npoly, int *nper,
+  Rboolean winding,
+  const pGEcontext plotParams, pDevDesc deviceInfo
+){
+
+  warning( "This version of the TikZ graphics device does not support polypath rendering" );
+
+}
+#endif
+
 
 /* This function either prints out the color definitions for outline and fill 
  * colors or the style tags in the \draw[] command, the defineColor parameter 
@@ -1535,6 +1560,9 @@ static char *Sanitize(const char *str){
 
   const char *cleanString = CHAR(asChar(RSanitizedString));
 
+  //if(DEBUG)
+  //  printf("Clean String: %s\n",cleanString);
+
   // Since we called PROTECT twice, we must call UNPROTECT
   // and pass the number 2.
   UNPROTECT(2);
@@ -1542,6 +1570,8 @@ static char *Sanitize(const char *str){
   //This is really stupid but create a copy of cleanString to 
   // avoid warning: "discards qualifiers from pointer target type"
   char *cleanStringCP = (char *) calloc( strlen(cleanString), sizeof(char) );
+  
+  strcat(cleanStringCP, cleanString);
   
   return cleanStringCP;
 }
@@ -1572,7 +1602,7 @@ static void TikZ_Raster(
   const pGEcontext plotParams, pDevDesc deviceInfo
 ){
 
-  error("The tikzDevice does not currently support including raster images in graphics output.");
+  warning( "The tikzDevice does not currently support including raster images in graphics output." );
 
 }
 
@@ -1590,7 +1620,8 @@ static void TikZ_Raster(
 */
 static SEXP TikZ_Cap( pDevDesc deviceInfo ){
 
-  error("The tikzDevice does not currently support capturing device output to a raster image.");
+  warning( "The tikzDevice does not currently support capturing device output to a raster image." );
+  return R_NilValue;
 
 }
 

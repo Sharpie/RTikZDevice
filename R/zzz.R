@@ -17,8 +17,8 @@ function(libname, pkgname) {
 
   versionInfo <- read.dcf(file.path( libname, pkgname, "DESCRIPTION"))
 
-  versionInfo <- gettextf("%s: %s (v%s)", versionInfo[, "Package"], versionInfo[, "Title"],
-    as.character(versionInfo[, "Version"]))
+  versionInfo <- gettextf( "%s: %s (v%s)", versionInfo[, "Package"], versionInfo[, "Title"],
+    getTikzDeviceVersion() )
 
   versionInfo <- c( paste(strwrap(versionInfo),collapse='\n'), "Checking for a LaTeX compiler...\n")
 
@@ -32,7 +32,8 @@ function(libname, pkgname) {
     Sys.setenv("PATH" = Sys.getenv("PATH"))
     latexPath <<- Sys.which( paste( pathToTeX ) )
 
-    if( latexPath[1] != "" ){
+    # Check to see if the path leads to an executible
+    if( file.access(latexPath[1], 1) == 0 ){
       options( tikzLatex=latexPath )
       options( tikzLatexDefault=latexPath )
       foundLatex <<- TRUE

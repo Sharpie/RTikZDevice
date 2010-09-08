@@ -3,10 +3,6 @@
 library(tikzDevice)
 library(getopt)
 
-#Run separate XeLaTeX test (currently broken)
-#source('testXeLaTeX.R')
-setTikzDefaults()
-
 #Column 3: Argument mask of the flag. An integer. Possible values: 
 # 0=no argument, 1=required argument, 2=optional argument. 
 optspec <- matrix(c('output-prefix', 'p', 2, "character"),ncol=4,byrow=T)
