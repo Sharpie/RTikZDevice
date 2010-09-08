@@ -32,7 +32,8 @@ function(libname, pkgname) {
     Sys.setenv("PATH" = Sys.getenv("PATH"))
     latexPath <<- Sys.which( paste( pathToTeX ) )
 
-    if( latexPath[1] != "" ){
+    # Check to see if the path leads to an executible
+    if( file.access(latexPath[1], 1) == 0 ){
       options( tikzLatex=latexPath )
       options( tikzLatexDefault=latexPath )
       foundLatex <<- TRUE
