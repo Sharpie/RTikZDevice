@@ -22,6 +22,9 @@ function (file = "Rplots.tex", width = 7, height = 7,
     baseSize <- pointsize
 
   }
+  
+  if(!file.exists(dirname(file)))
+    stop(paste("Cannot create",file,"because the path does not exist! If you are trying to save a plot to a location other than the working directory, check to make sure that directory exists."))
 
 
   # Collapse the character vectors into a single string 
