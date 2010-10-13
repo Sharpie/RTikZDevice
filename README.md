@@ -17,10 +17,11 @@ The tikzDevice supports three main modes of output:
 
   - Stand alone figures: Complete LaTeX documents containing figure
     code that can be compiled into stand-alone images.  Pages are
-    cropped to the size of the figure using the preview package.
+    cropped to the size of the figure using the LaTeX preview package.
 
   - Console output: TikZ code is returned directly to the R console
     as a character vector for further manipulation.
+
 
 ## Beta Notice
 
@@ -33,13 +34,16 @@ is that there are several open design issues- two of which are:
 
   - Supporting TeX variants other than LaTeX.
 
-Resolving these issues may require changes to the tikzDevice that
-break backwards compatibility with previous versions.  The beta flag
-is a reminder that such changes may occur- although we will strive to
-avoid them if possible.
+Resolving these issues may require changes to the tikzDevice that break
+backwards compatibility with previous versions.  The beta flag is a reminder
+that such changes may occur- although we will strive to avoid them if possible.
 
-The beta flag will be removed upon release of version 1.0. At this
-time maintaining backwards compatibility will become a primary concern.
+The beta flag will be removed upon release of version 1.0. At this time the
+tikzDevice will switch to [semantic versioning][1] and changes that
+break backwards compatibility will happen rarely and will incur a major release.
+
+  [1]: http://www.semver.org
+
 
 ## Obtaining the Package
 
@@ -69,24 +73,35 @@ may be made by opening issues at the primary repository:
 Adventurous users are encouraged to fork the repository and contribute
 to the development of the device!
 
+
 ## Latest Changes
 *See the CHANGELOG for changes that occurred in previous releases*
 
 ---
 
 ### Version: 0.5.1
-**(Unstable- under active development)**
 
 ---
-
-#### Contributors
-The following people contributed to this release of the tikzDevice:
-
-#### New Features
 
 #### Bug Fixes
 
 - A stub function has been added so that the `polypath()` function
   introduced in R 2.12.0 won't crash the device.
 
-- Fixed bug where no string output was shown when sanitize=TRUE
+- Fixed bug where no string output was shown when the sanitize=TRUE option was
+  used.
+
+- The path to a LaTeX compiler returned by `Sys.which()` is now checked by
+  `file.access()` to check that it is actually an executable and not an error
+  message.  This fixes issues arising from `Sys.which()` on Solaris.
+
+- On UNIX platforms, `/usr/texbin/pdflatex` is added to the end of the list of
+  places to search for a LaTeX compiler.  This should help people using R.app on
+  OS X find a LaTeX compiler without having to manually specify it.
+
+- `tikz()` produces a better error message when it cannot open a file for output.
+
+- In the event that LaTeX crashes during a metric calculation, the LaTeX log
+  output is echoed using `message()` instead of `cat()`.  This makes it show up
+  during operations that supperss `cat()` output such as `R CMD build` and 
+  `R CMD Sweave`. 

@@ -254,8 +254,8 @@ function( TeXMetrics ){
 	width <- gsub('[=A-Za-z]','',match)
 
 	if( length(width) == 0 ){
-		cat(readLines(texFile),sep='\n')
-		cat(readLines(texLog),sep='\n')
+		message(paste(readLines(texFile),collapse='\n'))
+		message(paste(readLines(texLog),collapse='\n'))
 		stop('******** There was a problem calculating string metrics, 
   ******** likely there was a problem with your custom packages.
   ******** See the LaTeX log file above for details.')
