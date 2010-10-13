@@ -1,5 +1,35 @@
 ---
 
+### Version: 0.5.1
+
+---
+
+#### Bug Fixes
+
+- A stub function has been added so that the `polypath()` function
+  introduced in R 2.12.0 won't crash the device.
+
+- Fixed bug where no string output was shown when the sanitize=TRUE option was
+  used.
+
+- The path to a LaTeX compiler returned by `Sys.which()` is now checked by
+  `file.access()` to check that it is actually an executable and not an error
+  message.  This fixes issues arising from `Sys.which()` on Solaris.
+
+- On UNIX platforms, `/usr/texbin/pdflatex` is added to the end of the list of
+  places to search for a LaTeX compiler.  This should help people using R.app on
+  OS X find a LaTeX compiler without having to manually specify it.
+
+- `tikz()` produces a better error message when it cannot open a file for output.
+
+- In the event that LaTeX crashes during a metric calculation, the LaTeX log
+  output is echoed using `message()` instead of `cat()`.  This makes it show up
+  during operations that supperss `cat()` output such as `R CMD build` and 
+  `R CMD Sweave`. 
+
+
+---
+
 ### Version 0.5.0 Beta
 
 ---
@@ -55,7 +85,7 @@ The following people contributed to this release of the tikzDevice:
 
 ---
 
-# Version 0.4.0 Beta
+### Version 0.4.0 Beta
 
 ---
 
@@ -71,7 +101,7 @@ The following people contributed to this release of the tikzDevice:
 
 ---
 
-# Version <= 0.3.0 Alpha/Pre-Alpha
+### Version <= 0.3.0 Alpha/Pre-Alpha
 
 ---
 
