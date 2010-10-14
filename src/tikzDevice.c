@@ -892,8 +892,9 @@ static double TikZ_StrWidth( const char *str,
   SETCAR( RCallBack, widthFun );
 
   //If using the sanitize option call back to R for the sanitized string
+  char *cleanString;
   if(tikzInfo->sanitize == TRUE){
-    char *cleanString = Sanitize( str );
+    cleanString = Sanitize( str );
     // Place the sanitized string into the second slot of the SEXP.
     SETCADR( RCallBack, mkString( cleanString ) );
     
@@ -952,6 +953,7 @@ static double TikZ_StrWidth( const char *str,
   // Since we called PROTECT twice, we must call UNPROTECT
   // and pass the number 2.
   UNPROTECT(2);
+  if(tikzInfo->sanitize == TRUE){ free(cleanString); }
   
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
@@ -987,7 +989,7 @@ static void TikZ_Text( double x, double y, const char *str,
   double tol = 0.01;
   
   // Append font face commands depending on which font R is using.
-  char *tikzString = (char *) calloc( strlen(str) + 20, sizeof(char) );
+  char *tikzString = (char *) calloc( strlen(str) + 21, sizeof(char) );
 
   switch( plotParams->fontface ){
   
@@ -1055,9 +1057,10 @@ static void TikZ_Text( double x, double y, const char *str,
     "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
     fontScale, x, y);
   
+  char *cleanString;
   if(tikzInfo->sanitize == TRUE){
     //If using the sanitize option call back to R for the sanitized string
-    char *cleanString = Sanitize( tikzString );
+    cleanString = Sanitize( tikzString );
   	if(tikzInfo->debug == TRUE)
     	printOutput(tikzInfo,"\n%% Sanatized %s to %s\n",tikzString,cleanString);
     printOutput(tikzInfo, "%s%%\n};\n", cleanString);
@@ -1070,6 +1073,7 @@ static void TikZ_Text( double x, double y, const char *str,
    * we should free the memory that it is being stored in.
   */
   free( tikzString );
+  if(tikzInfo->sanitize == TRUE){ free( cleanString ); }
 
   /* 
    * Add a small red marker to indicate the 
@@ -1569,7 +1573,9 @@ static char *Sanitize(const char *str){
   
   //This is really stupid but create a copy of cleanString to 
   // avoid warning: "discards qualifiers from pointer target type"
-  char *cleanStringCP = (char *) calloc( strlen(cleanString), sizeof(char) );
+  char *cleanStringCP = (char *) calloc( strlen(cleanString) + 1, sizeof(char) );
+  
+  strcat(cleanStringCP, cleanString);
   
   strcat(cleanStringCP, cleanString);
   
