@@ -1569,7 +1569,7 @@ static char *Sanitize(const char *str){
   
   //This is really stupid but create a copy of cleanString to 
   // avoid warning: "discards qualifiers from pointer target type"
-  char *cleanStringCP = (char *) calloc( strlen(cleanString), sizeof(char) );
+  char *cleanStringCP = (char *) calloc( strlen(cleanString) + 1, sizeof(char) );
   
   strcat(cleanStringCP, cleanString);
   
