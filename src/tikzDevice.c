@@ -1577,8 +1577,6 @@ static char *Sanitize(const char *str){
   
   strcat(cleanStringCP, cleanString);
   
-  strcat(cleanStringCP, cleanString);
-  
   return cleanStringCP;
 }
 
