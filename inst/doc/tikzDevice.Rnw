@@ -50,40 +50,9 @@
 	if( !file.exists( 'figs' ) ) dir.create( 'figs' )
 	require(tikzDevice)
 	
-	# We need some extra options for controlling
-	# Sweave output. Therefore we're going to bust
-	# out and overwrite some core code with more
-	# flexible alternatives.
-	
 	# *** Begin Mother of All R Hacks ****
-	
-	# We load a new Sweave function that contains a
-	# more flexible set of output routines.
-	source('patchSweave.R')
-	
-	# First, we find out where Sweave lives.
-	env <- as.environment('package:utils')
-	
-	# And we break into it's house.
-	unlockBinding('makeRweaveLatexCodeRunner',env)
-	
-	# And rearrange it's furniture....
-	assignInNamespace('makeRweaveLatexCodeRunner',patchedCodeRunner,ns='utils')
-	
-	# ...and lock the door on the way out.
-	lockBinding('makeRweaveLatexCodeRunner',env)
-	
-	#  But we take something with us when we leave...
-	newCodeRunner <- utils:::makeRweaveLatexCodeRunner()
-	
-	# ...to stalk it down on the street...
-	env <- grep('driver', lapply(sys.frames(),
-		function(frame){ ls(envir=frame) }
-	))
-	env <- sys.frames()[[env]]
-	
-	# ...and give it a facelift.
-	evalq( driver$runcode <- newCodeRunner, envir=env)
+
+  source( 'patchSweave.R' )
 	
 	# *** End Mother of All R Hacks ***
 	
