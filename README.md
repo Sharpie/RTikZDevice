@@ -85,5 +85,14 @@ to the development of the device!
 
 ---
 
+#### Contributors
+The following people contributed to this release of the tikzDevice:
+
+- mlt for reporting problems with the Sanitize function that led to the
+  discovery of two situations where buffer overflows were ocurring.  
+
+
 #### Bug Fixes
 
+- Fixed buffer overflows and memory leaks related to string pointers in
+  tikzDevice.c
