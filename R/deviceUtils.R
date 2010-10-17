@@ -182,3 +182,19 @@ getTikzDeviceEngine <- function(dev_num = dev.cur()){
 
   return( engine )
 }
+
+tikz_writeRaster <-
+function( fileName, rasterCount, rasterData, nrows, ncols ){
+
+  message( "Request to print raster output for ", fileName, 
+    " raster num ", rasterCount,
+    " num rows:", nrows,
+    " num columns:", ncols
+  )
+
+  message("\nRaster data was:\n\n",
+    paste(capture.output(print(rasterData)),collapse='\n'))
+
+  return('frooble')
+
+}

@@ -267,6 +267,7 @@ static Rboolean TikZ_Setup(
   /* Copy TikZ-specific information to the tikzInfo variable. */
   strcpy( tikzInfo->outFileName, fileName);
   tikzInfo->engine = engine;
+  tikzInfo->rasterFileCount = 1;
   tikzInfo->firstPage = TRUE;
   tikzInfo->debug = DEBUG;
   tikzInfo->standAlone = standAlone;
@@ -1680,7 +1681,114 @@ static void TikZ_Raster(
   const pGEcontext plotParams, pDevDesc deviceInfo
 ){
 
-  warning( "The tikzDevice does not currently support including raster images in graphics output." );
+  /* Shortcut pointer to device information. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  /*
+   * Recover package namespace as the raster output function is not exported
+   * into the global environment.
+  */
+  SEXP TikZ_namespace;
+  PROTECT( 
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
+
+  /*
+   * Prepare callback to R for creation of a PNG from raster data.  Five
+   * parameters will be passed:
+   * 
+   * - The name of the current output file.
+   *
+   * - The number of rasters that have been output so far.
+   *
+   * - The raster data.
+   *
+   * - The number of rows and columns in the raster data.
+  */
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP, 6) );
+  SETCAR( RCallBack, install("tikz_writeRaster") );
+
+  SETCADR( RCallBack, mkString( tikzInfo->outFileName ) );
+  SET_TAG( CDR(RCallBack), install("fileName") );
+
+  SETCADDR( RCallBack, ScalarInteger( tikzInfo->rasterFileCount ) );
+  SET_TAG( CDDR(RCallBack), install("rasterCount") );
+
+  /*
+   * The raster values are stored as a 32 bit unsigned integer.  Every 8 bits
+   * contains an red, green, blue or alpha value (actual order is ABGR).  This
+   * is the tricky bit of dealing with the raster-- there is no easy way to send
+   * unsigned integers back into the R environment.  So... I gues we'll split
+   * things back to RBGA values, send back a list of four vectors and regenrate
+   * the whole shbang on the R side... there should be an easier way to deal
+   * with this.
+  */
+  SEXP red_vec, blue_vec, green_vec, alpha_vec;
+  PROTECT( red_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( blue_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( green_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( alpha_vec = allocVector( INTSXP, w * h ) );
+
+  /*
+   * Use the R_<color component> macros defined in GraphicsDevice.h to generate
+   * RGBA components from the raster data.  These macros are basically shorthand
+   * notation for C bitwise operators that extract 8 bit chunks from the 32 bit
+   * unsigned integers contained in the raster vector.
+  */
+  int i;
+  for( i = 0; i < h * w; i ++ ){ 
+    INTEGER(red_vec)[i] = R_RED(raster[i]);
+    INTEGER(blue_vec)[i] = R_BLUE(raster[i]);
+    INTEGER(green_vec)[i] = R_GREEN(raster[i]);
+    INTEGER(alpha_vec)[i] = R_ALPHA(raster[i]);
+  }
+
+  /* 
+   * We will store all the vectors generated above in an R list named colors,
+   * this will make it easier to pass back into the R environment as an argument
+   * to an R function
+  */
+  SEXP colors;
+  PROTECT( colors =  allocVector( VECSXP, 4 ) );
+  SET_VECTOR_ELT( colors, 0, red_vec  );
+  SET_VECTOR_ELT( colors, 1, blue_vec );
+  SET_VECTOR_ELT( colors, 2, green_vec );
+  SET_VECTOR_ELT( colors, 3, alpha_vec );
+
+  /* We will also make this a named list. */
+  SEXP color_names;
+  PROTECT( color_names = allocVector( STRSXP, 4 ) );
+  SET_STRING_ELT( color_names, 0, mkChar("red") );
+  SET_STRING_ELT( color_names, 1, mkChar("green") );
+  SET_STRING_ELT( color_names, 2, mkChar("blue") );
+  SET_STRING_ELT( color_names, 3, mkChar("alpha") );
+
+  /* Apply the names to the list. */
+  setAttrib( colors, R_NamesSymbol, color_names );
+
+
+  SETCADDDR( RCallBack, colors );
+  SET_TAG( CDR(CDDR(RCallBack)), install("rasterData") );
+
+  SETCAD4R( RCallBack, ScalarInteger(h) );
+  SET_TAG( CDDR(CDDR(RCallBack)), install("nrows") );
+
+  SETCAD4R( CDR(RCallBack), ScalarInteger(w) );
+  SET_TAG( CDR(CDDR(CDDR(RCallBack))), install("ncols") );
+
+  SEXP rasterFile;
+  PROTECT( rasterFile = eval( RCallBack, TikZ_namespace ) );
+
+  /* 
+   * Increment the number of raster files we have created with this device.
+   * This is used to provide unique file names for each raster.
+  */
+  tikzInfo->rasterFileCount++;
+
+  UNPROTECT(9);
+  return;
 
 }
 
