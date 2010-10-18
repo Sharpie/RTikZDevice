@@ -186,15 +186,63 @@ getTikzDeviceEngine <- function(dev_num = dev.cur()){
 tikz_writeRaster <-
 function( fileName, rasterCount, rasterData, nrows, ncols ){
 
-  message( "Request to print raster output for ", fileName, 
-    " raster num ", rasterCount,
+  fileName = file_path_sans_ext( fileName )
+  fileName = paste( fileName, '_ras_', rasterCount, '.png', sep = '' )
+
+  message("\nRaw data was:\n\n",
+    paste(capture.output(print(rasterData)),collapse='\n'))
+
+  # Convert the 4 vectors of RGBA data contained in rasterData to a raster
+  # image.
+  rasterData[['maxColorValue']] = 255
+  rasterData = do.call( grDevices::rgb, rasterData ) 
+  rasterData = as.raster(
+    matrix( rasterData, nrow = nrows, ncol = ncols, byrow = TRUE ) )
+
+  message("\nRaster image is:\n\n",
+    paste(capture.output(print(rasterData)),collapse='\n'))
+
+
+  message( "Creating raster image: ", fileName, "\n" )
+
+  message(
+    "\nraster num ", rasterCount,
     " num rows:", nrows,
     " num columns:", ncols
   )
 
-  message("\nRaster data was:\n\n",
-    paste(capture.output(print(rasterData)),collapse='\n'))
+  # Write the image to a PNG file.
+  savePar = par(no.readonly=TRUE); on.exit(par(savePar))
 
-  return('frooble')
+  # On OS X there is a problem with png() not respecting antialiasing options.
+  # So, we have to use quartz instead.  Also, we cannot count on X11 or Cairo
+  # being compiled into OS X binaries.  Technically, cannot count on Aqua/Quartz
+  # either but you would have to be a special kind of special to leave it out.
+  # Using type='Xlib' also causes a segfault for me on OS X 10.6.4
+  if ( capabilities('aqua') ){
+
+    quartz( file = fileName, type = 'png', width = ncols, height = nrows,
+      dpi = 1, antialias = FALSE )
+
+  } else {
+
+    # NOTE: Windows appears to have issues (who knew?!).  We may be loosing a
+    # row and column of data.
+    png( filename = fileName, width = ncols, height = nrows,
+      type = 'Xlib', units = 'px', antialias = 'none' )
+
+  }
+
+  par( mar = c(0,0,0,0) )
+  plot.new()
+
+  plotArea = par('fig')
+
+  rasterImage(rasterData, plotArea[1], plotArea[3],
+    plotArea[2], plotArea[4], interpolate = FALSE )
+
+  dev.off()
+
+  return( fileName )
 
 }
