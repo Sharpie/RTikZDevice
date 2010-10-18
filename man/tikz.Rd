@@ -214,7 +214,7 @@ y <- rnorm(length(syms))
 
 tikz(tf,standAlone=TRUE)
 	plot(-2:2, -2:2, type = "n", axes=F, 
-			xlab='', ylab='', main='TikZ Device Example')
+			xlab='', ylab='', main='TikZ Device Math Example')
     text(x,y,paste('\\\\Large$\\\\',syms,'$',sep=''))
 dev.off()
 
@@ -232,7 +232,7 @@ oldwd <- getwd()
 setwd(td)
 
 tikz(tf,standAlone=TRUE)
-	plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main=main)
+	plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='', main='Random Circles')
     points(rnorm(50), rnorm(50), pch=21, 
 			bg=rainbow(50,alpha=.5), cex=10)
 dev.off()
