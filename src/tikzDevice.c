@@ -352,8 +352,8 @@ static Rboolean TikZ_Setup(
    * wantSymbolUTF8 indicates if mathematical symbols should be sent to
    * the device as UTF8 characters.
   */
-  deviceInfo->hasTextUTF8 = FALSE;
-  deviceInfo->wantSymbolUTF8 = FALSE;
+  deviceInfo->hasTextUTF8 = TRUE;
+  deviceInfo->wantSymbolUTF8 = TRUE;
 
   /*
    * Initialize device parameters. These concern properties such as the 

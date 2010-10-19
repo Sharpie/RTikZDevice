@@ -10,7 +10,7 @@
 #define HAVE_TIKZDEV_H 
 
 #ifndef DEBUG
-#define DEBUG FALSE
+#define DEBUG TRUE
 #endif
 
 /* Use default graphics engine function declarations. */
