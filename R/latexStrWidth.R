@@ -122,10 +122,10 @@ function( charCode, cex = 1, face = 1 ){
 	# generalized and combined.
 
 	# We must be given a valid integer character code.
-	if( !(is.numeric(charCode) && charCode > 31 && charCode < 127 ) ){
-		warning("Sorry, this function currently only accepts numbers between 32 and 126!")
-		return(NULL)
-	}
+	#if( !(is.numeric(charCode) && charCode > 31 && charCode < 127 ) ){
+	#	warning("Sorry, this function currently only accepts numbers between 32 and 126!")
+	#	return(NULL)
+	#}
 
 	# Coerce the charCode to integer in case someone was being funny
   # and passed a float.
