@@ -25,7 +25,9 @@ function(libname, pkgname) {
   packageStartupMessage( paste(versionInfo,collapse='\n') )
 
   foundLatex <- FALSE
+  foundXeLatex <- FALSE
   checked <- c()
+  checkedXeLatex <- c()
 
   latexTest <- function( pathToTeX, pathDesc ){
     
@@ -47,6 +49,26 @@ function(libname, pkgname) {
 
   }
 
+  xelatexTest <- function( pathToTeX, pathDesc ){
+
+      Sys.setenv("PATH" = Sys.getenv("PATH"))
+      xelatexPath <<- Sys.which( paste( pathToTeX ) )
+
+      # Check to see if the path leads to an executible
+      if( file.access(xelatexPath[1], 1) == 0 ){
+        options( tikzXeLatex=xelatexPath )
+        options( tikzXeLatexDefault=xelatexPath )
+        foundXeLatex <<- TRUE
+        checkedXelatex <<- paste( "\nA working LaTeX compiler was found by checking:\n\t",pathDesc,
+          "\n\nGlobal option tikzLatex set to:\n\t",xelatexPath,'\n',sep='' )
+        return( TRUE )
+      }else{
+        checkedXeLatex[ length(checked)+1 ] <<- pathDesc
+        return( FALSE )
+      }
+
+    }
+
 
   testLocs <- c( ifelse( is.null(getOption('tikzLatex')), "", getOption('tikzLatex') ),
     Sys.getenv("R_LATEXCMD"),
@@ -55,12 +77,16 @@ function(libname, pkgname) {
     'pdflatex',
     'latex')
 
+  xelatexLoc <- c('xelatex')
+
   testDescs <- c( "A pre-existing value of the global option tikzLatex",
     "The R environment variable R_LATEXCMD",
     "The R environment variable R_PDFLATEXCMD",
     "The global option latexcmd",
     "The PATH using the command pdflatex",
     "The PATH using the command latex")
+
+  xelatexTestDesc <- "The PATH using the command xelatex"
 
   # Non-Windows users are likely to use some derivative of TeX Live.  This next
   # test primarily covers the fact that R.app does not include `/usr/texbin` on
@@ -75,6 +101,9 @@ function(libname, pkgname) {
   for( i in 1:length(testLocs) ){
     if( latexTest( testLocs[i], testDescs[i] ) ){ break }
   }
+
+  xelatexTest(xelatexLoc, xelatexTestDesc)
+
 
   if( foundLatex ){
     packageStartupMessage( checked )
@@ -99,6 +128,20 @@ function(libname, pkgname) {
       "\n\n\tEnsure the folder containing your compiler is included in PATH.\n"
     )
   }
+
+  if( foundXeLatex ){
+      packageStartupMessage( checkedXeLatex )
+      p <- pipe( paste( xelatexPath, '--version' ) )
+      packageStartupMessage( paste( readLines( p ), '\n', sep='' ) , sep='\n' )
+      close(p)
+    }else{
+      stop("\n\nAn appropriate XeLaTeX compiler could not be found.\n",
+        "Access to XeLaTeX is required for the TikZ device \n",
+        "to produce output with UTF-8 encoding.\n\n",
+        "The following places were tested for a valid XeLaTeX compiler:\n\n\t",
+        paste( checkedXeLatex,collapse='\n\t'),
+      )
+    }
 
   library.dynam(pkgname, pkgname, libname)
 
