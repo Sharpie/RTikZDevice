@@ -353,7 +353,7 @@ static Rboolean TikZ_Setup(
    * the device as UTF8 characters.
   */
   deviceInfo->hasTextUTF8 = TRUE;
-  deviceInfo->wantSymbolUTF8 = TRUE;
+  deviceInfo->wantSymbolUTF8 = FALSE;
 
   /*
    * Initialize device parameters. These concern properties such as the 
@@ -745,7 +745,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
    * Assuming we are dealing with ASCII characters, check the character
    * code c to see if it falls outside the range of printable characters
    * which are: 32-126
-  */
+
   if( c < 32 || c > 126 ){
     // Non-printable character. Set metrics to zero and return.
     *ascent = 0.0;
@@ -753,6 +753,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
     *width = 0.0;
     return;
   }
+  */
 
   // Calculate font scaling factor.
   double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
@@ -872,6 +873,7 @@ static double TikZ_StrWidth( const char *str,
    *   fucking wicked.
    *
   */
+   printOutput(tikzInfo,"%% Calculating string width\n");
   
   // Call out to R to retrieve the getLatexStrWidth function.
   SEXP widthFun = findFun( install("getLatexStrWidth"), R_GlobalEnv );
@@ -985,6 +987,7 @@ static void TikZ_Text( double x, double y, const char *str,
   
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  printOutput(tikzInfo,"%% Text Stuff\n");
   
   double tol = 0.01;
   
