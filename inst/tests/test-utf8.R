@@ -1,0 +1,8 @@
+require(tikzDevice)
+tikz(standAlone=T)
+x <- matrix(intToUtf8(seq(161,,1,400),multiple=T),20)
+plot(1:20,type='n',xlab='',ylab='',axes=F)
+for(i in 1:20)
+    for(j in 1:20)
+        text(i,j,x[i,j])
+dev.off()
