@@ -352,7 +352,7 @@ static Rboolean TikZ_Setup(
    * wantSymbolUTF8 indicates if mathematical symbols should be sent to
    * the device as UTF8 characters.
   */
-  deviceInfo->hasTextUTF8 = TRUE;
+  deviceInfo->hasTextUTF8 = FALSE;
   deviceInfo->wantSymbolUTF8 = FALSE;
 
   /*
@@ -873,7 +873,6 @@ static double TikZ_StrWidth( const char *str,
    *   fucking wicked.
    *
   */
-   printOutput(tikzInfo,"%% Calculating string width\n");
   
   // Call out to R to retrieve the getLatexStrWidth function.
   SEXP widthFun = findFun( install("getLatexStrWidth"), R_GlobalEnv );
@@ -987,7 +986,6 @@ static void TikZ_Text( double x, double y, const char *str,
   
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-  printOutput(tikzInfo,"%% Text Stuff\n");
   
   double tol = 0.01;
   
