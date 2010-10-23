@@ -59,7 +59,7 @@ function(libname, pkgname) {
         options( tikzXeLatex=xelatexPath )
         options( tikzXeLatexDefault=xelatexPath )
         foundXeLatex <<- TRUE
-        checkedXelatex <<- paste( "\nA working LaTeX compiler was found by checking:\n\t",pathDesc,
+        checkedXelatex <<- paste( "\nA working XeLaTeX compiler was found by checking:\n\t",pathDesc,
           "\n\nGlobal option tikzLatex set to:\n\t",xelatexPath,'\n',sep='' )
         return( TRUE )
       }else{
