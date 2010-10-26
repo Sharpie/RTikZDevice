@@ -93,3 +93,18 @@ to the development of the device!
   `test_that` package.
 
 ---
+#### New Features
+
+- Unicode Support!!!! XeLaTeX will be used automatically (if available) to calculate metrics and widths of unicode characters.
+
+- New global option `tikzXelatexPackages` which contains packages necessary to use unicode characters with xelatex.  Specifically, the fontspec and the xunicode packages as well as the xetex option to the preview package.
+
+- New global option `tikzUnicodeMetricPackages` which contains the packages necessary to calculate metrics for multibyte unicode characters with xelatex.
+
+- New function anyMultibyteUTF8Characters() which will check if the given string contains any multibyte unicode characters.  Exposed in the package namespace since it is general and may be useful in other applications.
+
+- Added "_" to the list of default sanitize characters
+
+
+---
+#### Bug Fixes

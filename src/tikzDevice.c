@@ -516,6 +516,9 @@ static void Print_TikZ_Header( tikzDevDesc *tikzInfo ){
   printOutput( tikzInfo, "%% Created by tikzDevice version %s on %s\n",
     CHAR(STRING_ELT(currentVersion,0)), CHAR(STRING_ELT(currentDate,0)) );
 
+	//Specifically for TeXShop, force it to open the file with UTF-8 encoding
+	printOutput(tikzInfo, "%% !TEX encoding = UTF-8 Unicode\n");
+
   UNPROTECT(3);
 
 }

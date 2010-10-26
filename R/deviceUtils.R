@@ -100,6 +100,14 @@ setTikzDefaults <- function( overwrite = TRUE ){
       "\\setlength\\PreviewBorder{0pt}\n"
     ),
 
+    tikzXelatexPackages = c(
+      "\\usepackage{tikz}\n",
+      "\\usepackage[active,tightpage,xetex]{preview}\n",
+      "\\usepackage{fontspec,xunicode}\n",
+      "\\PreviewEnvironment{pgfpicture}\n",
+      "\\setlength\\PreviewBorder{0pt}\n"
+    ),
+
     tikzFooter = "\\end{document}\n",
 
     tikzMetricPackages = c(
@@ -107,7 +115,16 @@ setTikzDefaults <- function( overwrite = TRUE ){
       # R assumes the output device is uing T1 encoding.
       # LaTeX defaults to OT1. This package makes the
       # symbol codes consistant for both systems.
-      #"\\usepackage[T1]{fontenc}\n",
+      "\\usepackage[T1]{fontenc}\n",
+      "\\usetikzlibrary{calc}\n"
+    ),
+
+    tikzUnicodeMetricPackages = c(
+      # The fontenc package is very important here!
+      # R assumes the output device is uing T1 encoding.
+      # LaTeX defaults to OT1. This package makes the
+      # symbol codes consistant for both systems.
+      "\\usepackage[T1]{fontenc}\n",
       "\\usetikzlibrary{calc}\n",
       "\\usepackage{fontspec,xunicode}\n"
     ),
@@ -140,5 +157,37 @@ setTikzDefaults <- function( overwrite = TRUE ){
 
   # Return a list of the options that were modified.
   invisible( tikzSetOptions )
+
+}
+
+anyMultibyteUTF8Characters <- function(string, encoding = "UTF-8"){
+
+  # This function checks if any of the characters in the given string
+  # are multibyte unicode charcters (not ASCII)
+  #
+  # The function will assume an input encoding of UTF-8 but will take any
+  # specified encoding into account and will convert from the specified
+  # encoding to UTF-8 before doing any checks
+
+  mb <- FALSE
+
+    # Set the encoding of the string if it is not explicitly set
+  if(Encoding(string) == "unknown")
+    Encoding(string) <- encoding
+
+    # convert the string to UTF-8
+  string <- enc2utf8(string)
+
+    # Check if any of the characters are Multibyte
+  explode <- strsplit(string,'')[[1]]
+  for(i in 1:length(explode)){
+
+    if(length(charToRaw(explode[i])) > 1){
+      mb <- TRUE
+      break
+    }
+  }
+
+  return(mb)
 
 }
