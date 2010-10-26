@@ -41,11 +41,22 @@
 getLatexStrWidth <-
 function( texString, cex = 1, face= 1){
 
+    # Check if any of the characters in the given string are multibyte UTF-8
+    # and if so use the special XeLaTeX packages
+  multibyte <- anyMultibyteUTF8Characters(texString)
+  if( multibyte ){
+    if(is.null(getOption('tikzXelatex')))
+      error("Your string currently contains non-ASCII UTF-8 characters but XeLaTeX is not available, please specify a value for tikzXelatex or remove non-ASCII characters.")
+    packages <- getOption("tikzXelatexPackages")
+  }else{
+    packages <- getOption("tikzLatexPackages")
+  }
+
 	# Create an object that contains the string and it's
 	# properties.
 	TeXMetrics <- list( type='string', scale=cex, face=face, value=texString,
 	 	documentDeclaration = getOption("tikzDocumentDeclaration"),
-		packages = getOption("tikzLatexPackages"))
+		packages = packages, multibyte = multibyte)
 		
 
 	# Check to see if we have a width stored in
@@ -122,20 +133,33 @@ function( charCode, cex = 1, face = 1 ){
 	# generalized and combined.
 
 	# We must be given a valid integer character code.
-	#if( !(is.numeric(charCode) && charCode > 31 && charCode < 127 ) ){
-	#	warning("Sorry, this function currently only accepts numbers between 32 and 126!")
-	#	return(NULL)
-	#}
+	if( is.null(getOption('tikzXelatex')) &&
+	  !(is.numeric(charCode) && charCode > 31 && charCode < 127 ) ){
+		warning("Sorry, xelatex is not available so this function currently only accepts numbers between 32 and 126!")
+		return(NULL)
+	}
 
 	# Coerce the charCode to integer in case someone was being funny
   # and passed a float.
 	charCode <- as.integer( charCode )
 
+  # IMPORTANT: The charCode must be in UTF-8 encoding or else funny business
+  #            will likely occur.
+  multibyte <- anyMultibyteUTF8Characters( intToUtf8( charCode ) )
+
+  packages <-
+  if(multibyte)
+    getOption("tikzXelatexPackages")
+  else
+    getOption("tikzLatexPackages")
+
+  multibyte <- anyMultibyteUTF8Characters(intToUtf8(charCode))
+
 	# Create an object that contains the character and it's
 	# properties.
 	TeXMetrics <- list( type='char', scale=cex, face=face, value=charCode,
 		documentDeclaration = getOption("tikzDocumentDeclaration"),
-		packages = getOption("tikzLatexPackages"))
+		packages = packages, multibyte = multibyte)
 
 	# Check to see if we have metrics stored in
 	# our dictionary for this character.
@@ -199,11 +223,18 @@ function( TeXMetrics ){
 	# Also, we load the user packages last so the user can override 
 	# things if they need to.
 	#
-	#The user MUST load the tikz package here
-	writeLines(getOption("tikzLatexPackages"), texIn)
+	# The user MUST load the tikz package here.
+	#
+	# Load important packages for calculating metrics, must use different
+	# packages for (multibyte) unicode characters.
 	
-	# Load important packages for calculating metrics
+	if(TeXMetrics$multibyte){
+	  writeLines(getOption("tikzXelatexPackages"), texIn)
+	  writeLines(getOption("tikzUnicodeMetricPackages"), texIn)
+	}else{
+	  writeLines(getOption("tikzLatexPackages"), texIn)
 	writeLines(getOption("tikzMetricPackages"), texIn)
+	}
 
 	writeLines("\\batchmode", texIn)
 
@@ -307,17 +338,18 @@ function( TeXMetrics ){
 	# Close the LaTeX file, ready to compile 
 	close( texIn )
 
-	# Recover the latex command.
-	xelatexCmd <- getOption('tikzXeLatex')
+	# Recover the latex command. Use XeLaTeX if the character is not ASCII
+	latexCmd <- ifelse(TeXMetrics$multibyte,
+	  getOption('tikzXelatex'), getOption('tikzLatex'))
 
 	# Append the batchmode flag to increase LaTeX 
 	# efficiency.
-	xelatexCmd <- paste( xelatexCmd, '-interaction=batchmode', '-halt-on-error',
+	latexCmd <- paste( latexCmd, '-interaction=batchmode', '-halt-on-error',
 		'-output-directory', texDir, texFile)
 
   # avoid warnings about non-zero exit status, we know tex exited abnormally
   # it was designed that way for speed
-	suppressWarnings(silence <- system( xelatexCmd, intern=T, ignore.stderr=T))
+	suppressWarnings(silence <- system( latexCmd, intern=T, ignore.stderr=T))
 
 	# Open the log file.
 	texOut <- file( texLog, 'r' )
