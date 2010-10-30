@@ -1755,10 +1755,7 @@ static void TikZ_Raster(
   SET_VECTOR_ELT( colors, 0, red_vec  );
   SET_VECTOR_ELT( colors, 1, blue_vec );
   SET_VECTOR_ELT( colors, 2, green_vec );
-  /* Something is seriously borked with R's rgb() function when it comes to
-   * alpha values.  So, we disable these for now.
-  */
-  //SET_VECTOR_ELT( colors, 3, alpha_vec );
+  SET_VECTOR_ELT( colors, 3, alpha_vec );
 
   /* We will also make this a named list. */
   SEXP color_names;
@@ -1766,7 +1763,7 @@ static void TikZ_Raster(
   SET_STRING_ELT( color_names, 0, mkChar("red") );
   SET_STRING_ELT( color_names, 1, mkChar("green") );
   SET_STRING_ELT( color_names, 2, mkChar("blue") );
-  //SET_STRING_ELT( color_names, 3, mkChar("alpha") );
+  SET_STRING_ELT( color_names, 3, mkChar("alpha") );
 
   /* Apply the names to the list. */
   setAttrib( colors, R_NamesSymbol, color_names );
