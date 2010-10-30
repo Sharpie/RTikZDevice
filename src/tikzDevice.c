@@ -1781,6 +1781,11 @@ static void TikZ_Raster(
   SEXP rasterFile;
   PROTECT( rasterFile = eval( RCallBack, TikZ_namespace ) );
 
+  printOutput(tikzInfo, "\\node[draw,black,inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f,%6.2f) {",
+    rot, x, y);
+  printOutput(tikzInfo, "\\includegraphics[width=%6.2fpt,height=%6.2fpt]{", width, height);
+  printOutput(tikzInfo, "%s}};\n", translateChar(asChar(rasterFile)));
+
   /* 
    * Increment the number of raster files we have created with this device.
    * This is used to provide unique file names for each raster.
