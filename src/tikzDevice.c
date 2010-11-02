@@ -1695,7 +1695,7 @@ static void TikZ_Raster(
   );
 
   /*
-   * Prepare callback to R for creation of a PNG from raster data.  Five
+   * Prepare callback to R for creation of a PNG from raster data.  Seven
    * parameters will be passed:
    * 
    * - The name of the current output file.
@@ -1705,9 +1705,13 @@ static void TikZ_Raster(
    * - The raster data.
    *
    * - The number of rows and columns in the raster data.
+   *
+   * - The desired dimensions of the final image, in inches.
+   *
+   * - The value of the interpolate variable.
   */
   SEXP RCallBack;
-  PROTECT( RCallBack = allocVector(LANGSXP, 6) );
+  PROTECT( RCallBack = allocVector(LANGSXP, 8) );
   SETCAR( RCallBack, install("tikz_writeRaster") );
 
   SETCADR( RCallBack, mkString( tikzInfo->outFileName ) );
@@ -1778,12 +1782,32 @@ static void TikZ_Raster(
   SETCAD4R( CDR(RCallBack), ScalarInteger(w) );
   SET_TAG( CDR(CDDR(CDDR(RCallBack))), install("ncols") );
 
+  /* Create a list containing the final width and height of the image */
+  SEXP final_dims, dim_names;
+
+  PROTECT( final_dims = allocVector(VECSXP, 2) );
+  SET_VECTOR_ELT(final_dims, 0, ScalarReal(width/dim2dev(1.0)));
+  SET_VECTOR_ELT(final_dims, 1, ScalarReal(height/dim2dev(1.0)));
+  
+  PROTECT( dim_names = allocVector(STRSXP, 2) );
+  SET_STRING_ELT(dim_names, 0, mkChar("width"));
+  SET_STRING_ELT(dim_names, 1, mkChar("height"));
+
+  setAttrib(final_dims, R_NamesSymbol, dim_names);
+
+  SETCAD4R(CDDR(RCallBack), final_dims);
+  SET_TAG(CDDR(CDDR(CDDR(RCallBack))), install("finalDims"));
+
+  SETCAD4R(CDR(CDDR(RCallBack)), ScalarLogical(interpolate));
+  SET_TAG(CDR(CDDR(CDDR(CDDR(RCallBack)))), install("interpolate"));
+
+
   SEXP rasterFile;
   PROTECT( rasterFile = eval( RCallBack, TikZ_namespace ) );
 
   printOutput(tikzInfo, "\\node[draw,black,inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f,%6.2f) {",
     rot, x, y);
-  printOutput(tikzInfo, "\\includegraphics[width=%6.2fpt,height=%6.2fpt]{", width, height);
+  printOutput(tikzInfo, "\\includegraphics{");
   printOutput(tikzInfo, "%s}};\n", translateChar(asChar(rasterFile)));
 
   /* 
@@ -1792,7 +1816,7 @@ static void TikZ_Raster(
   */
   tikzInfo->rasterFileCount++;
 
-  UNPROTECT(9);
+  UNPROTECT(11);
   return;
 
 }

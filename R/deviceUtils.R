@@ -184,7 +184,10 @@ getTikzDeviceEngine <- function(dev_num = dev.cur()){
 }
 
 tikz_writeRaster <-
-function( fileName, rasterCount, rasterData, nrows, ncols ){
+function( 
+  fileName, rasterCount, rasterData, nrows, ncols,
+  finalDims, interpolate
+){
 
   fileName = file_path_sans_ext( fileName )
   fileName = paste( fileName, '_ras_', rasterCount, '.png', sep = '' )
@@ -208,7 +211,9 @@ function( fileName, rasterCount, rasterData, nrows, ncols ){
   message(
     "\nraster num ", rasterCount,
     " num rows:", nrows,
-    " num columns:", ncols
+    " num columns:", ncols,
+    " final dims:", finalDims,
+    " interpolate?:", interpolate
   )
 
   # Write the image to a PNG file.
@@ -221,15 +226,15 @@ function( fileName, rasterCount, rasterData, nrows, ncols ){
   # Using type='Xlib' also causes a segfault for me on OS X 10.6.4
   if ( capabilities('aqua') ){
 
-    quartz( file = fileName, type = 'png', width = ncols, height = nrows,
-      dpi = 1, antialias = FALSE )
+    quartz( file = fileName, type = 'png',
+      width = finalDims$width, height = finalDims$height, antialias = FALSE )
 
   } else {
 
     # NOTE: Windows appears to have issues (who knew?!).  We may be loosing a
     # row and column of data.
-    png( filename = fileName, width = ncols, height = nrows,
-      type = 'Xlib', units = 'px', antialias = 'none' )
+    png( filename = fileName, width = finalDims$width, height = finalDims$height,
+      type = 'Xlib', units = 'in', antialias = 'none' )
 
   }
 
@@ -239,7 +244,7 @@ function( fileName, rasterCount, rasterData, nrows, ncols ){
   plotArea = par('fig')
 
   rasterImage(rasterData, plotArea[1], plotArea[3],
-    plotArea[2], plotArea[4], interpolate = FALSE )
+    plotArea[2], plotArea[4], interpolate = interpolate )
 
   dev.off()
 
