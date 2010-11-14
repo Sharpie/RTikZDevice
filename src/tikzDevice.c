@@ -342,18 +342,22 @@ static Rboolean TikZ_Setup(
    * handling functions that must be built into the device. If set to true
    * both hook functions textUTF8 and strWidthUTF8 must be implemented.
    * Compared to ASCII, which only has 128 character values, UTF8 has
-   * thousends. This will require a fairly sophisticated function for
-   * calculating string widths.
+   * thousands.
    *
-   * UTF8 support would be a great feature to include as it would make
-   * this device useful for an international audience. For now only
-   * the ASCII character set will be used as it is easy to implement.
+   * Version 0.6.0 of tikzDevice gained the ability to calculate metrics for
+   * UTF8 encoded strings and characters. Those calculations are not done here
+   * in the C code but implemented through the magical callback to R. On the R
+   * level, we determine automatically is a string contains multibyte UTF8
+   * characters and then use XeLaTeX.  Bottom line is, even though hasTextUTF8
+   * is FALSE we can still print UTF8 characters and we dont need a separate
+   * text handling function for UTF8 characters (thank god).
    * 
    * wantSymbolUTF8 indicates if mathematical symbols should be sent to
-   * the device as UTF8 characters.
+   * the device as UTF8 characters.  These can be handled in the same way as
+   * normal UTF8 text and so wantSymbolUTF8 is TRUE.
   */
   deviceInfo->hasTextUTF8 = FALSE;
-  deviceInfo->wantSymbolUTF8 = FALSE;
+  deviceInfo->wantSymbolUTF8 = TRUE;
 
   /*
    * Initialize device parameters. These concern properties such as the 
