@@ -490,6 +490,48 @@ The tricky bit is the specification of the ``base font size''.  By default the t
 This regular expression will return 10 as the base pointsize to be used by the device.  If the regular expression fails to produce a match, the value of the \code{pointsize} argument to the \code{tikz()} function will be used.
 
 
+\subsection{UTF-8 Output}
+
+Version 0.6.0 introduced support for (multibyte) Unicode characters in the text of graphics.  There are a few important implications/limitations of this feature:
+
+\begin{description}
+
+\item[System Requirements:]
+A working version of XeLaTeX along with the packages fontspec and xunicode are required for direct processing of Unicode input.  If \code{tikzDevice} cannot find XeLaTeX then it will default to only allowing ASCII characters.
+
+\item[Automatic Detection of Unicode Characters:]
+
+\code{tikzDevice} will automatically recognize multibyte characters such that the metrics and string width for the character/string will be calculated using the \code{tikzUnicodeMetricPackages} and \code{tikzXelatexPackages} via a call to XeLaTeX (from the option \code{tikzXelatex}).
+
+\item[Unicode character and the \code{standAlone} option:]
+There is no way to know before a tikz device is opened and the \code{standAlone} header is written whether any of the text input will have unicode characters. Consequently you must set the values of \code{tikzLatexPackages} manually before you open the device:
+
+\begin{tikzCodeBlock}[listing style=sweavechunk]
+options(tikzLatexPackages=getOption('tikzXelatexPackages'))
+\end{tikzCodeBlock}
+
+or
+
+\begin{tikzCodeBlock}[listing style=sweavechunk]
+tikz(..., packages=getOption('tikzXelatexPackages'))
+\end{tikzCodeBlock}
+
+\item[Encoding:] \code{tikzDevice} will try its best to convert characters from other encodings but do not count on it converting things correctly, best to do the conversion yourself beforehand to avoid unexpected output.
+
+\item[Fonts:] Having a Unicode character actually show up in your LaTeX document relies on the font you use having the glyph available. We leave it up to the user to know for themselves what is available.  Otherwise you will likely just get no output in place of where the character should be.
+
+\item[plotmath:] There is specifically no support for input of plotmath characters as unicode since the user can simply input LaTeX math directly.  We strongly encourage the use of LaTeX math over plotmath for style and consistency's sake.  A consequence of this is that most of the \lang{R} examples and demos of plotmath won't work without significant manipulation (your milage may vary but you may get anything from errors to warnings to documents that mysteriously won't compile).  That is not to say that the output could not be duplicated with \code{tikzDevice} but the examples will not work out of the box.
+
+\item[Compiling:]
+A graphic that contains UTF-8 characters must be compiled with XeLaTeX (or possibly LuaLaTeX) with the xunicode and fontspec packages enabled.
+
+\item[ASCII only:]
+Everything should be exactly the same as previous versions if only ASCII (single byte) characters are used (i.e. character codes less than 132).
+
+\end{description}
+
+
+
 \subsection{Examples}
 
 % We will shift into the figs directory here so that we don't have
@@ -868,6 +910,42 @@ tikzAnnotate(c("\\node[starburst, fill=green, ",
 tikzAnnotate(c("\\draw[->, very thick] (burst.west) -- (max);"))
 
 dev.off()
+setTikzDefaults()
+@
+
+\begin{figure}[!h]
+\centering
+\input{figs/annotation.tex}
+\caption{An example using \TikZ{} annotation.}\label{fig:annotation}
+\end{figure}
+
+\subsubsection{Plotmath vs. tikzDevice output with UTF-8 Characters}
+<<plotmath,echo=T,results=hide,keep.source=T>>=
+
+pdf("plotmath.pdf",width=4,height=4)
+options(tikzLatexPackages=getOption('tikzXelatexPackages'))
+
+dev.off()
+
+#Same using tikz
+tikz("plotmath.tex",width=4,height=4)
+
+
+dev.off()
+
+require(tools)
+
+	catch <- system(paste(Sys.which('pdflatex'),
+		'-interaction=batchmode -output-directory figs/ figs/standAloneExample.tex'),
+		ignore.stderr=T)
+
+	# If compiling the example failed, we don't want to include a broken link.
+	if( catch == 0 ){
+		pdfLink <- "The file \\\\code{standAloneExample.tex} may then be compiled to produce
+			\\\\href{./figs/standAloneExample.pdf}{standAloneExample.pdf}. "
+	}else{
+		pdfLink <- ""
+	}
 setTikzDefaults()
 @
 

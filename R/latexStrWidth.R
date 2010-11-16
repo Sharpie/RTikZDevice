@@ -46,7 +46,7 @@ function( texString, cex = 1, face= 1){
   multibyte <- anyMultibyteUTF8Characters(texString)
   if( multibyte ){
     if(is.null(getOption('tikzXelatex')))
-      error("Your string currently contains non-ASCII UTF-8 characters but XeLaTeX is not available, please specify a value for tikzXelatex or remove non-ASCII characters.")
+      stop("Your string currently contains non-ASCII UTF-8 characters but XeLaTeX is not available, please specify a value for tikzXelatex or remove non-ASCII characters.")
     packages <- getOption("tikzXelatexPackages")
   }else{
     packages <- getOption("tikzLatexPackages")
@@ -189,7 +189,7 @@ function( charCode, cex = 1, face = 1 ){
 getMetricsFromLatex <-
 function( TeXMetrics ){
 	
-	# Reimplementation of the origonal C function since
+	# Reimplementation of the original C function since
 	# the C function causes all kinds of gibberish to
 	# hit the screen when called under Windows and
 	# Linux. 
