@@ -919,40 +919,53 @@ setTikzDefaults()
 \caption{An example using \TikZ{} annotation.}\label{fig:annotation}
 \end{figure}
 
-\subsubsection{Plotmath vs. tikzDevice output with UTF-8 Characters}
-<<plotmath,echo=T,results=hide,keep.source=T>>=
+\subsubsection{Plotmath vs. tikzDevice output with mathematical output and UTF-8 Characters}
 
-pdf("plotmath.pdf",width=4,height=4)
+This exmple shows how UTF-8 characters and latex mathematics can be used to reproduce an example from \code{?text}.  Some characters might not show up in the vignette, see the source code for the complete example.  Figures \ref{fig:plotmathDefault} and \ref{fig:plotmathTikz} show the difference between \code{tikz()} output and the \code{pdf()} device.
+
+\begin{tikzCodeBlock}[title={Plotmath example replicated with tikzDevice},listing style=sweavechunk]
 options(tikzLatexPackages=getOption('tikzXelatexPackages'))
+options(tikzLatex='xelatex')
+options(tikzSanitizeCharacters = c(getOption("tikzSanitizeCharacters"),"\\"))
+options(tikzReplacementCharacters = c(getOption("tikzReplacementCharacters"),"\\textbackslash"))
+
+tikz("plotmath.tex",width=7,height=7)
+## The following two examples use latin1 characters: these may not
+## appear correctly (or be omitted entirely).
+plot(1:10, 1:10, main = "text(...) examples\n~~~~~~~~~~~~~~",
+     sub = "R is GNU ©, but not ® ...")
+mtext("«Latin-1 accented chars»: éè øØ å<Å æ<Æ", side=3)
+points(c(6,2), c(2,1), pch = 3, cex = 4, col = "red")
+text(6, 2, "the text is CENTERED around (x,y) = (6,2) by default",
+     cex = .8)
+text(2, 1, "or Left/Bottom - JUSTIFIED at (2,1) by 'adj = c(0,0)'",
+     adj = c(0,0))
+text(4, 9, "$\\displaystyle\\hat{\\beta} = (X^tX)^{-1}X^ty$")
+text(4, 8.4,
+    sanitizeTexString("\\displaystyle\\hat{\\beta} = (X^tX)^{-1}X^ty"),
+    cex = .75)
+text(4, 7,
+    "$\\displaystyle\\bar{x} = \\displaystyle\\sum_{i=1}^n\\frac{x_i}{n}$")
+
+## Two more latin1 examples
+text(5,10.2,
+     "Le français, c'est façile: Règles, Liberté, Egalité, Fraternité...")
+text(5,9.8,
+     "Jetz no chli züritüütsch: (noch ein bißchen Zürcher deutsch)")
 
 dev.off()
-
-#Same using tikz
-tikz("plotmath.tex",width=4,height=4)
-
-
-dev.off()
-
-require(tools)
-
-	catch <- system(paste(Sys.which('pdflatex'),
-		'-interaction=batchmode -output-directory figs/ figs/standAloneExample.tex'),
-		ignore.stderr=T)
-
-	# If compiling the example failed, we don't want to include a broken link.
-	if( catch == 0 ){
-		pdfLink <- "The file \\\\code{standAloneExample.tex} may then be compiled to produce
-			\\\\href{./figs/standAloneExample.pdf}{standAloneExample.pdf}. "
-	}else{
-		pdfLink <- ""
-	}
-setTikzDefaults()
-@
+\end{tikzCodeBlock}
 
 \begin{figure}[!h]
 \centering
-\input{figs/annotation.tex}
-\caption{An example using \TikZ{} annotation.}\label{fig:annotation}
+\includegraphics{img/plotmathDefault.pdf}
+\caption{Default output with plotmath and the pdf device.}\label{fig:plotmathDefault}
+\end{figure}
+
+\begin{figure}[!h]
+\centering
+\includegraphics{img/plotmathTikz.pdf}
+\caption{Plotmath output and UTF8 characters replicated with \code{tikz()} annotation.}\label{fig:plotmathTikz}
 \end{figure}
 
 % Return to the normal working directory
