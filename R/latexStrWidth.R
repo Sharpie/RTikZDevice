@@ -232,20 +232,20 @@ function( TeXMetrics ){
 
 	# Append the batchmode flag to increase LaTeX 
 	# efficiency.
-	latexCmd <- paste( latexCmd, '-interaction=batchmode',
+	latexCmd <- paste( latexCmd, '-interaction=batchmode', '-halt-on-error',
 		'-output-directory', texDir, texFile)
 
   # avoid warnings about non-zero exit status, we know tex exited abnormally
   # it was designed that way for speed
   w <- getOption('warn')
   options(warn=-1)
-  
+
 	# Run that shit.
 	silence <- system( latexCmd, intern=T, ignore.stderr=T)
-	
+
 	# set the options back to normal
 	options(warn=w)
-	
+
 
 	# Open the log file.
 	texOut <- file( texLog, 'r' )
@@ -253,7 +253,7 @@ function( TeXMetrics ){
 	# Read the contents of the log file.
 	logContents <- readLines( texOut )
 	close( texOut )
-	
+
 	# Recover width by finding the line containing
 	# tikzTeXWidth in the logfile.
 	match <- logContents[ grep('tikzTeXWidth=', logContents) ]
@@ -262,7 +262,8 @@ function( TeXMetrics ){
 	# number.
 	width <- gsub('[=A-Za-z]','',match)
 
-	if( length(width) == 0 ){
+  # complete.cases() checks for NULLs, NAs and NaNs
+	if( length(width) == 0 | any(!complete.cases(width)) ){
 		message(paste(readLines(texFile),collapse='\n'))
 		message(paste(readLines(texLog),collapse='\n'))
 		stop('******** There was a problem calculating string metrics, 
