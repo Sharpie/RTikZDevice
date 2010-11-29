@@ -145,8 +145,9 @@ function(libname, pkgname) {
       packageStartupMessage( paste( utils:::head(readLines( p ), 2), '\n', sep='' ) , sep='\n' )
       close(p)
     }else{
-      stop("\n\nAn appropriate XeLaTeX compiler could not be found.\n",
-        "Access to XeLaTeX is required for the TikZ device \n",
+      packageStartupMessage(
+        "\n\nATTENTION: An appropriate XeLaTeX compiler could not be found.\n",
+        "Access to the `xelatex' command is required for the TikZ device \n",
         "to produce output containing multibyte UTF-8 characters.\n\n",
         "The following places were tested for a valid XeLaTeX compiler:\n\n\t",
         paste( checkedXelatex,collapse='\n\t')
@@ -155,6 +156,8 @@ function(libname, pkgname) {
 
   library.dynam(pkgname, pkgname, libname)
 
+    # Its not nice to leave things in the user's global environment
+  rm(latexPath, xelatexPath, envir=.GlobalEnv)
 }
 
 # Any variables defined in here will be hidden
