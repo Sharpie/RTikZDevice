@@ -264,11 +264,21 @@ function( TeXMetrics ){
 
   # complete.cases() checks for NULLs, NAs and NaNs
 	if( length(width) == 0 | any(!complete.cases(width)) ){
+
 		message(paste(readLines(texFile),collapse='\n'))
 		message(paste(readLines(texLog),collapse='\n'))
-		stop('******** There was a problem calculating string metrics, 
-  ******** likely there was a problem with your custom packages.
-  ******** See the LaTeX log file above for details.')
+		stop('\nTeX was unable to calculate metrics for the following string\n',
+      'or character:\n\n\t', 
+      TeXMetrics$value, '\n\n',
+      'Common reasons for failure include:\n',
+      '  * The string contains a character which is special to LaTeX unless\n', 
+      '    escaped properly, such as % or $.\n',
+      '  * The string makes use of LaTeX commands provided by a package and\n',
+      '    the tikzDevice was not told to load the package.\n\n',
+      'The contents of the LaTeX log of the aborted run have been printed above,\n',
+      'it may contain additional details as to why the metric calculation failed.\n'
+    )
+
 	}
 
 	# If we're dealing with a string, we're done.
