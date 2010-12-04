@@ -90,7 +90,7 @@ setTikzDefaults <- function( overwrite = TRUE ){
     tikzSanitizeCharacters = c('%','$','}','{','^','_','#','&','~'), 
  
     tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}','\\_{}',
-      '\\#','\\&','\\~')
+      '\\#','\\&','\\char`\\~')
 
   )
 

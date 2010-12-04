@@ -59,7 +59,7 @@ With the contents of `tikzReplacementCharacters`:
   \item \verb{\\\\_\{\}}
   \item \verb{\\\\#}
   \item \verb{\\\\&}
-  \item \verb{\\\\~}
+  \item \verb{\\char`\\~}
 }
 
 These defaults may be adjusted using the \code{\link{options}} function.
