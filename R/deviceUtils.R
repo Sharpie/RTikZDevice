@@ -74,9 +74,7 @@ setTikzDefaults <- function( overwrite = TRUE ){
       "\\PreviewEnvironment{pgfpicture}\n",
       "\\setlength\\PreviewBorder{0pt}\n"
     ),
- 
-    tikzFooter = "\\end{document}\n",
- 
+
     tikzMetricPackages = c(
       "\\usepackage[utf8]{inputenc}\n",
       # The fontenc package is very important here! 
@@ -87,9 +85,12 @@ setTikzDefaults <- function( overwrite = TRUE ){
       "\\usetikzlibrary{calc}\n"
     ),
  
-    tikzSanitizeCharacters = c('%','$','}','{','^'), 
+    tikzFooter = "\\end{document}\n",
  
-    tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}')
+    tikzSanitizeCharacters = c('%','$','}','{','^','_','#','&','~'), 
+ 
+    tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}','\\_{}',
+      '\\#','\\&','\\char`\\~')
 
   )
 

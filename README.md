@@ -79,22 +79,22 @@ to the development of the device!
 
 ---
 
-### Version: 0.5.2
+### Version: 0.5.3
 
 ---
 
-#### Contributors
-The following people contributed to this release of the tikzDevice:
-
-- mlt for reporting problems with the Sanitize function that led to the
-  discovery of two situations where buffer overflows were occurring.
-
-
 #### Bug Fixes
 
-- Fixed buffer overflows and memory leaks related to string pointers in
-  tikzDevice.c.
+- R 2.12.x now throws a warning message when shell commands run via `system()`
+  have non-zero exit conditions.  The metric calculation runs LaTeX on a file
+  containing an \@@end command.  This causes a non zero exit condition.  The end
+  result was that users were getting spammed by warning messages.  These
+  messages have been gagged for now and a better way to run LaTeX such that a
+  non-zero condition can meaningfully indicate an error is being investigated.
 
-- Fixed compilation of the tikzDevice vignette under R 2.12.0.
+- The range of characters the default sanitizer looks for has been extended.  It
+  should now process all characters that are special to TeX with the exception
+  of backslashes.  Documentation has been improved.
 
-- Reduced the verbosity of the package startup message.
+- Detection of failed string metric calculations has been strengthened and the
+  resulting error message has been improved.

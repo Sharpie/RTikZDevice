@@ -1567,15 +1567,18 @@ static char *Sanitize(const char *str){
   //if(DEBUG)
   //  printf("Clean String: %s\n",cleanString);
 
-  // Since we called PROTECT twice, we must call UNPROTECT
-  // and pass the number 2.
-  UNPROTECT(2);
-  
-  //This is really stupid but create a copy of cleanString to 
-  // avoid warning: "discards qualifiers from pointer target type"
+  /* 
+   * cleanString is a pointer to data derived from an R object.  Once UNPROTECT
+   * is called, this object may be eaten by the R garbage collector.  Therefore,
+   * we need to copy the data we care about into a new string.
+  */
   char *cleanStringCP = (char *) calloc( strlen(cleanString) + 1, sizeof(char) );
   
   strcat(cleanStringCP, cleanString);
+
+  // Since we called PROTECT twice, we must call UNPROTECT
+  // and pass the number 2.
+  UNPROTECT(2);
   
   return cleanStringCP;
 }

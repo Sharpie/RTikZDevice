@@ -33,6 +33,37 @@ string replacing each occurrence of a special character contained in
 piece of text when the sanitize option is TRUE. See \code{\link{tikz}}
 for more information on the default special characters and replacement
 values.
+
+By default, `tikzSanitizeCharacters` replaces the following characters:
+
+\itemize{
+  \item \verb{\%}
+  \item \verb{$}
+  \item \verb{\}}
+  \item \verb{\{}
+  \item \verb{^}
+  \item \verb{_}
+  \item \verb{#}
+  \item \verb{&}
+  \item \verb{~}
+}
+
+With the contents of `tikzReplacementCharacters`:
+
+\itemize{
+  \item \verb{\\\\\%}
+  \item \verb{\\\\$}
+  \item \verb{\\\\\}}
+  \item \verb{\\\\\{}
+  \item \verb{\\\\^\{\}}
+  \item \verb{\\\\_\{\}}
+  \item \verb{\\\\#}
+  \item \verb{\\\\&}
+  \item \verb{\\char`\\~}
+}
+
+These defaults may be adjusted using the \code{\link{options}} function.
+
 }
 
 \value{

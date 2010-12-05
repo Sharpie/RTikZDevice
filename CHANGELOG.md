@@ -1,5 +1,28 @@
 ---
 
+### Version: 0.5.2
+
+---
+
+#### Contributors
+The following people contributed to this release of the tikzDevice:
+
+- mlt for reporting problems with the Sanitize function that led to the
+  discovery of two situations where buffer overflows were occurring.
+
+
+#### Bug Fixes
+
+- Fixed buffer overflows and memory leaks related to string pointers in
+  tikzDevice.c.
+
+- Fixed compilation of the tikzDevice vignette under R 2.12.0.
+
+- Reduced the verbosity of the package startup message.
+
+
+---
+
 ### Version: 0.5.1
 
 ---

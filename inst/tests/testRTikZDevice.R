@@ -45,7 +45,6 @@ function(main){
 },
 
 # Plotting test- pch values 0-25
-
 function(main){
 
 	# Magic stuff taken from example(points)
@@ -68,6 +67,31 @@ function(main){
 		# Place text label so we know which character is being plotted.
 		text(ix[i]-0.3, iy[i], i-1 )
 
+	}
+
+},
+
+# Test of string sanitization---if this test is not the 6th test in the list
+# then code will need to be changed below.
+function(main){
+
+  toSanitize <- c('%','$','}','{','^','_','#','&','~')
+
+	# Magic stuff taken from example(points)
+	n <- floor(sqrt(length(toSanitize)))
+	npchIndex <- 0:(length(toSanitize) - 1)
+
+	ix <- npchIndex %/% n
+	iy <- 3 + (n-1) - npchIndex %% n
+
+	rx <- c(-1,1)/2 + range(ix)
+	ry <- c(-1,1)/2 + range(iy)
+  
+	# Set up plot area
+	plot(rx, ry, type="n", axes=F, xlab='', ylab='', main=main, sub="Character Sanitization Test")
+
+	for( i in 1:length(toSanitize) ){
+		text(ix[i], iy[i], toSanitize[i] )
 	}
 
 },
@@ -254,7 +278,14 @@ for(i in 1:length(tests)){
       paste('test',sprintf('%02d',i),'.tex',sep=''))
     t <- system.time(
     {
-        tikz(this.testfile,standAlone=T)
+        # Hack to support the testing of string sanitization.  This test script
+        # has grown old and warty enough that it should be replaced soon.
+        # Probably using a unit test framework like testthat.
+        if(i == 6){
+          tikz(this.testfile, standAlone=TRUE, sanitize=TRUE)
+        }else{
+          tikz(this.testfile, standAlone=TRUE)
+        }
 		# evaluate each test in a new environment so values do not persist 
 		# across tests, because each should be self contained
         evalq( tests[[i]](main=paste('Test',i)), new.env() )

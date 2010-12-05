@@ -8,7 +8,7 @@ rm -rf tikzDevice_*
 mkdir $OUTDIR
 
 # Install the package so changes update
-R CMD BUILD --no-vignettes ../../
+R CMD build --no-vignettes ../../
 R CMD INSTALL tikzDevice_*.tar.gz
 
 # Run the test suite
