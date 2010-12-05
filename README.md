@@ -79,22 +79,7 @@ to the development of the device!
 
 ---
 
-### Version: 0.5.3
+### Version: 0.5.4
+*Under development, will most likely become 0.6.0*
 
 ---
-
-#### Bug Fixes
-
-- R 2.12.x now throws a warning message when shell commands run via `system()`
-  have non-zero exit conditions.  The metric calculation runs LaTeX on a file
-  containing an \@@end command.  This causes a non zero exit condition.  The end
-  result was that users were getting spammed by warning messages.  These
-  messages have been gagged for now and a better way to run LaTeX such that a
-  non-zero condition can meaningfully indicate an error is being investigated.
-
-- The range of characters the default sanitizer looks for has been extended.  It
-  should now process all characters that are special to TeX with the exception
-  of backslashes.  Documentation has been improved.
-
-- Detection of failed string metric calculations has been strengthened and the
-  resulting error message has been improved.
