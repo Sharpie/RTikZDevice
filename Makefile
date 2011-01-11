@@ -1,9 +1,9 @@
 PKGNAME := $(shell sed -n "s/Package: *\([^ ]*\)/\1/p" DESCRIPTION)
 PKGVERS := $(shell sed -n "s/Version: *\([^ ]*\)/\1/p" DESCRIPTION)
+PKGSRC  := $(shell basename $(PWD))
 
 
 .PHONY: help
-
 
 help:
 	@echo "\nExecute development tasks for $(PKGNAME)\n"
@@ -20,21 +20,21 @@ help:
 #------------------------------------------------------------------------------
 docs:
 	cd ..;\
-		R --vanilla --slave -e "library(roxygen); roxygenize('$(PKGNAME)', use.Rd2=TRUE, overwrite=TRUE)"
+		R --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)', use.Rd2=TRUE, overwrite=TRUE)"
 	# Cripple the new folder so you don't get confused and start doing
 	# development in there.
-	cd ../$(PKGNAME).roxygen;\
+	cd ../$(PKGSRC).roxygen;\
 		rm Makefile
 	# Copy over the NAMESPACE as ROxygen wipes it out and does not replace it.
 	#
 	# TODO: Fix this by migrating package documentation to ROxygen.
-	cd ../$(PKGNAME).roxygen;\
-		cp ../$(PKGNAME)/NAMESPACE .
+	cd ../$(PKGSRC).roxygen;\
+		cp ../$(PKGSRC)/NAMESPACE .
 
 
 build: docs
 	cd ..;\
-		R CMD build --no-vignettes $(PKGNAME).roxygen
+		R CMD build --no-vignettes $(PKGSRC).roxygen
 
 
 install: build
@@ -46,7 +46,7 @@ release:
 	# See note in docs as to why this is needed for now.
 	mv NAMESPACE ..
 	cd ..;\
-		R --vanilla --slave -e "library(roxygen); roxygenize('$(PKGNAME)','$(PKGNAME)', copy.package=FALSE, use.Rd2=TRUE, overwrite=TRUE)"
+		R --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)','$(PKGSRC)', copy.package=FALSE, use.Rd2=TRUE, overwrite=TRUE)"
 	mv ../NAMESPACE .
 	./updateVersion.sh
 	cd inst/doc;\
