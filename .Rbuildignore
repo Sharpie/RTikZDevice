@@ -1,2 +1,3 @@
 .git*
 updateVersion.sh
+Makefile
