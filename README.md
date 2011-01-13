@@ -1,3 +1,9 @@
+#**This is an active integration branch for version 0.6**
+
+This means wild things may happen at any moment.  History may get re-written.
+Upstream rebases may occur.  **Pull at your own peril.**
+
+
 # tikzDevice
 
 ---
