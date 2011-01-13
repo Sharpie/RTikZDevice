@@ -13,6 +13,7 @@ help:
 	@echo "-----------------"
 	@echo "  docs       Invike roxygen to generate Rd files in a seperate"
 	@echo "             directory"
+	@echo "  vignette   Build a copy of the package vignette"
 	@echo "  build      Invoke docs and then create a package"
 	@echo "  install    Invoke build and then install the result"
 	@echo "  test       Install a new copy of the package and run it "
@@ -34,6 +35,12 @@ docs:
 	# development in there.
 	cd ../$(PKGSRC).build;\
 		rm Makefile
+
+
+vignette:
+	cd inst/doc;\
+		R CMD Sweave $(PKGNAME).Rnw;\
+		texi2dvi --pdf $(PKGNAME).tex
 
 
 build: docs
