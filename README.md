@@ -82,4 +82,11 @@ to the development of the device!
 ### Version: 0.5.4
 *Under development, will most likely become 0.6.0*
 
+#### Behind the Scenes
+
+- New Makefile for executing common development tasks.
+
+- Package documentation now handled by `roxygen`.  Thanks to Hadley Wickham and
+  Yihui Xie for the `Rd2roxygen` package which facilitated this switch.
+
 ---
