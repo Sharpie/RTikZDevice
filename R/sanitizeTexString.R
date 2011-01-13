@@ -62,6 +62,7 @@
 #' 	sanitizeTexString('10\% of 10$ is 10^\{-1\}$')
 #' }
 #'
+#' @export
 sanitizeTexString <- function(string, 
 	strip = getOption('tikzSanitizeCharacters'),
 	replacement = getOption('tikzReplacementCharacters')){

@@ -166,6 +166,8 @@
 #' setwd(oldwd)
 #' ################################################
 #' }
+#'
+#' @export
 tikz <-
 function (file = "Rplots.tex", width = 7, height = 7,
   bg="transparent", fg="black", pointsize = 10, standAlone = FALSE, 

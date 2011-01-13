@@ -85,8 +85,8 @@
 #' 	dev.off()
 #' }
 #'
+#' @export tikzAnnotate tikzCoord
 NULL
-
 
 tikzAnnotate <-
 function (annotation)

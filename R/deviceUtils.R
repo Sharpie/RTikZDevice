@@ -84,6 +84,7 @@ getDocumentPointsize <- function( docString ){
 #' 	setTikzDefaults()
 #' 	print( options( 'tikzDocumentDeclaration' ) )
 #'
+#' @export
 setTikzDefaults <- function( overwrite = TRUE ){
 
   tikzDefaults <- list(

@@ -37,6 +37,7 @@
 #'
 #' 	getLatexStrWidth('{\\\\tiny Hello \\\\LaTeX!}')
 #'
+#' @export
 getLatexStrWidth <-
 function( texString, cex = 1, face= 1){
 
@@ -112,6 +113,7 @@ function( texString, cex = 1, face= 1){
 #' 	# Calculate ascent, descent and width for "A"
 #' 	getLatexCharMetrics(65)
 #'
+#' @export
 getLatexCharMetrics <-
 function( charCode, cex = 1, face = 1 ){
 
