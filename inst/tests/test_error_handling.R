@@ -1,4 +1,4 @@
-context('Test tikzDevice errors')
+context('Test tikzDevice error and warning messages')
 
 test_that('Device produces an error for unescaped characters',{
 

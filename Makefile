@@ -53,7 +53,8 @@ install: build
 		R CMD INSTALL $(PKGNAME)_$(PKGVERS).tar.gz
 
 test: install
-	Rscript tests/unit_tests.R
+	cd tests;\
+		Rscript unit_tests.R
 
 
 #------------------------------------------------------------------------------
