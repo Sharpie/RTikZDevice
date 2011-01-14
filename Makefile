@@ -53,7 +53,7 @@ install: build
 		R CMD INSTALL $(PKGNAME)_$(PKGVERS).tar.gz
 
 test: install
-	@echo "TODO: Refactor testsuite"
+	Rscript tests/unit_tests.R
 
 
 #------------------------------------------------------------------------------
