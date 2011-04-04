@@ -89,4 +89,7 @@ to the development of the device!
 - Package documentation now handled by `roxygen`.  Thanks to Hadley Wickham and
   Yihui Xie for the `Rd2roxygen` package which facilitated this switch.
 
+- Package test suite completely overhauled and now based on Hadley Wickham's
+  `test_that` package.
+
 ---
