@@ -317,15 +317,7 @@ function( TeXMetrics ){
 
   # avoid warnings about non-zero exit status, we know tex exited abnormally
   # it was designed that way for speed
-  w <- getOption('warn')
-  options(warn=-1)
-
-	# Run that shit.
-	silence <- system( latexCmd, intern=T, ignore.stderr=T)
-
-	# set the options back to normal
-	options(warn=w)
-
+	suppressWarnings(silence <- system( latexCmd, intern=T, ignore.stderr=T))
 
 	# Open the log file.
 	texOut <- file( texLog, 'r' )
