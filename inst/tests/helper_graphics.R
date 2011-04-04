@@ -2,6 +2,13 @@ do_graphics_test <- function(short_name, description, graph_code){
 
   context(description)
 
+  if (str_length(Sys.getenv('R_TESTS')) != 0){
+    # `R CMD check` is running. Skip test and return so our graphics testsuite
+    # does not slow down the CRAN daily checks.
+    cat("SKIP")
+    return(invisible())
+  }
+
   graph_file <- file.path(test_work_dir, str_c(short_name,'.tex'))
 
   test_that('Graph is created cleanly',{
