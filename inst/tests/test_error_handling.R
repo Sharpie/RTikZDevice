@@ -1,5 +1,14 @@
 context('Test tikzDevice error and warning messages')
 
+test_that('Null device is not a tikzDevice',{
+
+    expect_that(
+      isTikzDevice(),
+      is_false()
+    )
+
+})
+
 test_that('Device produces an error for unescaped characters',{
 
   expect_that(

@@ -159,3 +159,10 @@ setTikzDefaults <- function( overwrite = TRUE ){
   invisible( tikzSetOptions )
 
 }
+
+isTikzDevice <- function(which = dev.cur()){
+  if (which == 1){ return(FALSE) }
+
+  dev_name <- names(dev.list()[which - 1])
+  return(dev_name == 'tikz output')
+}
