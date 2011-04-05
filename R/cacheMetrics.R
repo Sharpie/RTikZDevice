@@ -1,3 +1,8 @@
+# Requires functions from filehash
+#' @import filehash
+NULL
+
+
 queryMetricsDictionary <-
 function( key ){
 

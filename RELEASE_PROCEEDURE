@@ -1,0 +1,40 @@
+TikZ Device Release Proceedure
+==============================
+
+(Or, "how to move commits from GitHub to RForge")
+
+Steps:
+
+  * Check out the branch synced with R-Forge:
+
+      git checkout r-forge
+
+  * Bring in master branch as a squashed merge, but do not commit:
+
+      git merge --squash --no-commit master
+
+  * Run `make release` to update the vignette PDFs and the R man pages along
+    with the version number in inst/GIT_VERSION.
+
+      make release
+
+  * May be some merge conflicts due to files that are present in the RForge
+    branch, but deleated in the master branch, such as the vignette PDFs and
+    the R man pages.  Clear these up using git-add:
+
+      git add man
+      git add inst/doc
+
+  * Commit all changes. Add a commit note summarizing what happened:
+
+      git commit -a
+
+  * Push to RForge:
+
+      git svn dcommit
+
+  * ???
+
+  * Profit!
+
+

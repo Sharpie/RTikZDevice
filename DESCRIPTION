@@ -1,19 +1,23 @@
 Package: tikzDevice
 Type: Package
 Title: A Device for R Graphics Output in PGF/TikZ Format
-Version: 0.5.3
+Version: 0.5.4
 Date: 2010-12-05
 Author: Charlie Sharpsteen and Cameron Bracken
-Maintainer: The tikzDevice team <tikzdevice-bugs@lists.r-forge.r-project.org>
-Description: The TikZ device enables LaTeX-ready output from R graphics 
-        functions. This is done by producing code that can be understood by 
-        the TikZ graphics language. All text in a graphic output with the 
-        tikz() function will can be typeset by LaTeX and therefore will match 
-        whatever fonts are currently used in the document. This also means 
-        that LaTeX mathematics can be typeset directly into labels and 
-        annotations!  Graphics produced this way can also be annotated with 
-        custom TikZ commands.
+Maintainer: The tikzDevice team
+    <tikzdevice-bugs@lists.r-forge.r-project.org>
+Description: The TikZ device enables LaTeX-ready output from R graphics
+    functions. This is done by producing code that can be understood by
+    the TikZ graphics language. All text in a graphic output with the
+    tikz() function will can be typeset by LaTeX and therefore will
+    match whatever fonts are currently used in the document. This also
+    means that LaTeX mathematics can be typeset directly into labels
+    and annotations!  Graphics produced this way can also be annotated
+    with custom TikZ commands.
 License: GPL (>= 2.0)
 Depends: filehash
-SystemRequirements: pgf (>=2.00)
+Suggests: testthat (>= 0.4), evaluate, stringr
+SystemRequirements: pgf (>= 2.00)
 LazyLoad: yes
+Collate: 'cacheMetrics.R' 'deviceUtils.R' 'latexStrWidth.R'
+    'sanitizeTexString.R' 'tikz.R' 'tikzAnnotate.R' 'zzz.R'
