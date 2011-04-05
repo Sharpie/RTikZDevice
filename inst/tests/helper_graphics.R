@@ -1,5 +1,5 @@
 do_graphics_test <- function(short_name, description, graph_code,
-  uses_xetex = FALSE){
+  uses_xetex = FALSE, graph_options = NULL){
 
   context(description)
 
@@ -8,6 +8,14 @@ do_graphics_test <- function(short_name, description, graph_code,
     # does not slow down the CRAN daily checks.
     cat("SKIP")
     return(invisible())
+  }
+
+  if (!is.null(graph_options)) {
+    # If this test uses custom options, make sure the current options are
+    # restored after it finishes.
+    orig_opts <- options()
+    options(graph_options)
+    on.exit(options(orig_opts))
   }
 
   graph_file <- file.path(test_work_dir, str_c(short_name,'.tex'))
