@@ -41,9 +41,15 @@
 getLatexStrWidth <-
 function( texString, cex = 1, face= 1){
 
-    # Check if any of the characters in the given string are multibyte UTF-8
-    # and if so use the special XeLaTeX packages
-  multibyte <- anyMultibyteUTF8Characters(texString)
+  # Check if any of the characters in the given string are multibyte UTF-8, or
+  # if the currently open graphics device is a tikzDevice using the xetex
+  # engine. If so, use the special XeLaTeX packages
+  multibyte <- anyMultibyteUTF8Characters(texString) | ifelse(
+    isTikzDevice(),
+    getTikzDeviceEngine() == 'xetex',
+    FALSE
+  )
+
   if( multibyte ){
     if(is.null(getOption('tikzXelatex')))
       stop("Your string currently contains non-ASCII UTF-8 characters but XeLaTeX is not available, please specify a value for tikzXelatex or remove non-ASCII characters.")
@@ -147,15 +153,17 @@ function( charCode, cex = 1, face = 1 ){
 
   # IMPORTANT: The charCode must be in UTF-8 encoding or else funny business
   #            will likely occur.
-  multibyte <- anyMultibyteUTF8Characters( intToUtf8( charCode ) )
+  multibyte <- anyMultibyteUTF8Characters(intToUtf8( charCode )) | ifelse(
+    isTikzDevice(),
+    getTikzDeviceEngine() == 'xetex',
+    FALSE
+  )
 
   packages <-
   if(multibyte)
     getOption("tikzXelatexPackages")
   else
     getOption("tikzLatexPackages")
-
-  multibyte <- anyMultibyteUTF8Characters(intToUtf8(charCode))
 
 	# Create an object that contains the character and it's
 	# properties.
