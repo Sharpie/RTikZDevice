@@ -90,15 +90,16 @@ NULL
 
 tikzAnnotate <-
 function (annotation)
-{	
+{
 
-	if(names(dev.cur()) != "tikz output")
+	if (!isTikzDevice()){
 		stop("The active device is not a tikz device, please start a tikz device to use this function. See ?tikz.")
-		
-	.C('tikzAnnotate', as.character(annotation), 
-		as.integer(length(annotation)), PACKAGE='tikzDevice') 
-	
-	invisible()	
+  }
+
+	.C('tikzAnnotate', as.character(annotation),
+		as.integer(length(annotation)), PACKAGE='tikzDevice')
+
+	invisible()
 }
 
 tikzCoord <-
@@ -115,7 +116,7 @@ function( x, y, name ){
 
   # Use tikzAnnotate() to add a coordinate.
   tikzAnnotate(paste('\\coordinate (', name, ') at (',
-    tikzX, ',', tikzY, ');', sep='')) 
+    tikzX, ',', tikzY, ');', sep=''))
 
 	# Return the coordinate name, invisibly.
 	invisible(
