@@ -148,6 +148,11 @@ SEXP tikzDevice ( SEXP args ){
   */ 
   sanitize = asLogical(CAR(args)); args = CDR(args);
 
+  /*
+   * See the definition of tikz_engine in tikzDevice.h
+   */
+  int engine = asInteger(CAR(args));
+
   /* Ensure there is an empty slot avaliable for a new device. */
   R_CheckDeviceAvailable();
 
@@ -175,9 +180,9 @@ SEXP tikzDevice ( SEXP args ){
      * R graphics function hooks with the appropriate C routines
      * in this file.
     */
-    if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, baseSize, 
-        standAlone, bareBones, documentDeclaration, packages, 
-        footer, console, sanitize ) ){
+    if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, baseSize,
+        standAlone, bareBones, documentDeclaration, packages,
+        footer, console, sanitize, engine ) ){
       /* 
        * If setup was unsuccessful, destroy the device and return
        * an error message.
@@ -221,7 +226,7 @@ static Rboolean TikZ_Setup(
   Rboolean standAlone, Rboolean bareBones,
   const char *documentDeclaration,
   const char *packages, const char *footer, 
-  Rboolean console, Rboolean sanitize ){
+  Rboolean console, Rboolean sanitize, int engine ){
 
   /* 
    * Create tikzInfo, this variable contains information which is
@@ -261,6 +266,7 @@ static Rboolean TikZ_Setup(
 
   /* Copy TikZ-specific information to the tikzInfo variable. */
   strcpy( tikzInfo->outFileName, fileName);
+  tikzInfo->engine = engine;
   tikzInfo->firstPage = TRUE;
   tikzInfo->debug = DEBUG;
   tikzInfo->standAlone = standAlone;
@@ -1520,6 +1526,17 @@ void tikzAnnotate(const char **annotation, int *size){
   
   for(i == 0; i < size[0]; ++i)
     printOutput(tikzInfo, "%s\n", annotation[i] );
+}
+
+/*
+ * Returns the engine used by a given tikzDevice
+ */
+SEXP TikZ_GetEngine(SEXP device_num){
+  int dev_index = asInteger(device_num);
+  pDevDesc deviceInfo = GEgetDevice(dev_index - 1)->dev;
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  return(ScalarInteger(tikzInfo->engine));
 }
 
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
