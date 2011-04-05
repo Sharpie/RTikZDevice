@@ -169,5 +169,6 @@ double dim2dev( double length );
 static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
 static char *Sanitize(const char *str);
+Rboolean contains_multibyte_chars(const char *str);
 
 #endif // End of Once Only header
