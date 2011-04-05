@@ -170,15 +170,36 @@
 #' @export
 tikz <-
 function (file = "Rplots.tex", width = 7, height = 7,
-  bg="transparent", fg="black", pointsize = 10, standAlone = FALSE, 
+  bg="transparent", fg="black", pointsize = 10, standAlone = FALSE,
   bareBones = FALSE, console = FALSE, sanitize = FALSE,
+  engine = getOption("tikzDefaultEngine"),
   documentDeclaration = getOption("tikzDocumentDeclaration"),
-  packages = getOption("tikzLatexPackages"),
+  packages,
   footer = getOption("tikzFooter")
 ){
 
+  if(!file.exists(dirname(file)))
+    stop(paste("Cannot create",file,"because the path does not exist! If you are trying to save a plot to a location other than the working directory, check to make sure that directory exists."))
+
+  # Determine which TeX engine is being used.
+  switch(engine,
+    pdftex = {
+      engine <- 1L # In the C routines, a integer value of 1 means pdftex
+      if (missing(packages)) {packages <- getOption('tikzLatexPackages')}
+    },
+    xetex = {
+      engine <- 2L
+      if (missing(packages)) {packages <- getOption('tikzXelatexPackages')}
+    },
+    {#ELSE
+      stop('Unsupported TeX engine: ', engine,
+        '\nAvailable choices are:\n',
+        '\tpdftex\n',
+        '\txetex\n')
+    })
+
   # Ensure the standAlone option will trump the bareBones option.
-  if( standAlone ) { bareBones = F }
+  if( standAlone ) { bareBones = FALSE }
   if( footer != getOption("tikzFooter") && !standAlone)
     warning( "Footers are ignored when standAlone is set to FALSE" )
 
@@ -187,27 +208,20 @@ function (file = "Rplots.tex", width = 7, height = 7,
 
   # If a pointsize was not found, we use the value of the pointsize
   # argument.
-  if( is.na( baseSize ) ){
+  if( is.na( baseSize ) ){ baseSize <- pointsize }
 
-    baseSize <- pointsize
-
-  }
-  
-  if(!file.exists(dirname(file)))
-    stop(paste("Cannot create",file,"because the path does not exist! If you are trying to save a plot to a location other than the working directory, check to make sure that directory exists."))
-
-
-  # Collapse the character vectors into a single string 
+  # Collapse the character vectors into a single string
   # which is easier to work with in C
-  documentDeclaration <- 
+  documentDeclaration <-
     paste( paste(documentDeclaration, collapse='\n'), collapse='\n')
   packages <- paste( paste( packages, collapse='\n'), collapse='\n')
   footer <- paste( paste( footer,collapse='\n'), collapse='\n')
-  
-  .External('tikzDevice', file, width, height, bg, fg, baseSize, 
-    standAlone, bareBones, documentDeclaration, packages, footer, console, sanitize,
-    PACKAGE='tikzDevice') 
-  
-  invisible()  
+
+  .External('tikzDevice', file, width, height, bg, fg, baseSize,
+    standAlone, bareBones, documentDeclaration, packages, footer, console,
+    sanitize, engine,
+    PACKAGE='tikzDevice')
+
+  invisible()
 
 }
