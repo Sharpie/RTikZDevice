@@ -1,5 +1,4 @@
 test_graphs <- list(
-
   list(
     short_name = 'hello_TeX',
     description = 'Draw a circle and some simple text',
@@ -267,13 +266,31 @@ test_graphs <- list(
 
       print( testPlot )
     })
+  ),
+
+
+  ### XeLaTeX Tests
+  list(
+    short_name = 'utf8_characters',
+    description = 'Test of UTF8 characters',
+    uses_xetex = TRUE,
+    graph_code =  quote({
+      n <- 10
+      chars <- matrix(intToUtf8(seq(161,,1,10*n),multiple=T),n)
+
+      plot(1:n,type='n',xlab='',ylab='',axes=FALSE, main="UTF-8 Characters")
+        for(i in 1:n)
+          for(j in 1:n)
+            text(i,j,chars[i,j])
+    })
   )
+
 
   # New tests go here
   #list(
   #  short_name = 'something_suitable_as_a_filename',
   #  description = 'Longer description of what the test does',
-  #  graph_code = ({
+  #  graph_code = quote({
   #
   #  })
   #)
