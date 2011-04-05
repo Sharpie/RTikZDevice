@@ -133,8 +133,10 @@ function( charCode, cex = 1, face = 1 ){
 	# generalized and combined.
 
 	# We must be given a valid integer character code.
-	if( is.null(getOption('tikzXelatex')) &&
-	  !(is.numeric(charCode) && charCode > 31 && charCode < 127 ) ){
+	if( !is.numeric(charCode) || (
+      is.null(getOption('tikzXelatex')) && !(charCode > 31 && charCode < 127 )
+    )
+  ){
 		warning("Sorry, xelatex is not available so this function currently only accepts numbers between 32 and 126!")
 		return(NULL)
 	}
