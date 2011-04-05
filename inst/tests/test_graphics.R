@@ -299,6 +299,8 @@ test_graphs <- list(
     short_name = 'xetex_variants',
     description = 'Test of XeLaTeX font variants',
     uses_xetex = TRUE,
+    # Only OS X is likely to have the required fonts installed
+    skip_if = function(){Sys.info()['sysname'] != 'Darwin'},
     graph_options = list(
       tikzXelatexPackages = c(
         "\\usepackage{fontspec}",

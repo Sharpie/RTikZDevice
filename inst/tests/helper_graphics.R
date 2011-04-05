@@ -1,5 +1,5 @@
 do_graphics_test <- function(short_name, description, graph_code,
-  uses_xetex = FALSE, graph_options = NULL){
+  uses_xetex = FALSE, graph_options = NULL, skip_if = NULL){
 
   context(description)
 
@@ -8,6 +8,13 @@ do_graphics_test <- function(short_name, description, graph_code,
     # does not slow down the CRAN daily checks.
     cat("SKIP")
     return(invisible())
+  }
+
+  if (!is.null(skip_if)) {
+    if (skip_if()) {
+      cat("SKIP")
+      return(invisible())
+    }
   }
 
   if (!is.null(graph_options)) {
