@@ -66,4 +66,14 @@ test_that('tikzAnnotate refuses to work with a non-tikzDevice',{
     tikzAnnotate('test'),
     throws_error('The active device is not a tikz device')
   )
+
+})
+
+test_that('UTF8 calculation fails when XeTeX cannot find a character in the current font.',{
+
+  expect_that(
+    getLatexStrWidth('α'),
+    throws_error('TeX was unable to calculate metrics')
+  )
+
 })
