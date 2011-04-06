@@ -268,6 +268,39 @@ test_graphs <- list(
     })
   ),
 
+  list(
+   short_name = 'base_raster',
+   description = 'Test raster support in base graphics',
+   graph_code = quote({
+
+     plot(c(100, 250), c(300, 450), type = "n", xlab="", ylab="")
+     image <- as.raster(matrix(rep(0:1,5*3), ncol=5, nrow=3))
+     rasterImage(image, 100, 300, 150, 350, interpolate=FALSE)
+     rasterImage(image, 100, 400, 150, 450)
+     rasterImage(image, 200, 300, 200 + xinch(.5), 300 + yinch(.3),
+              interpolate=FALSE)
+            rasterImage(image, 200, 400, 250, 450, angle=15,
+              interpolate=FALSE)
+
+   })
+  ),
+
+  list(
+   short_name = 'grid_raster',
+   description = 'Test raster support in grid graphics',
+   graph_code = quote({
+
+     suppressPackageStartupMessages(require(grid))
+     suppressPackageStartupMessages(require(lattice))
+
+     plt <- levelplot(volcano, panel = panel.levelplot.raster,
+          col.regions = topo.colors, cuts = 30, interpolate = TRUE)
+
+     print(plt)
+
+   })
+  ),
+
   # New pdfLaTeX tests go here
   #list(
   #  short_name = 'something_suitable_as_a_filename',
