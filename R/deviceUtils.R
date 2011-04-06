@@ -184,12 +184,12 @@ getTikzDeviceEngine <- function(dev_num = dev.cur()){
 }
 
 tikz_writeRaster <-
-function( 
+function(
   fileName, rasterCount, rasterData, nrows, ncols,
   finalDims, interpolate
 ){
 
-  fileName = file_path_sans_ext( fileName )
+  fileName = tools::file_path_sans_ext( fileName )
   fileName = paste( fileName, '_ras_', rasterCount, '.png', sep = '' )
 
   message("\nRaw data was:\n\n",
@@ -198,7 +198,7 @@ function(
   # Convert the 4 vectors of RGBA data contained in rasterData to a raster
   # image.
   rasterData[['maxColorValue']] = 255
-  rasterData = do.call( grDevices::rgb, rasterData ) 
+  rasterData = do.call( grDevices::rgb, rasterData )
   rasterData = as.raster(
     matrix( rasterData, nrow = nrows, ncol = ncols, byrow = TRUE ) )
 
