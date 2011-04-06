@@ -1,3 +1,4 @@
+#' @export
 anyMultibyteUTF8Characters <- function(string, encoding = "UTF-8"){
 
   # This function checks if any of the characters in the given string
