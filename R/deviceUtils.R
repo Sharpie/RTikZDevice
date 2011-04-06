@@ -224,15 +224,20 @@ function(
   # being compiled into OS X binaries.  Technically, cannot count on Aqua/Quartz
   # either but you would have to be a special kind of special to leave it out.
   # Using type='Xlib' also causes a segfault for me on OS X 10.6.4
-  if ( capabilities('aqua') ){
+  if ( Sys.info()['sysname'] == 'Darwin' && capabilities('aqua') ){
 
     quartz( file = fileName, type = 'png',
       width = finalDims$width, height = finalDims$height, antialias = FALSE )
 
+  } else if (Sys.info()['sysname'] == 'Windows') {
+
+    # TODO: make `res` user configurable.
+    png( filename = fileName, width = finalDims$width, height = finalDims$height,
+      units = 'in', res = 300 )
+
   } else {
 
-    # NOTE: Windows appears to have issues (who knew?!).  We may be loosing a
-    # row and column of data.
+    # Linux/UNIX and OS X without Aqua.
     png( filename = fileName, width = finalDims$width, height = finalDims$height,
       type = 'Xlib', units = 'in', antialias = 'none' )
 
