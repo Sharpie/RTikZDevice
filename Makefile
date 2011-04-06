@@ -21,6 +21,7 @@ help:
 	@echo "             directory"
 	@echo "  vignette   Build a copy of the package vignette"
 	@echo "  build      Invoke docs and then create a package"
+	@echo "  check      Invoke build and then check the package"
 	@echo "  install    Invoke build and then install the result"
 	@echo "  test       Install a new copy of the package and run it "
 	@echo "             through the testsuite"
@@ -60,6 +61,10 @@ build: docs
 install: build
 	cd ..;\
 		"$(RBIN)/R" CMD INSTALL $(PKGNAME)_$(PKGVERS).tar.gz
+
+check: build
+	cd ..;\
+		"$(RBIN)/R" CMD check --no-tests $(PKGNAME)_$(PKGVERS).tar.gz
 
 test: install
 	cd tests;\
