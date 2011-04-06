@@ -363,7 +363,14 @@ static Rboolean TikZ_Setup(
    * normal UTF8 text and so wantSymbolUTF8 is TRUE.
   */
   deviceInfo->hasTextUTF8 = FALSE;
-  deviceInfo->wantSymbolUTF8 = TRUE;
+  switch (tikzInfo->engine) {
+    case pdftex:
+      deviceInfo->wantSymbolUTF8 = FALSE;
+      break;
+    case xetex:
+      deviceInfo->wantSymbolUTF8 = TRUE;
+      break;
+  }
 
   /*
    * Initialize device parameters. These concern properties such as the 
@@ -754,17 +761,23 @@ TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
 static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
     double *ascent, double *descent, double *width, pDevDesc deviceInfo ){
 
-  /* 
-   * Assuming we are dealing with ASCII characters, check the character
-   * code c to see if it falls outside the range of printable characters
-   * which are: 32-126
 
-  if( c < 32 || c > 126 ){
-    // Non-printable character. Set metrics to zero and return.
-    *ascent = 0.0;
-    *descent = 0.0;
-    *width = 0.0;
-    return;
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if (tikzInfo->engine == pdftex) {
+    /*
+     * PdfTeX can only deal with ASCII characters, check the character code c
+     * to see if it falls outside the range of printable characters which are:
+     * 32-126
+     */
+    if( c < 32 || c > 126 ){
+      /* Non-printable character. Set metrics to zero and return. */
+      *ascent = 0.0;
+      *descent = 0.0;
+      *width = 0.0;
+      return;
+    }
   }
   */
 
@@ -803,7 +816,6 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   *descent = REAL(RMetrics)[1];
   *width = REAL(RMetrics)[2];
 
-  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
   if( tikzInfo->debug == TRUE )
   printOutput( tikzInfo, "%% Calculated character metrics. ascent: %f, descent: %f, width: %f\n",
     *ascent, *descent, *width);
@@ -847,6 +859,17 @@ static double TikZ_StrWidth( const char *str,
       
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if (tikzInfo->engine == pdftex) {
+    /*
+     * We don't support UTF8 with the pdftex engine. Check the string for
+     * multibyte characters and throw a wobbly if any are found.
+     */
+    if (contains_multibyte_chars(str)) {
+      error("The TikZ device does not support UTF8 strings when the pdftex engine is in use!");
+      return(0.0);
+    }
+  }
 
   // Calculate font scaling factor.
   double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
@@ -1524,7 +1547,7 @@ void tikzAnnotate(const char **annotation, int *size){
   if(tikzInfo->debug == TRUE)
     printOutput(tikzInfo,"\n%% Annotating Graphic\n");
   
-  for(i == 0; i < size[0]; ++i)
+  for(i = 0; i < size[0]; ++i)
     printOutput(tikzInfo, "%s\n", annotation[i] );
 }
 
@@ -1608,6 +1631,40 @@ static char *Sanitize(const char *str){
   return cleanStringCP;
 }
 
+Rboolean contains_multibyte_chars(const char *str){
+  /*
+   * Recover package namespace as the multibyte check function
+   * is not exported
+  */
+  SEXP TikZ_namespace;
+  PROTECT(
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
+
+  SEXP multibyte_check_fun = findFun(
+      install("anyMultibyteUTF8Characters"), TikZ_namespace );
+
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP,2) );
+
+  // Place the function into the first slot of the SEXP.
+  SETCAR( RCallBack, multibyte_check_fun );
+
+  // Place the string into the second slot of the SEXP.
+  SETCADR( RCallBack, mkString( str ) );
+  SET_TAG( CDR( RCallBack ), install("string") );
+
+  /*
+   * Call the R function, capture the result.
+  */
+  SEXP result;
+  PROTECT( result = eval( RCallBack, TikZ_namespace ) );
+
+  UNPROTECT(3);
+
+  return(asLogical(result));
+}
 
 /* Raster routines are only defined for R >= 2.11.0, Graphics Engine >= 6 */
 #if R_GE_version >= 6

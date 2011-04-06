@@ -18,20 +18,26 @@ test_that('Device produces an error for unescaped characters',{
 
 })
 
-test_that('Device warns about the lower bound of the ASCII table',{
+test_that('Device warns about the lower bound of the ASCII table if XeTeX disabled',{
+  xelatex <- getOption('tikzXelatex')
+  options(tikzXelatex = NULL)
+  on.exit(options(tikzXelatex = xelatex))
 
   expect_that(
     getLatexCharMetrics(31),
-    gives_warning('only accepts numbers between 32 and 126!')
+    gives_warning('xelatex is not available')
   )
 
 })
 
-test_that('Device warns about the upper bound of the ASCII table',{
+test_that('Device warns about the upper bound of the ASCII table if XeTeX disabled',{
+  xelatex <- getOption('tikzXelatex')
+  options(tikzXelatex = NULL)
+  on.exit(options(tikzXelatex = xelatex))
 
   expect_that(
     getLatexCharMetrics(127),
-    gives_warning('only accepts numbers between 32 and 126!')
+    gives_warning('xelatex is not available')
   )
 
 })
@@ -60,4 +66,14 @@ test_that('tikzAnnotate refuses to work with a non-tikzDevice',{
     tikzAnnotate('test'),
     throws_error('The active device is not a tikz device')
   )
+
+})
+
+test_that('UTF8 calculation fails when XeTeX cannot find a character in the current font.',{
+
+  expect_that(
+    getLatexStrWidth('α'),
+    throws_error('TeX was unable to calculate metrics')
+  )
+
 })
