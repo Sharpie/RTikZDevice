@@ -462,16 +462,29 @@ The first five options should be familiar to anyone who has used the default gra
 
 \subsection{Font Size Calculations}
 \label{subsec:fontCalc}
-The overarching goal of the ‘tikzDevice’ is to provide seamless integration between text in R graphics and the text of LaTeX documents that contain those graphics.  In order to achieve this integration the device must translate font sizes specified in R to corresponding font sizes in LaTeX.  The issue is that font sizes in LaTeX are controlled by a ``base font size'' that is specified at the beginning of the document- typically 10pt.  There is no easy way in LaTeX to change the font size to a new numerical value, such as 16pt for a plot title.  Fortunately, the TikZ graphics system allows text to be resized using a scaling factor.  The \code{tikzDevice} calculates a scaling factor used to approximate other font sizes using the following three inputs:
+The overarching goal of the `tikzDevice' is to provide seamless integration
+between text in R graphics and the text of LaTeX documents that contain those
+graphics.  In order to achieve this integration the device must translate font
+sizes specified in R to corresponding font sizes in LaTeX.  The issue is that
+font sizes in LaTeX are controlled by a ``base font size'' that is specified at
+the beginning of the document- typically 10pt.  There is no easy way in LaTeX
+to change the font size to a new numerical value, such as 16pt for a plot
+title.  Fortunately, the TikZ graphics system allows text to be resized using a
+scaling factor.  The \code{tikzDevice} calculates a scaling factor used to
+approximate other font sizes using the following three inputs:
 
 \begin{itemize}
 
   \item{The ``base font size'' specified when the graphics device is
           created.}
 
-  \item{The ``character expansion factor'' parameter, specified using the ‘cex’ argument to functions such as described in the documentation of the \lang{R} function \code{par()}.}
+  \item{The ``character expansion factor'' parameter, specified using the `cex'
+    argument to functions such as described in the documentation of the
+    \lang{R} function \code{par()}.}
   
-  \item{The ``font size'' parameter, specified using the `ps’ argument to functions such as \code{par()} or the `fontsize’ argument to functions such as \code{gpar()}.}
+  \item{The ``font size'' parameter, specified using the `ps' argument to
+    functions such as \code{par()} or the `fontsize' argument to functions such
+    as \code{gpar()}.}
 
 \end{itemize}
 
