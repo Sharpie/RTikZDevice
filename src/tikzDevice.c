@@ -453,20 +453,12 @@ static Rboolean TikZ_Setup(
   deviceInfo->path = TikZ_Path;
 #endif
 
-  /*
-   * The following functions were added in R 2.11.0, Graphics Engine
-   * version 6.  Definition of these functions is protected by C
-   * preprocessor directives in order to aviod confusing older versions
-   * of R.
-  */
-#if R_GE_version >= 6
   /* 
    * Raster Routines.  Currently implemented as stub functions to
    * avoid nasty crashes. 
   */
   deviceInfo->raster = TikZ_Raster;
   deviceInfo->cap = TikZ_Cap;
-#endif
 
   /* Dummy routines. These are mainly used by GUI graphics devices. */
   deviceInfo->activate = TikZ_Activate;
@@ -1665,8 +1657,6 @@ Rboolean contains_multibyte_chars(const char *str){
   return(asLogical(result));
 }
 
-/* Raster routines are only defined for R >= 2.11.0, Graphics Engine >= 6 */
-#if R_GE_version >= 6
 
 /*
  * Creates a raster image whose lower left corner is centered at the
@@ -1712,8 +1702,6 @@ static SEXP TikZ_Cap( pDevDesc deviceInfo ){
   return R_NilValue;
 
 }
-
-#endif
 
 
 /* 

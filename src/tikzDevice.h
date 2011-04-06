@@ -20,6 +20,11 @@
 #include <Rinternals.h>
 #include <R_ext/GraphicsEngine.h>
 
+/* Check R Graphics Engine for minimum supported version */
+#if R_GE_version < 6
+#error "This version of the tikzDevice must be compiled against R 2.11.0 or newer!"
+#endif
+
 
 /*
  * tikz_engine can take on possible values from a list of all the TeX engines
@@ -121,10 +126,6 @@ TikZ_Path( double *x, double *y,
 );
 #endif
 
-
-/* Raster routines are only defined for R >= 2.11.0, Graphics Engine >= 6 */
-#if R_GE_version >= 6
-
 static void TikZ_Raster( 
   unsigned int *raster,
   int w, int h,
@@ -136,8 +137,6 @@ static void TikZ_Raster(
 );
 
 static SEXP TikZ_Cap( pDevDesc deviceInfo );
-
-#endif
 
 /* Dummy routines. */
 static void TikZ_Activate( pDevDesc deviceInfo );
