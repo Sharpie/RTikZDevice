@@ -16,12 +16,17 @@ getTikzDeviceVersion <- function(){
   
   # Returns the version of the currently installed tikzDevice 
   # for use in Print_TikZ_Header.
+  version_file <- system.file('GIT_VERSION', package = 'tikzDevice')
+  if (file.exists(version_file)) {
+    version_num <- readLines(version_file)[1]
+  } else {
+    version_num <- paste('~',
+      read.dcf(system.file('DESCRIPTION', package = 'tikzDevice'),
+        fields = 'Version')
+    )
+  }
 
-  return(
-    readLines(
-      system.file('GIT_VERSION', package = 'tikzDevice')
-    )[1]
-  )
+  return( version_num )
 
 }
 
