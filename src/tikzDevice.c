@@ -1315,7 +1315,35 @@ TikZ_Path( double *x, double *y,
   const pGEcontext plotParams, pDevDesc deviceInfo
 ){
 
-  warning( "This version of the TikZ graphics device does not support polypath rendering" );
+  int i, j, index;
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing Polypath\n"); }
+
+  /*Define the colors for fill and border*/
+  StyleDef(TRUE, plotParams, deviceInfo);
+
+  index = 0;
+  for (i = 0; i < npoly; i++) {
+    if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing subpath: %i\n", i); }
+
+    /* Start drawing, open an options bracket. */
+    printOutput(tikzInfo,"\n\\draw[");
+
+    /*Define the draw styles*/
+    StyleDef(FALSE, plotParams, deviceInfo);
+
+    printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n", x[index],y[index]);
+    index++;
+
+    for (j = 1; j < nper[i]; j++) {
+      printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n", x[index],y[index]);
+      index++;
+    }
+
+    printOutput(tikzInfo, "\tcycle;\n" );
+
+  }
 
 }
 #endif
