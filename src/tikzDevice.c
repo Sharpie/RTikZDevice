@@ -1805,12 +1805,25 @@ static void TikZ_Raster(
   SEXP rasterFile;
   PROTECT( rasterFile = eval( RCallBack, TikZ_namespace ) );
 
-  printOutput(tikzInfo, "\\node[draw,black,inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f,%6.2f) {",
+  /* Position the image using a node */
+  printOutput(tikzInfo, "\\node[inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f, %6.2f) {\n",
     rot, x, y);
-  printOutput(tikzInfo, "\\includegraphics{");
-  printOutput(tikzInfo, "%s}};\n", translateChar(asChar(rasterFile)));
+  /* Include the image using PGF's native image handling */
+  printOutput(tikzInfo, "\t\\pgfimage[width=%6.2fpt,height=%6.2fpt,",
+      width, height);
+  /* Set PDF interpolation (not all viewers respect this, but they should) */
+  if (interpolate) {
+    printOutput(tikzInfo, "interpolate=true]");
+  } else {
+    printOutput(tikzInfo, "interpolate=false]");
+  }
+  /* Slap in the file name */
+  printOutput(tikzInfo, "{%s}", translateChar(asChar(rasterFile)));
+  printOutput(tikzInfo, "};\n");
 
-  /* 
+  if (tikzInfo->debug) { printOutput(tikzInfo, "\\draw[fill=red] (%6.2f, %6.2f) circle (1pt);", x, y); }
+
+  /*
    * Increment the number of raster files we have created with this device.
    * This is used to provide unique file names for each raster.
   */
