@@ -1406,7 +1406,7 @@ static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo){
   }
 }
 
-static void SetLineStyle(int lty, int lwd, tikzDevDesc *tikzInfo){
+static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo){
     
   SetLineWeight(lwd, tikzInfo);
   
@@ -1460,10 +1460,10 @@ static void SetDashPattern(int lty, tikzDevDesc *tikzInfo){
   printOutput(tikzInfo, ",");
 }
 
-static void SetLineWeight(int lwd, tikzDevDesc *tikzInfo){
+static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo){
   
   /*Set the line width, 0.4pt is the TikZ default so scale lwd=1 to that*/
-  if(lwd != 1)
+  if(lwd != 1.0)
     printOutput(tikzInfo,"line width=%4.1fpt,",0.4*lwd);
 }
 
