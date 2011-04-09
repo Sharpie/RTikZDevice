@@ -105,6 +105,11 @@ to the development of the device!
 
 #### Bug Fixes
 
+- Fixed a bug where the `lwd` parameter used to control line widths was
+  declared by tikzDevice to be of type `int` when it is actually a `double`.
+  This was causing line widths to be ignored or miscalculated. Many thanks to
+  Baptiste Auguie for reporting this issue.
+
 
 #### Depreciation Notices
 

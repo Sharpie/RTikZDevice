@@ -154,9 +154,9 @@ static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
 static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo);
 static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo);
 static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo);
-static void SetLineStyle(int lty, int lwd, tikzDevDesc *tikzInfo);
+static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo);
 static void SetDashPattern(int lty, tikzDevDesc *tikzInfo);
-static void SetLineWeight(int lwd, tikzDevDesc *tikzInfo);
+static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo);
 static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
 static void SetLineEnd(R_GE_linejoin lend, tikzDevDesc *tikzInfo);
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
