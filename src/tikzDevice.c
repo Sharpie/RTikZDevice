@@ -1318,22 +1318,45 @@ TikZ_Path( double *x, double *y,
   int i, j, index;
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing Polypath\n"); }
+  if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing polypath with %i subpaths\n", npoly); }
 
   /*Define the colors for fill and border*/
   StyleDef(TRUE, plotParams, deviceInfo);
 
+  /*
+   * Start drawing, open an options bracket.
+   *
+   * We use \filldraw instead of the normal \draw, because filldraw has builtin
+   * support for handling rule-based filling of operlaping polygons as R expects.
+   *
+   * Thank you TikZ!
+   */
+  printOutput(tikzInfo,"\n\\filldraw[");
+
+  /* Define the draw styles */
+  StyleDef(FALSE, plotParams, deviceInfo);
+
+  /*
+   * Select rule to be used for overlapping fills as specified by the 'winding'
+   * parameter. See the "Graphic Parameters: Interior Rules" section of the PGF
+   * manual for details.
+   */
+  if (winding) {
+    printOutput(tikzInfo, "nonzero rule");
+  } else {
+    printOutput(tikzInfo, "even odd rule");
+  }
+
+  printOutput(tikzInfo, "]");
+
+
+  /* Draw polygons */
   index = 0;
   for (i = 0; i < npoly; i++) {
-    if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing subpath: %i\n", i); }
 
-    /* Start drawing, open an options bracket. */
-    printOutput(tikzInfo,"\n\\draw[");
+    if(tikzInfo->debug) { printOutput(tikzInfo, "\n%% Drawing subpath: %i\n", i); }
 
-    /*Define the draw styles*/
-    StyleDef(FALSE, plotParams, deviceInfo);
-
-    printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n", x[index],y[index]);
+    printOutput(tikzInfo, "\n\t(%6.2f,%6.2f) --\n", x[index],y[index]);
     index++;
 
     for (j = 1; j < nper[i]; j++) {
@@ -1341,9 +1364,12 @@ TikZ_Path( double *x, double *y,
       index++;
     }
 
-    printOutput(tikzInfo, "\tcycle;\n" );
+    printOutput(tikzInfo, "\tcycle" );
 
   }
+
+  /* Close the \filldraw command */
+  printOutput(tikzInfo, ";\n");
 
 }
 #endif

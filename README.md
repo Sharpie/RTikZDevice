@@ -102,6 +102,10 @@ to the development of the device!
 
 - Added "_" to the list of default sanitize characters
 
+- The TikZ device now fully supports the `polypath` graphics primitive that was
+  added in R 2.12.0 and no longer throws "not implemented" warnings when this
+  functionality is used.
+
 
 #### Bug Fixes
 
