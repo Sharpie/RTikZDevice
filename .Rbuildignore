@@ -3,4 +3,3 @@ updateVersion.sh
 Makefile
 tests/test_work
 tests/test_output
-RELEASE_PROCEEDURE

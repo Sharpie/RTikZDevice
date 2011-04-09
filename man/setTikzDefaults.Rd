@@ -10,6 +10,8 @@ Reset all the \pkg{tikzDevice} options to their default values.
 \usage{
 	setTikzDefaults( overwrite = TRUE ) 
 setTikzDefaults(overwrite=TRUE)
+setTikzDefaults(overwrite=TRUE)
+setTikzDefaults(overwrite=TRUE)
 }
 
 \arguments{
@@ -28,10 +30,28 @@ Specifically resets the options \code{tikzLatex},
 and \code{tikzReplacementCharacters}.
 
 
+\code{setTikzDefaults}: Specifically resets the options \code{tikzLatex},
+\code{tikzDocumentDeclaration}, \code{tikzLatexPackages},
+\code{tikzMetricPackages}, \code{tikzFooter}, \code{tikzSanitizeCharacters}
+and \code{tikzReplacementCharacters}.
+
+
+\code{setTikzDefaults}: Specifically resets the options \code{tikzLatex},
+\code{tikzDocumentDeclaration}, \code{tikzLatexPackages},
+\code{tikzMetricPackages}, \code{tikzFooter}, \code{tikzSanitizeCharacters}
+and \code{tikzReplacementCharacters}.
+
+
 }
 
 \value{
 Nothing returned.
+\code{setTikzDefaults}: Nothing returned.
+
+
+\code{setTikzDefaults}: Nothing returned.
+
+
 \code{setTikzDefaults}: Nothing returned.
 
 
@@ -42,7 +62,7 @@ Cameron Bracken \email{cameron.bracken@gmail.com} and Charlie Sharpsteen \email{
 
 \seealso{
 \code{\link{tikz}}
-\code{\link{tikz}}}
+\code{\link{tikz}}\code{\link{tikz}}\code{\link{tikz}}}
 \examples{
 	print( options( 'tikzDocumentDeclaration' ) )
 	options( tikzDocumentDeclaration = 'foo' )
@@ -51,6 +71,16 @@ Cameron Bracken \email{cameron.bracken@gmail.com} and Charlie Sharpsteen \email{
 print( options( 'tikzDocumentDeclaration' ) )
 options( tikzDocumentDeclaration = 'foo' )
 setTikzDefaults()
+print( options( 'tikzDocumentDeclaration' ) )print( options( 'tikzDocumentDeclaration' ) )
+options( tikzDocumentDeclaration = 'foo' )
+setTikzDefaults()
+print( options( 'tikzDocumentDeclaration' ) )print( options( 'tikzDocumentDeclaration' ) )
+options( tikzDocumentDeclaration = 'foo' )
+setTikzDefaults()
 print( options( 'tikzDocumentDeclaration' ) )}
+\alias{setTikzDefaults}
+
+\alias{setTikzDefaults}
+
 \alias{setTikzDefaults}
 

@@ -41,11 +41,28 @@
 getLatexStrWidth <-
 function( texString, cex = 1, face= 1){
 
+  # Check if any of the characters in the given string are multibyte UTF-8, or
+  # if the currently open graphics device is a tikzDevice using the xetex
+  # engine. If so, use the special XeLaTeX packages
+  multibyte <- anyMultibyteUTF8Characters(texString) | ifelse(
+    isTikzDevice(),
+    getTikzDeviceEngine() == 'xetex',
+    FALSE
+  )
+
+  if( multibyte ){
+    if(is.null(getOption('tikzXelatex')))
+      stop("Your string currently contains non-ASCII UTF-8 characters but XeLaTeX is not available, please specify a value for tikzXelatex or remove non-ASCII characters.")
+    packages <- getOption("tikzXelatexPackages")
+  }else{
+    packages <- getOption("tikzLatexPackages")
+  }
+
 	# Create an object that contains the string and it's
 	# properties.
 	TeXMetrics <- list( type='string', scale=cex, face=face, value=texString,
 	 	documentDeclaration = getOption("tikzDocumentDeclaration"),
-		packages = getOption("tikzLatexPackages"))
+		packages = packages, multibyte = multibyte)
 		
 
 	# Check to see if we have a width stored in
@@ -122,8 +139,11 @@ function( charCode, cex = 1, face = 1 ){
 	# generalized and combined.
 
 	# We must be given a valid integer character code.
-	if( !(is.numeric(charCode) && charCode > 31 && charCode < 127 ) ){
-		warning("Sorry, this function currently only accepts numbers between 32 and 126!")
+	if( !is.numeric(charCode) || (
+      is.null(getOption('tikzXelatex')) && !(charCode > 31 && charCode < 127 )
+    )
+  ){
+		warning("Sorry, xelatex is not available so this function currently only accepts numbers between 32 and 126!")
 		return(NULL)
 	}
 
@@ -131,11 +151,25 @@ function( charCode, cex = 1, face = 1 ){
   # and passed a float.
 	charCode <- as.integer( charCode )
 
+  # IMPORTANT: The charCode must be in UTF-8 encoding or else funny business
+  #            will likely occur.
+  multibyte <- anyMultibyteUTF8Characters(intToUtf8( charCode )) | ifelse(
+    isTikzDevice(),
+    getTikzDeviceEngine() == 'xetex',
+    FALSE
+  )
+
+  packages <-
+  if(multibyte)
+    getOption("tikzXelatexPackages")
+  else
+    getOption("tikzLatexPackages")
+
 	# Create an object that contains the character and it's
 	# properties.
 	TeXMetrics <- list( type='char', scale=cex, face=face, value=charCode,
 		documentDeclaration = getOption("tikzDocumentDeclaration"),
-		packages = getOption("tikzLatexPackages"))
+		packages = packages, multibyte = multibyte)
 
 	# Check to see if we have metrics stored in
 	# our dictionary for this character.
@@ -165,7 +199,7 @@ function( charCode, cex = 1, face = 1 ){
 getMetricsFromLatex <-
 function( TeXMetrics ){
 	
-	# Reimplementation of the origonal C function since
+	# Reimplementation of the original C function since
 	# the C function causes all kinds of gibberish to
 	# hit the screen when called under Windows and
 	# Linux. 
@@ -199,11 +233,18 @@ function( TeXMetrics ){
 	# Also, we load the user packages last so the user can override 
 	# things if they need to.
 	#
-	#The user MUST load the tikz package here
-	writeLines(getOption("tikzLatexPackages"), texIn)
+	# The user MUST load the tikz package here.
+	#
+	# Load important packages for calculating metrics, must use different
+	# packages for (multibyte) unicode characters.
 	
-	# Load important packages for calculating metrics
+	if(TeXMetrics$multibyte){
+	  writeLines(getOption("tikzXelatexPackages"), texIn)
+	  writeLines(getOption("tikzUnicodeMetricPackages"), texIn)
+	}else{
+	  writeLines(getOption("tikzLatexPackages"), texIn)
 	writeLines(getOption("tikzMetricPackages"), texIn)
+	}
 
 	writeLines("\\batchmode", texIn)
 
@@ -307,8 +348,9 @@ function( TeXMetrics ){
 	# Close the LaTeX file, ready to compile 
 	close( texIn )
 
-	# Recover the latex command.
-	latexCmd <- getOption('tikzLatex')
+	# Recover the latex command. Use XeLaTeX if the character is not ASCII
+	latexCmd <- ifelse(TeXMetrics$multibyte,
+	  getOption('tikzXelatex'), getOption('tikzLatex'))
 
 	# Append the batchmode flag to increase LaTeX 
 	# efficiency.
@@ -318,10 +360,6 @@ function( TeXMetrics ){
   # avoid warnings about non-zero exit status, we know tex exited abnormally
   # it was designed that way for speed
 	suppressWarnings(silence <- system( latexCmd, intern=T, ignore.stderr=T))
-
-	# set the options back to normal
-	options(warn=w)
-
 
 	# Open the log file.
 	texOut <- file( texLog, 'r' )

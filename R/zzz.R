@@ -25,7 +25,9 @@ function(libname, pkgname) {
   packageStartupMessage( paste(versionInfo,collapse='\n') )
 
   foundLatex <- FALSE
+  foundXelatex <- FALSE
   checked <- c()
+  checkedXelatex <- c()
 
   latexTest <- function( pathToTeX, pathDesc ){
     
@@ -47,6 +49,26 @@ function(libname, pkgname) {
 
   }
 
+  xelatexTest <- function( pathToTeX, pathDesc ){
+
+      Sys.setenv("PATH" = Sys.getenv("PATH"))
+      xelatexPath <<- Sys.which( paste( pathToTeX ) )
+
+      # Check to see if the path leads to an executible
+      if( file.access(xelatexPath[1], 1) == 0 ){
+        options( tikzXelatex = xelatexPath )
+        options( tikzXelatexDefault = xelatexPath )
+        foundXelatex <<- TRUE
+        checkedXelatex <<- paste( "\nA working XeLaTeX compiler was found by checking:\n\t",pathDesc,
+          "\n\nGlobal option tikzXelatex set to:\n\t",xelatexPath,'\n',sep='' )
+        return( TRUE )
+      }else{
+        checkedXelatex[ length(checked)+1 ] <<- pathDesc
+        return( FALSE )
+      }
+
+    }
+
 
   testLocs <- c( ifelse( is.null(getOption('tikzLatex')), "", getOption('tikzLatex') ),
     Sys.getenv("R_LATEXCMD"),
@@ -55,12 +77,22 @@ function(libname, pkgname) {
     'pdflatex',
     'latex')
 
+
   testDescs <- c( "A pre-existing value of the global option tikzLatex",
     "The R environment variable R_LATEXCMD",
     "The R environment variable R_PDFLATEXCMD",
     "The global option latexcmd",
     "The PATH using the command pdflatex",
     "The PATH using the command latex")
+
+
+    # Only check for xelatex in the options and the PATH variable since there
+    # no environment variables for xelatex
+  xelatexTestLocs <- c(ifelse( is.null(getOption('tikzXelatex')), "", getOption('tikzXelatex') ),
+    "xelatex")
+
+  xelatexTestDescs <- c("A pre-existing value of the global option tikzXelatex",
+    "The PATH using the command xelatex")
 
   # Non-Windows users are likely to use some derivative of TeX Live.  This next
   # test primarily covers the fact that R.app does not include `/usr/texbin` on
@@ -69,12 +101,19 @@ function(libname, pkgname) {
 
     testLocs <- c( testLocs, '/usr/texbin/pdflatex' )
     testDescs <- c( testDescs, 'The directory /usr/texbin for `pdflatex`' ) 
+    xelatexTestLocs <- c( xelatexTestLocs, '/usr/texbin/xelatex' )
+    xelatexTestDescs <- c( xelatexTestDescs, 'The directory /usr/texbin for `xelatex`' )
 
   }
 
   for( i in 1:length(testLocs) ){
     if( latexTest( testLocs[i], testDescs[i] ) ){ break }
   }
+
+  for( i in 1:length(xelatexTestLocs) ){
+    if( xelatexTest(xelatexTestLocs[i], xelatexTestDescs[i]) ){ break }
+  }
+
 
   if( foundLatex ){
     packageStartupMessage( checked )
@@ -100,8 +139,25 @@ function(libname, pkgname) {
     )
   }
 
+  if( foundXelatex ){
+      packageStartupMessage( checkedXelatex )
+      p <- pipe( paste( xelatexPath, '--version' ) )
+      packageStartupMessage( paste( utils:::head(readLines( p ), 2), '\n', sep='' ) , sep='\n' )
+      close(p)
+    }else{
+      packageStartupMessage(
+        "\n\nATTENTION: An appropriate XeLaTeX compiler could not be found.\n",
+        "Access to the `xelatex' command is required for the TikZ device \n",
+        "to produce output containing multibyte UTF-8 characters.\n\n",
+        "The following places were tested for a valid XeLaTeX compiler:\n\n\t",
+        paste( checkedXelatex,collapse='\n\t')
+      )
+    }
+
   library.dynam(pkgname, pkgname, libname)
 
+    # Its not nice to leave things in the user's global environment
+  rm(latexPath, xelatexPath, envir=.GlobalEnv)
 }
 
 # Any variables defined in here will be hidden

@@ -6,8 +6,7 @@
 */
 
 #ifndef HAVE_TIKZDEV_H // Begin once-only header
-
-#define HAVE_TIKZDEV_H 
+#define HAVE_TIKZDEV_H
 
 #ifndef DEBUG
 #define DEBUG FALSE
@@ -21,6 +20,22 @@
 #include <Rinternals.h>
 #include <R_ext/GraphicsEngine.h>
 
+/* Check R Graphics Engine for minimum supported version */
+#if R_GE_version < 6
+#error "This version of the tikzDevice must be compiled against R 2.11.0 or newer!"
+#endif
+
+
+/*
+ * tikz_engine can take on possible values from a list of all the TeX engines
+ * we support.
+ */
+typedef enum {
+  pdftex = 1,
+  xetex = 2
+} tikz_engine;
+
+
 /*
  * tikzDevDesc is a structure that is used to hold information
  * that is unique to the implementation of the TikZ Device. A
@@ -28,10 +43,10 @@
  * deemed desirable to have available during execution of TikZ
  * Device routines.
 */
-
-typedef struct{
+typedef struct {
 	FILE *outputFile;
 	char outFileName[128];
+  tikz_engine engine;
 	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
@@ -61,7 +76,7 @@ static Rboolean TikZ_Setup(
 		Rboolean standAlone, Rboolean bareBones,
 		const char *documentDeclaration,
 		const char *packages, const char *footer,
-		Rboolean console, Rboolean sanitize );
+		Rboolean console, Rboolean sanitize, int engine );
 
 static Rboolean TikZ_Open( pDevDesc deviceInfo );
 
@@ -111,10 +126,6 @@ TikZ_Path( double *x, double *y,
 );
 #endif
 
-
-/* Raster routines are only defined for R >= 2.11.0, Graphics Engine >= 6 */
-#if R_GE_version >= 6
-
 static void TikZ_Raster( 
   unsigned int *raster,
   int w, int h,
@@ -126,8 +137,6 @@ static void TikZ_Raster(
 );
 
 static SEXP TikZ_Cap( pDevDesc deviceInfo );
-
-#endif
 
 /* Dummy routines. */
 static void TikZ_Activate( pDevDesc deviceInfo );
@@ -154,9 +163,11 @@ static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
+SEXP TikZ_GetEngine(SEXP device_num);
 double dim2dev( double length );
 static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
 static char *Sanitize(const char *str);
+Rboolean contains_multibyte_chars(const char *str);
 
 #endif // End of Once Only header

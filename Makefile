@@ -6,7 +6,7 @@ PKGSRC  := $(shell basename $(PWD))
 # pre-prelease version) use `make RBIN=/path/to/other/R/` or `export RBIN=...`
 # If no alternate bin folder is specified, the default is to use the folder
 # containing the first instance of R on the PATH.
-RBIN ?= $(shell dirname `which R`)
+RBIN ?= $(shell dirname "`which R`")
 
 
 .PHONY: help
@@ -17,26 +17,37 @@ help:
 	@echo ""
 	@echo "Development Tasks"
 	@echo "-----------------"
+	@echo "  deps       Install dependencies for package development"
 	@echo "  docs       Invike roxygen to generate Rd files in a seperate"
 	@echo "             directory"
 	@echo "  vignette   Build a copy of the package vignette"
 	@echo "  build      Invoke docs and then create a package"
+	@echo "  check      Invoke build and then check the package"
 	@echo "  install    Invoke build and then install the result"
 	@echo "  test       Install a new copy of the package and run it "
 	@echo "             through the testsuite"
+	@echo "  valgrind   Run package testsuite through the Valgrind debugger"
+	@echo "             to check for memory leaks"
 	@echo ""
 	@echo "Packaging Tasks"
 	@echo "---------------"
 	@echo "  release    Populate a release branch"
+	@echo ""
+	@echo "Using R in: $(RBIN)"
+	@echo "Set the RBIN environment variable to change this."
 	@echo ""
 
 
 #------------------------------------------------------------------------------
 # Development Tasks
 #------------------------------------------------------------------------------
+deps:
+	"$(RBIN)/R" --vanilla --slave -e "install.packages(c('filehash','roxygen','testthat','ggplot2'))"
+
+
 docs:
 	cd ..;\
-		$(RBIN)/R --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)', '$(PKGSRC).build', use.Rd2=TRUE, overwrite=TRUE, unlink.target=TRUE)"
+		"$(RBIN)/R" --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)', '$(PKGSRC).build', use.Rd2=TRUE, overwrite=TRUE, unlink.target=TRUE)"
 	# Cripple the new folder so you don't get confused and start doing
 	# development in there.
 	cd ../$(PKGSRC).build;\
@@ -45,31 +56,38 @@ docs:
 
 vignette:
 	cd inst/doc;\
-		$(RBIN)/R CMD Sweave $(PKGNAME).Rnw;\
+		"$(RBIN)/R" CMD Sweave $(PKGNAME).Rnw;\
 		texi2dvi --pdf $(PKGNAME).tex
 
 
 build: docs
 	cd ..;\
-		$(RBIN)/R CMD build --no-vignettes $(PKGSRC).build
+		"$(RBIN)/R" CMD build --no-vignettes $(PKGSRC).build
 
 
 install: build
 	cd ..;\
-		$(RBIN)/R CMD INSTALL $(PKGNAME)_$(PKGVERS).tar.gz
+		"$(RBIN)/R" CMD INSTALL $(PKGNAME)_$(PKGVERS).tar.gz
+
+check: build
+	cd ..;\
+		"$(RBIN)/R" CMD check --no-tests $(PKGNAME)_$(PKGVERS).tar.gz
 
 test: install
 	cd tests;\
-		$(RBIN)/Rscript unit_tests.R
+		"$(RBIN)/Rscript" unit_tests.R
 
+valgrind: install
+	cd tests;\
+		"$(RBIN)/R" -d "valgrind --tool=memcheck --leak-check=full --dsymutil=yes" --vanilla < unit_tests.R
 
 #------------------------------------------------------------------------------
 # Packaging Tasks
 #------------------------------------------------------------------------------
 release:
 	cd ..;\
-		$(RBIN)/R --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)','$(PKGSRC)', copy.package=FALSE, use.Rd2=TRUE, overwrite=TRUE)"
+		"$(RBIN)/R" --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)','$(PKGSRC)', copy.package=FALSE, use.Rd2=TRUE, overwrite=TRUE)"
 	./updateVersion.sh
 	cd inst/doc;\
-		$(RBIN)/R CMD Sweave $(PKGNAME).Rnw;\
+		"$(RBIN)/R" CMD Sweave $(PKGNAME).Rnw;\
 		texi2dvi --pdf $(PKGNAME).tex

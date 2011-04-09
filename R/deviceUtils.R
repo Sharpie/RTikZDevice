@@ -16,12 +16,17 @@ getTikzDeviceVersion <- function(){
   
   # Returns the version of the currently installed tikzDevice 
   # for use in Print_TikZ_Header.
+  version_file <- system.file('GIT_VERSION', package = 'tikzDevice')
+  if (file.exists(version_file)) {
+    version_num <- readLines(version_file)[1]
+  } else {
+    version_num <- paste('~',
+      read.dcf(system.file('DESCRIPTION', package = 'tikzDevice'),
+        fields = 'Version')
+    )
+  }
 
-  return(
-    readLines(
-      system.file('GIT_VERSION', package = 'tikzDevice')
-    )[1]
-  )
+  return( version_num )
 
 }
 
@@ -89,6 +94,8 @@ setTikzDefaults <- function( overwrite = TRUE ){
 
   tikzDefaults <- list(
 
+    tikzDefaultEngine = 'pdftex',
+
     tikzLatex = getOption( 'tikzLatexDefault' ),
  
     tikzDocumentDeclaration = "\\documentclass[10pt]{article}\n",
@@ -100,8 +107,17 @@ setTikzDefaults <- function( overwrite = TRUE ){
       "\\setlength\\PreviewBorder{0pt}\n"
     ),
 
+    tikzXelatexPackages = c(
+      "\\usepackage{tikz}\n",
+      "\\usepackage[active,tightpage,xetex]{preview}\n",
+      "\\usepackage{fontspec,xunicode}\n",
+      "\\PreviewEnvironment{pgfpicture}\n",
+      "\\setlength\\PreviewBorder{0pt}\n"
+    ),
+
+    tikzFooter = "\\end{document}\n",
+
     tikzMetricPackages = c(
-      "\\usepackage[utf8]{inputenc}\n",
       # The fontenc package is very important here! 
       # R assumes the output device is uing T1 encoding.
       # LaTeX defaults to OT1. This package makes the
@@ -109,8 +125,17 @@ setTikzDefaults <- function( overwrite = TRUE ){
       "\\usepackage[T1]{fontenc}\n",
       "\\usetikzlibrary{calc}\n"
     ),
- 
-    tikzFooter = "\\end{document}\n",
+
+    tikzUnicodeMetricPackages = c(
+      # The fontenc package is very important here!
+      # R assumes the output device is uing T1 encoding.
+      # LaTeX defaults to OT1. This package makes the
+      # symbol codes consistant for both systems.
+      "\\usepackage[T1]{fontenc}\n",
+      "\\usetikzlibrary{calc}\n",
+      "\\usepackage{fontspec,xunicode}\n"
+    ),
+
  
     tikzSanitizeCharacters = c('%','$','}','{','^','_','#','&','~'), 
  
@@ -140,4 +165,25 @@ setTikzDefaults <- function( overwrite = TRUE ){
   # Return a list of the options that were modified.
   invisible( tikzSetOptions )
 
+}
+
+isTikzDevice <- function(which = dev.cur()){
+  if (which == 1){ return(FALSE) }
+
+  dev_name <- names(dev.list()[which - 1])
+  return(dev_name == 'tikz output')
+}
+
+getTikzDeviceEngine <- function(dev_num = dev.cur()){
+  if (!isTikzDevice(dev_num)){
+    stop("The specified device is not a tikz device, please start a tikz device to use this function. See ?tikz.")
+  }
+
+  engine <- switch(
+    EXPR = as.character(.Call('TikZ_GetEngine', dev_num, PACKAGE = 'tikzDevice')),
+    '1' = 'pdftex',
+    '2' = 'xetex'
+  )
+
+  return( engine )
 }

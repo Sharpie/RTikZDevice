@@ -1,4 +1,5 @@
-do_graphics_test <- function(short_name, description, graph_code){
+do_graphics_test <- function(short_name, description, graph_code,
+  uses_xetex = FALSE, graph_options = NULL, skip_if = NULL){
 
   context(description)
 
@@ -9,12 +10,27 @@ do_graphics_test <- function(short_name, description, graph_code){
     return(invisible())
   }
 
+  if (!is.null(skip_if)) {
+    if (skip_if()) {
+      cat("SKIP")
+      return(invisible())
+    }
+  }
+
+  if (!is.null(graph_options)) {
+    # If this test uses custom options, make sure the current options are
+    # restored after it finishes.
+    orig_opts <- options()
+    options(graph_options)
+    on.exit(options(orig_opts))
+  }
+
   graph_file <- file.path(test_work_dir, str_c(short_name,'.tex'))
 
   test_that('Graph is created cleanly',{
 
     expect_that(
-      create_graph(graph_code, graph_file),
+      create_graph(graph_code, graph_file, uses_xetex),
       runs_cleanly()
     )
 
@@ -22,7 +38,7 @@ do_graphics_test <- function(short_name, description, graph_code){
 
   test_that('Graph compiles cleanly',{
 
-    expect_that(compile_graph(graph_file), runs_cleanly())
+    expect_that(compile_graph(graph_file, uses_xetex), runs_cleanly())
 
   })
 
@@ -43,9 +59,11 @@ do_graphics_test <- function(short_name, description, graph_code){
 
 }
 
-create_graph <- function(graph_code, graph_file){
+create_graph <- function(graph_code, graph_file, uses_xetex){
 
-    tikz(file = graph_file, standAlone = TRUE)
+    engine = ifelse(uses_xetex, 'xetex', 'pdftex')
+
+    tikz(file = graph_file, standAlone = TRUE, engine = engine)
     on.exit(dev.off())
 
     eval(graph_code)
@@ -54,9 +72,9 @@ create_graph <- function(graph_code, graph_file){
 
 }
 
-compile_graph <- function(graph_file){
+compile_graph <- function(graph_file, uses_xetex){
 
-  tex_cmd <- options('tikzLatex')
+  tex_cmd <- ifelse(uses_xetex, getOption('tikzXelatex'), getOption('tikzLatex'))
   silence <- system(paste(tex_cmd, '-interaction=batchmode',
     '-output-directory', test_work_dir,
     graph_file ), intern = TRUE)

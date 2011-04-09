@@ -1,3 +1,4 @@
+export(anyMultibyteUTF8Characters)
 import(filehash)
 export(setTikzDefaults)
 export(getLatexStrWidth)

@@ -2,6 +2,8 @@
 \alias{getLatexCharMetrics}
 \title{Obtain LaTeX Font Metrics for Characters...}
 \usage{getLatexCharMetrics(charCode, cex=1, face=1)
+getLatexCharMetrics(charCode, cex=1, face=1)
+getLatexCharMetrics(charCode, cex=1, face=1)
 }
 \description{Obtain LaTeX Font Metrics for Characters
 This function is used to retrieve the ascent, decent and width of a
@@ -10,16 +12,44 @@ character glyph as it would appear in output typeset by LaTeX.}
 calculated for the given character using the given values of \code{cex} and
 \code{face}. If so, cached values are returned. If no cached values exists,
 the LaTeX compiler specified by \code{options( tikzLatex )} is invoked in
-order to calculate them.}
+order to calculate them.\code{getLatexCharMetrics}: \code{getLatexCharMetrics} first checks to see if metrics have allready been
+calculated for the given character using the given values of \code{cex} and
+\code{face}. If so, cached values are returned. If no cached values exists,
+the LaTeX compiler specified by \code{options( tikzLatex )} is invoked in
+order to calculate them.
+
+
+\code{getLatexCharMetrics}: \code{getLatexCharMetrics} first checks to see if metrics have allready been
+calculated for the given character using the given values of \code{cex} and
+\code{face}. If so, cached values are returned. If no cached values exists,
+the LaTeX compiler specified by \code{options( tikzLatex )} is invoked in
+order to calculate them.
+
+
+}
 \value{\item{metrics}{A numeric vector holding ascent, descent, width
-character metrics. Values should all be nonnegative. }}
+character metrics. Values should all be nonnegative. }\code{getLatexCharMetrics}: \item{metrics}{A numeric vector holding ascent, descent, width
+character metrics. Values should all be nonnegative. }
+
+
+\code{getLatexCharMetrics}: \item{metrics}{A numeric vector holding ascent, descent, width
+character metrics. Values should all be nonnegative. }
+
+
+}
 \note{\code{\link{tikzDevice}} tries very hard when it is loaded to find a
+working \command{latex} or \command{pdflatex} command.  If it is
+successful the command is set in \code{options('tikzLatex')}, otherwise
+this function will fail.\code{\link{tikzDevice}} tries very hard when it is loaded to find a
+working \command{latex} or \command{pdflatex} command.  If it is
+successful the command is set in \code{options('tikzLatex')}, otherwise
+this function will fail.\code{\link{tikzDevice}} tries very hard when it is loaded to find a
 working \command{latex} or \command{pdflatex} command.  If it is
 successful the command is set in \code{options('tikzLatex')}, otherwise
 this function will fail.}
 \author{Charlie Sharpsteen \email{source@sharpsteen.net}}
-\seealso{\code{\link{tikz}}, \code{\link{getLatexStrWidth}}}
-\references{PGF Manual}
+\seealso{\code{\link{tikz}}, \code{\link{getLatexStrWidth}}\code{\link{tikz}}, \code{\link{getLatexStrWidth}}\code{\link{tikz}}, \code{\link{getLatexStrWidth}}}
+\references{PGF ManualPGF ManualPGF Manual}
 \keyword{character}
 \arguments{\item{charCode}{an integer that corresponds to a symbol in the ASCII
 character table under the Type 1 font encoding. All numeric values are
@@ -30,5 +60,13 @@ applied to device output.}
 use. See \link{par} for details.}
 }
 \examples{# Calculate ascent, descent and width for "A"
+getLatexCharMetrics(65)# Calculate ascent, descent and width for "A"
+getLatexCharMetrics(65)# Calculate ascent, descent and width for "A"
 getLatexCharMetrics(65)}
+
+\alias{getLatexCharMetrics}
+\keyword{character}
+
+\alias{getLatexCharMetrics}
+\keyword{character}
 
