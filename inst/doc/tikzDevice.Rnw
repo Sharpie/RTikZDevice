@@ -23,6 +23,7 @@
 \usepackage[letterpaper,margin=1in]{geometry}
 \usepackage{epigraph}
 \usepackage{multicol}
+\usepackage{pdflscape}
 
 % Graphics control.
 \usepackage{graphicx}
@@ -932,54 +933,27 @@ setTikzDefaults()
 \caption{An example using \TikZ{} annotation.}\label{fig:annotation}
 \end{figure}
 
-\subsubsection{Plotmath vs. tikzDevice output with mathematical output and UTF-8 Characters}
+\begin{landscape}
 
-This exmple shows how UTF-8 characters and latex mathematics can be used to reproduce an example from \code{?text}.  Some characters might not show up in the vignette, see the source code for the complete example.  Figures \ref{fig:plotmathDefault} and \ref{fig:plotmathTikz} show the difference between \code{tikz()} output and the \code{pdf()} device.
+\subsubsection{\code{tikz()} vs. \code{pdf()} for \code{plotmath} symbols and Unicode characters}
 
-\begin{tikzCodeBlock}[title={Plotmath example replicated with tikzDevice},listing style=sweavechunk]
-options(tikzLatexPackages=getOption('tikzXelatexPackages'))
-options(tikzLatex='xelatex')
-options(tikzSanitizeCharacters = c(getOption("tikzSanitizeCharacters"),"\\"))
-options(tikzReplacementCharacters = c(getOption("tikzReplacementCharacters"),"\\textbackslash"))
-
-tikz("plotmath.tex",width=7,height=7)
-## The following two examples use latin1 characters: these may not
-## appear correctly (or be omitted entirely).
-plot(1:10, 1:10, main = "text(...) examples\n~~~~~~~~~~~~~~",
-     sub = "R is GNU ©, but not ® ...")
-mtext("«Latin-1 accented chars»: éè øØ å<Å æ<Æ", side=3)
-points(c(6,2), c(2,1), pch = 3, cex = 4, col = "red")
-text(6, 2, "the text is CENTERED around (x,y) = (6,2) by default",
-     cex = .8)
-text(2, 1, "or Left/Bottom - JUSTIFIED at (2,1) by 'adj = c(0,0)'",
-     adj = c(0,0))
-text(4, 9, "$\\displaystyle\\hat{\\beta} = (X^tX)^{-1}X^ty$")
-text(4, 8.4,
-    sanitizeTexString("\\displaystyle\\hat{\\beta} = (X^tX)^{-1}X^ty"),
-    cex = .75)
-text(4, 7,
-    "$\\displaystyle\\bar{x} = \\displaystyle\\sum_{i=1}^n\\frac{x_i}{n}$")
-
-## Two more latin1 examples
-text(5,10.2,
-     "Le français, c'est façile: Règles, Liberté, Egalité, Fraternité...")
-text(5,9.8,
-     "Jetz no chli züritüütsch: (noch ein bißchen Zürcher deutsch)")
-
-dev.off()
-\end{tikzCodeBlock}
+This is a side-by-side example showing how \code{tikz(..., engine = 'xetex')} handles UTF-8
+characters and plotmath symbols compared to the standard R \code{pdf()} device.
 
 \begin{figure}[!h]
 \centering
-\includegraphics{img/plotmathDefault.pdf}
-\caption{Default output with plotmath and the pdf device.}\label{fig:plotmathDefault}
+  \begin{minipage}{4.25in}
+    \includegraphics[width=4.25in]{img/plotmathDefault.pdf}
+    \caption{\code{example(text)} using the standard \code{pdf()} device.}\label{fig:plotmathDefault}
+  \end{minipage}
+  \vspace{1em}
+  \begin{minipage}{4.25in}
+    \includegraphics[width=4.25in]{img/plotmathTikz.pdf}
+    \caption{\code{example(text)} using \code{tikz(..., engine = 'xetex')}.}\label{fig:plotmathTikz}
+  \end{minipage}
 \end{figure}
 
-\begin{figure}[!h]
-\centering
-\includegraphics{img/plotmathTikz.pdf}
-\caption{Plotmath output and UTF8 characters replicated with \code{tikz()} annotation.}\label{fig:plotmathTikz}
-\end{figure}
+\end{landscape}
 
 % Return to the normal working directory
 <<pathStepOut,results=hide>>=
