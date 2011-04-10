@@ -165,6 +165,7 @@ static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
 SEXP TikZ_GetEngine(SEXP device_num);
+SEXP TikZ_DeviceInfo(SEXP device_num);
 double dim2dev( double length );
 static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);

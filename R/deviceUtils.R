@@ -185,6 +185,24 @@ getTikzDeviceEngine <- function(dev_num = dev.cur()){
   return( engine )
 }
 
+
+getDeviceInfo <- function(dev_num = dev.cur()) {
+  # This function recovers some information about a tikz() graphics device that
+  # is stored at the C level in the tikzDevDesc struct.
+  #
+  # Currently returns:
+  #
+  #  * The path to the TeX file that is being created.
+  if (!isTikzDevice(dev_num)){
+    stop("The specified device is not a tikz device!")
+  }
+
+  device_info <- .Call('TikZ_DeviceInfo', dev_num, PACKAGE = 'tikzDevice')
+
+  return(device_info)
+
+}
+
 tikz_writeRaster <-
 function(
   fileName, rasterCount, rasterData, nrows, ncols,

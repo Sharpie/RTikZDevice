@@ -1558,6 +1558,29 @@ SEXP TikZ_GetEngine(SEXP device_num){
   return(ScalarInteger(tikzInfo->engine));
 }
 
+/*
+ * Returns information stored in the tikzDevDesc structure for a given device.
+ */
+SEXP TikZ_DeviceInfo(SEXP device_num){
+
+  int dev_index = asInteger(device_num);
+  pDevDesc deviceInfo = GEgetDevice(dev_index - 1)->dev;
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  SEXP info, names;
+  PROTECT( info = allocVector(VECSXP, 1) );
+  PROTECT( names = allocVector(STRSXP, 1) );
+
+  SET_VECTOR_ELT(info, 0, mkString(tikzInfo->outFileName));
+  SET_STRING_ELT(names, 0, mkChar("output_file"));
+
+  setAttrib(info, R_NamesSymbol, names);
+
+  UNPROTECT(2);
+  return(info);
+
+}
+
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
   
   va_list(ap);
