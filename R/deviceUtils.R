@@ -214,29 +214,12 @@ function(
     paste(raster_file, '_ras', rasterCount, '.png', sep = '')
   )
 
-  message("\nRaw data was:\n\n",
-    paste(capture.output(print(rasterData)),collapse='\n'))
-
   # Convert the 4 vectors of RGBA data contained in rasterData to a raster
   # image.
   rasterData[['maxColorValue']] = 255
   rasterData = do.call( grDevices::rgb, rasterData )
   rasterData = as.raster(
     matrix( rasterData, nrow = nrows, ncol = ncols, byrow = TRUE ) )
-
-  message("\nRaster image is:\n\n",
-    paste(capture.output(print(rasterData)),collapse='\n'))
-
-
-  message( "Creating raster image: ", raster_file, "\n" )
-
-  message(
-    "\nraster num ", rasterCount,
-    " num rows:", nrows,
-    " num columns:", ncols,
-    " final dims:", finalDims,
-    " interpolate?:", interpolate
-  )
 
   # Write the image to a PNG file.
   savePar = par(no.readonly=TRUE); on.exit(par(savePar))

@@ -1698,7 +1698,7 @@ Rboolean contains_multibyte_chars(const char *str){
  * say PNG, and then dropping a node in the TikZ output that contains
  * an \includegraphics directive.
 */
-static void TikZ_Raster( 
+static void TikZ_Raster(
   unsigned int *raster,
   int w, int h,
   double x, double y,
@@ -1716,7 +1716,7 @@ static void TikZ_Raster(
    * into the global environment.
   */
   SEXP TikZ_namespace;
-  PROTECT( 
+  PROTECT(
     TikZ_namespace = eval(lang2( install("getNamespace"),
       ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
   );
@@ -1724,7 +1724,7 @@ static void TikZ_Raster(
   /*
    * Prepare callback to R for creation of a PNG from raster data.  Seven
    * parameters will be passed:
-   * 
+   *
    * - The name of the current output file.
    *
    * - The number of rasters that have been output so far.
@@ -1779,14 +1779,14 @@ static void TikZ_Raster(
    * of R_GREEN and R_BLUE are swapped below.
   */
   int i;
-  for( i = 0; i < h * w; i ++ ){ 
+  for( i = 0; i < h * w; i ++ ){
     INTEGER(red_vec)[i] = R_RED(raster[i]);
     INTEGER(green_vec)[i] = R_BLUE(raster[i]);
     INTEGER(blue_vec)[i] = R_GREEN(raster[i]);
     INTEGER(alpha_vec)[i] = R_ALPHA(raster[i]);
   }
 
-  /* 
+  /*
    * We will store all the vectors generated above in an R list named colors,
    * this will make it easier to pass back into the R environment as an argument
    * to an R function
@@ -1825,7 +1825,7 @@ static void TikZ_Raster(
   PROTECT( final_dims = allocVector(VECSXP, 2) );
   SET_VECTOR_ELT(final_dims, 0, ScalarReal(width/dim2dev(1.0)));
   SET_VECTOR_ELT(final_dims, 1, ScalarReal(height/dim2dev(1.0)));
-  
+
   PROTECT( dim_names = allocVector(STRSXP, 2) );
   SET_STRING_ELT(dim_names, 0, mkChar("width"));
   SET_STRING_ELT(dim_names, 1, mkChar("height"));

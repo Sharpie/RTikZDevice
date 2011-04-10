@@ -47,7 +47,7 @@ typedef struct {
 	FILE *outputFile;
   char *outFileName;
   tikz_engine engine;
-    int rasterFileCount;
+  int rasterFileCount;
 	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
