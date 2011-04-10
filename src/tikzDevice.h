@@ -45,7 +45,7 @@ typedef enum {
 */
 typedef struct {
 	FILE *outputFile;
-	char outFileName[128];
+  char *outFileName;
   tikz_engine engine;
     int rasterFileCount;
 	Rboolean firstPage;

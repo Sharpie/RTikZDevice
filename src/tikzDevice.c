@@ -265,7 +265,8 @@ static Rboolean TikZ_Setup(
   }
 
   /* Copy TikZ-specific information to the tikzInfo variable. */
-  strcpy( tikzInfo->outFileName, fileName);
+  tikzInfo->outFileName = (char*) calloc(strlen(fileName) + 1, sizeof(char));
+  strcpy(tikzInfo->outFileName, fileName);
   tikzInfo->engine = engine;
   tikzInfo->rasterFileCount = 1;
   tikzInfo->firstPage = TRUE;
@@ -607,6 +608,9 @@ static void TikZ_Close( pDevDesc deviceInfo){
   /* Close the file and destroy the tikzInfo structure. */
   if(tikzInfo->console == FALSE)
     fclose(tikzInfo->outputFile);
+
+  /* Deallocate pointers */
+  free(tikzInfo->outFileName);
   free(tikzInfo);
 
 }
