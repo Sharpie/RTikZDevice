@@ -135,7 +135,9 @@ setTikzDefaults <- function( overwrite = TRUE ){
     tikzSanitizeCharacters = c('%','$','}','{','^','_','#','&','~'), 
  
     tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}','\\_{}',
-      '\\#','\\&','\\char`\\~')
+      '\\#','\\&','\\char`\\~'),
+
+    tikzRasterResolution = 300
 
   )
 
@@ -227,19 +229,20 @@ function(
   if ( Sys.info()['sysname'] == 'Darwin' && capabilities('aqua') ){
 
     quartz( file = fileName, type = 'png',
-      width = finalDims$width, height = finalDims$height, antialias = FALSE )
+      width = finalDims$width, height = finalDims$height, antialias = FALSE,
+      dpi = getOption('tikzRasterResolution') )
 
   } else if (Sys.info()['sysname'] == 'Windows') {
 
-    # TODO: make `res` user configurable.
     png( filename = fileName, width = finalDims$width, height = finalDims$height,
-      units = 'in', res = 300 )
+      units = 'in', res = getOption('tikzRasterResolution') )
 
   } else {
 
     # Linux/UNIX and OS X without Aqua.
     png( filename = fileName, width = finalDims$width, height = finalDims$height,
-      type = 'Xlib', units = 'in', antialias = 'none' )
+      type = 'Xlib', units = 'in', antialias = 'none',
+      res = getOption('tikzRasterResolution') )
 
   }
 
