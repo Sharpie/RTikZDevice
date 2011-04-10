@@ -246,7 +246,7 @@ function(
   par( mar = c(0,0,0,0) )
   plot.new()
 
-  plotArea = par('fig')
+  plotArea = par('usr')
 
   rasterImage(rasterData, plotArea[1], plotArea[3],
     plotArea[2], plotArea[4], interpolate = interpolate )
