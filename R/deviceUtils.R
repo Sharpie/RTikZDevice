@@ -209,8 +209,10 @@ function(
   finalDims, interpolate
 ){
 
-  fileName = tools::file_path_sans_ext( fileName )
-  fileName = paste( fileName, '_ras_', rasterCount, '.png', sep = '' )
+  raster_file <- basename(tools::file_path_sans_ext(fileName))
+  raster_file <- file.path(dirname(fileName),
+    paste(raster_file, '_ras', rasterCount, '.png', sep = '')
+  )
 
   message("\nRaw data was:\n\n",
     paste(capture.output(print(rasterData)),collapse='\n'))
@@ -226,7 +228,7 @@ function(
     paste(capture.output(print(rasterData)),collapse='\n'))
 
 
-  message( "Creating raster image: ", fileName, "\n" )
+  message( "Creating raster image: ", raster_file, "\n" )
 
   message(
     "\nraster num ", rasterCount,
@@ -246,19 +248,19 @@ function(
   # Using type='Xlib' also causes a segfault for me on OS X 10.6.4
   if ( Sys.info()['sysname'] == 'Darwin' && capabilities('aqua') ){
 
-    quartz( file = fileName, type = 'png',
+    quartz( file = raster_file, type = 'png',
       width = finalDims$width, height = finalDims$height, antialias = FALSE,
       dpi = getOption('tikzRasterResolution') )
 
   } else if (Sys.info()['sysname'] == 'Windows') {
 
-    png( filename = fileName, width = finalDims$width, height = finalDims$height,
+    png( filename = raster_file, width = finalDims$width, height = finalDims$height,
       units = 'in', res = getOption('tikzRasterResolution') )
 
   } else {
 
     # Linux/UNIX and OS X without Aqua.
-    png( filename = fileName, width = finalDims$width, height = finalDims$height,
+    png( filename = raster_file, width = finalDims$width, height = finalDims$height,
       type = 'Xlib', units = 'in', antialias = 'none',
       res = getOption('tikzRasterResolution') )
 
@@ -274,6 +276,8 @@ function(
 
   dev.off()
 
-  return( fileName )
+  return(
+    basename(tools::file_path_sans_ext(raster_file))
+  )
 
 }
