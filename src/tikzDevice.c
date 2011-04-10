@@ -1740,12 +1740,22 @@ static void TikZ_Raster(
    * RGBA components from the raster data.  These macros are basically shorthand
    * notation for C bitwise operators that extract 8 bit chunks from the 32 bit
    * unsigned integers contained in the raster vector.
+   *
+   * NOTE:
+   *
+   * There is some funny business that happens below. In the definition of
+   * device_Raster from GraphicsDevice.h, the byte order of the colors entering
+   * this routine in the `raster` argument are specified to be ABGR. The color
+   * extraction macros assume the order is RGBA.
+   *
+   * In practice, it appears the byte order in `raster` is RBGA--hence the use
+   * of R_GREEN and R_BLUE are swapped below.
   */
   int i;
   for( i = 0; i < h * w; i ++ ){ 
     INTEGER(red_vec)[i] = R_RED(raster[i]);
-    INTEGER(blue_vec)[i] = R_BLUE(raster[i]);
-    INTEGER(green_vec)[i] = R_GREEN(raster[i]);
+    INTEGER(green_vec)[i] = R_BLUE(raster[i]);
+    INTEGER(blue_vec)[i] = R_GREEN(raster[i]);
     INTEGER(alpha_vec)[i] = R_ALPHA(raster[i]);
   }
 
@@ -1755,7 +1765,7 @@ static void TikZ_Raster(
    * to an R function
   */
   SEXP colors;
-  PROTECT( colors =  allocVector( VECSXP, 3 ) );
+  PROTECT( colors =  allocVector( VECSXP, 4 ) );
   SET_VECTOR_ELT( colors, 0, red_vec  );
   SET_VECTOR_ELT( colors, 1, blue_vec );
   SET_VECTOR_ELT( colors, 2, green_vec );
@@ -1763,7 +1773,7 @@ static void TikZ_Raster(
 
   /* We will also make this a named list. */
   SEXP color_names;
-  PROTECT( color_names = allocVector( STRSXP, 3 ) );
+  PROTECT( color_names = allocVector( STRSXP, 4 ) );
   SET_STRING_ELT( color_names, 0, mkChar("red") );
   SET_STRING_ELT( color_names, 1, mkChar("green") );
   SET_STRING_ELT( color_names, 2, mkChar("blue") );
