@@ -67,6 +67,9 @@
 #' @param sanitize Should special latex characters be replaced (Default FALSE).
 #'   See the section ``Options That Affect Package Behavior'' for which
 #'   characters are replaced.
+#' @param engine a string specifying which TeX engine to use. Possible values
+#'   are 'pdftex' and 'xetex'. See the Unicode section of \link{tikzDevice} for
+#'   details.
 #' @param documentDeclaration See the sections ``Options That Affect Package
 #'   Behavior'' and ``Font Size Calculations'' for more details.
 #' @param packages See the section ``Options That Affect Package Behavior.''

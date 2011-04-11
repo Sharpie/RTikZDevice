@@ -19,6 +19,10 @@
 #'   applied to device output.
 #' @param face an integer in the range [1-5] that specifies the font face to
 #'   use. See \link{par} for details.
+#' @param engine a string specifying which TeX engine to use. Possible values
+#'   are 'pdftex' and 'xetex'. See the Unicode section of \link{tikzDevice} for
+#'   details.
+#'
 #'
 #' @return \item{width}{The width of \code{texString} in point size.}
 #'
@@ -123,6 +127,10 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
 #'   applied to device output.
 #' @param face an integer in the range [1-5] that specifies the font face to
 #'   use. See \link{par} for details.
+#' @param engine a string specifying which TeX engine to use. Possible values
+#'   are 'pdftex' and 'xetex'. See the Unicode section of \link{tikzDevice} for
+#'   details.
+#'
 #'
 #' @return \item{metrics}{A numeric vector holding ascent, descent, width
 #'   character metrics. Values should all be nonnegative. }
