@@ -781,15 +781,20 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
 
   // Prepare to call back to R in order to retrieve character metrics.
+  SEXP TikZ_namespace;
+  PROTECT(
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
   
   // Call out to R to retrieve the latexParseCharForMetrics function.
   // Note: this code will eventually call a different function that provides
   // caching of the results. Right now we're directly calling the function
   // that activates LaTeX.
-  SEXP metricFun = findFun( install("getLatexCharMetrics"), R_GlobalEnv );
+  SEXP metricFun = findFun( install("getLatexCharMetrics"), TikZ_namespace );
 
   SEXP RCallBack;
-  PROTECT( RCallBack = allocVector(LANGSXP,4) );
+  PROTECT( RCallBack = allocVector(LANGSXP,5) );
 
   // Place the function into the first slot of the SEXP.
   SETCAR( RCallBack, metricFun );
@@ -804,8 +809,21 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
   SET_TAG( CDR(CDDR( RCallBack )), install("face") );
 
+  /*
+   * Set the TeX engine based on tikzInfo
+   */
+  switch (tikzInfo->engine) {
+    case pdftex:
+      SETCAD4R(RCallBack, mkString("pdftex"));
+      break;
+    case xetex:
+      SETCAD4R(RCallBack, mkString("xetex"));
+      break;
+  }
+  SET_TAG(CDDR(CDDR(RCallBack)), install("engine"));
+
   SEXP RMetrics;
-  PROTECT( RMetrics = eval( RCallBack, R_GlobalEnv ) );
+  PROTECT( RMetrics = eval( RCallBack, TikZ_namespace ) );
 
   // Recover the metrics.
   *ascent = REAL(RMetrics)[0];
@@ -816,7 +834,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   printOutput( tikzInfo, "%% Calculated character metrics. ascent: %f, descent: %f, width: %f\n",
     *ascent, *descent, *width);
 
-  UNPROTECT(2);
+  UNPROTECT(3);
 
   return;
 
@@ -905,21 +923,30 @@ static double TikZ_StrWidth( const char *str,
    *   fucking wicked.
    *
   */
-  
-  // Call out to R to retrieve the getLatexStrWidth function.
-  SEXP widthFun = findFun( install("getLatexStrWidth"), R_GlobalEnv );
 
   /*
-   * Create a SEXP that will be the R function call. The SEXP will
-   * have four components- the R function being called, the string 
-   * being passed and the current value of the graphics parameters
-   * cex and fontface. Therefore it is allocated as a  LANGSXP
-   * vector of length 4. This is done inside a PROTECT() function
-   * to keep the R garbage collector from saying "Hmmm... what's
-   * this? Looks like noone is using it so I guess I will nuke it."
+   * Find the namespace of the TikZ package.
+   */
+  SEXP TikZ_namespace;
+  PROTECT(
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
+
+  // Call out to R to retrieve the getLatexStrWidth function.
+  SEXP widthFun = findFun(install("getLatexStrWidth"), TikZ_namespace);
+
+  /*
+   * Create a SEXP that will be the R function call. The SEXP will have five
+   * components- the R function being called, the string being passed, the
+   * current value of the graphics parameters cex and fontface and the TeX
+   * engine to be used. Therefore it is allocated as a  LANGSXP vector of
+   * length 5. This is done inside a PROTECT() function to keep the R garbage
+   * collector from saying "Hmmm... what's this? Looks like noone is using it
+   * so I guess I will nuke it."
   */
   SEXP RCallBack;
-  PROTECT( RCallBack = allocVector(LANGSXP,4) );
+  PROTECT( RCallBack = allocVector(LANGSXP, 5) );
 
   // Place the function into the first slot of the SEXP.
   SETCAR( RCallBack, widthFun );
@@ -948,6 +975,19 @@ static double TikZ_StrWidth( const char *str,
   SET_TAG( CDR(CDDR( RCallBack )), install("face") );
 
   /*
+   * Set the TeX engine based on tikzInfo
+   */
+  switch (tikzInfo->engine) {
+    case pdftex:
+      SETCAD4R(RCallBack, mkString("pdftex"));
+      break;
+    case xetex:
+      SETCAD4R(RCallBack, mkString("xetex"));
+      break;
+  }
+  SET_TAG(CDDR(CDDR(RCallBack)), install("engine"));
+
+  /*
    * Call the R function, capture the result.
    * PROTECT may not be necessary here, but I'm doing
    * it just in case the SEXP holds a pointer to an
@@ -955,7 +995,7 @@ static double TikZ_StrWidth( const char *str,
    * decides to nuke.
   */
   SEXP RStrWidth;
-  PROTECT( RStrWidth = eval( RCallBack, R_GlobalEnv ) );
+  PROTECT( RStrWidth = eval( RCallBack, TikZ_namespace ) );
 
   /*
    * Why REAL()[0] instead of asReal(CAR())? I have no fucking
@@ -983,9 +1023,11 @@ static double TikZ_StrWidth( const char *str,
   */
   double width = REAL(RStrWidth)[0];
 
-  // Since we called PROTECT twice, we must call UNPROTECT
-  // and pass the number 2.
-  UNPROTECT(2);
+  /*
+   * Since we called PROTECT thrice, we must call UNPROTECT
+   * and pass the number 3.
+   */
+  UNPROTECT(3);
   if(tikzInfo->sanitize == TRUE){ free(cleanString); }
   
   /*Show only for debugging*/
