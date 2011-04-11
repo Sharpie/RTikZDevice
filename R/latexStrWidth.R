@@ -81,12 +81,17 @@ function( texString, cex = 1, face= 1){
 		# Call LaTeX and get one.
 		width <- getMetricsFromLatex( TeXMetrics )
 
-		# Store the width in the dictionary so we don't
-		# have to do this again.
-		storeMetricsInDictionary( TeXMetrics, width )
+    if (is.null(width)) {
+      # Something went wrong. Return 0
+      return(0)
+    } else {
+      # Store the width in the dictionary so we don't
+      # have to do this again.
+      storeMetricsInDictionary( TeXMetrics, width )
 
-		# Return the width.
-		return( width )
+      # Return the width.
+      return( width )
+    }
 
 	}
 }
@@ -187,11 +192,16 @@ function( charCode, cex = 1, face = 1 ){
 		# Call LaTeX to obtain them.
 		metrics <- getMetricsFromLatex( TeXMetrics )
 
-		# Store the metrics in the dictionary so we don't
-		# have to do this again.
-		storeMetricsInDictionary( TeXMetrics, metrics )
+    if (is.null(metrics)) {
+      # Couldn't get metrics for some reason, return 0
+      return(c(0, 0, 0))
+    } else {
+      # Store the metrics in the dictionary so we don't
+      # have to do this again.
+      storeMetricsInDictionary( TeXMetrics, metrics )
 
-		return( metrics )
+      return( metrics )
+    }
 
 	}
 }
@@ -367,6 +377,20 @@ function( TeXMetrics ){
 	# Read the contents of the log file.
 	logContents <- readLines( texOut )
 	close( texOut )
+
+  if (TeXMetrics$multibyte) {
+    # Check to see if XeLaTeX was unable to typeset any Unicode characters.
+    missing_glyphs <- logContents[grep('^\\s*Missing character: There is no',
+        logContents )]
+
+    if (length(missing_glyphs)) {
+      warning('XeLaTeX was unable to calculate metrics for some characters:\n',
+        paste('\t', missing_glyphs, collapse = '\n') )
+
+      # Bail out of the calculation
+      return(NULL)
+    }
+  }
 
 	# Recover width by finding the line containing
 	# tikzTeXWidth in the logfile.

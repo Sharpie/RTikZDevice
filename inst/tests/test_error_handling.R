@@ -73,7 +73,7 @@ test_that('UTF8 calculation fails when XeTeX cannot find a character in the curr
 
   expect_that(
     getLatexStrWidth('α'),
-    throws_error('TeX was unable to calculate metrics')
+    gives_warning('XeLaTeX was unable to calculate metrics')
   )
 
 })
