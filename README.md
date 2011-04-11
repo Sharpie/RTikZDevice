@@ -102,6 +102,12 @@ to the development of the device!
 
 - Added "_" to the list of default sanitize characters
 
+- The TikZ device now fully supports the `Raster` graphics primitive that was
+  added in R 2.11.0 and no longer throws "not implemented" warnings when this
+  functionality is used. This is accompilshed by writing raster images to PNG
+  files, `Rplots_ras#.png`, which are then included in the main TeX file
+  `Rplots.tex`.
+
 - The TikZ device now fully supports the `polypath` graphics primitive that was
   added in R 2.12.0 and no longer throws "not implemented" warnings when this
   functionality is used.

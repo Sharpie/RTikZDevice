@@ -169,7 +169,7 @@
 #'
 #' @export
 tikz <-
-function (file = "Rplots.tex", width = 7, height = 7,
+function (file = "./Rplots.tex", width = 7, height = 7,
   bg="transparent", fg="black", pointsize = 10, standAlone = FALSE,
   bareBones = FALSE, console = FALSE, sanitize = FALSE,
   engine = getOption("tikzDefaultEngine"),
@@ -178,8 +178,25 @@ function (file = "Rplots.tex", width = 7, height = 7,
   footer = getOption("tikzFooter")
 ){
 
-  if(!file.exists(dirname(file)))
-    stop(paste("Cannot create",file,"because the path does not exist! If you are trying to save a plot to a location other than the working directory, check to make sure that directory exists."))
+  tryCatch({
+    # Ok, this sucks. We copied the function signature of pdf() and got `file`
+    # as an argument to our function. We should have copied png() and used
+    # `filename`.
+
+    # file_path_as_absolute can give us the absolute path to the output
+    # file---but it has to exist first. So, we use file() to "touch" the
+    # path.
+    touch_file <- suppressWarnings(file(file, 'w'))
+    close(touch_file)
+
+    file <- tools::file_path_as_absolute(file)
+  },
+  error = function(e) {
+    stop(simpleError(paste(
+      "Cannot create:\n\t", file,
+      "\nBecause the directory does not exist or is not writable."
+    )))
+  })
 
   # Determine which TeX engine is being used.
   switch(engine,

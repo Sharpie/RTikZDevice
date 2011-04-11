@@ -265,8 +265,10 @@ static Rboolean TikZ_Setup(
   }
 
   /* Copy TikZ-specific information to the tikzInfo variable. */
-  strcpy( tikzInfo->outFileName, fileName);
+  tikzInfo->outFileName = (char*) calloc(strlen(fileName) + 1, sizeof(char));
+  strcpy(tikzInfo->outFileName, fileName);
   tikzInfo->engine = engine;
+  tikzInfo->rasterFileCount = 1;
   tikzInfo->firstPage = TRUE;
   tikzInfo->debug = DEBUG;
   tikzInfo->standAlone = standAlone;
@@ -606,6 +608,9 @@ static void TikZ_Close( pDevDesc deviceInfo){
   /* Close the file and destroy the tikzInfo structure. */
   if(tikzInfo->console == FALSE)
     fclose(tikzInfo->outputFile);
+
+  /* Deallocate pointers */
+  free(tikzInfo->outFileName);
   free(tikzInfo);
 
 }
@@ -1607,6 +1612,29 @@ SEXP TikZ_GetEngine(SEXP device_num){
   return(ScalarInteger(tikzInfo->engine));
 }
 
+/*
+ * Returns information stored in the tikzDevDesc structure for a given device.
+ */
+SEXP TikZ_DeviceInfo(SEXP device_num){
+
+  int dev_index = asInteger(device_num);
+  pDevDesc deviceInfo = GEgetDevice(dev_index - 1)->dev;
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  SEXP info, names;
+  PROTECT( info = allocVector(VECSXP, 1) );
+  PROTECT( names = allocVector(STRSXP, 1) );
+
+  SET_VECTOR_ELT(info, 0, mkString(tikzInfo->outFileName));
+  SET_STRING_ELT(names, 0, mkChar("output_file"));
+
+  setAttrib(info, R_NamesSymbol, names);
+
+  UNPROTECT(2);
+  return(info);
+
+}
+
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
   
   va_list(ap);
@@ -1724,7 +1752,7 @@ Rboolean contains_multibyte_chars(const char *str){
  * say PNG, and then dropping a node in the TikZ output that contains
  * an \includegraphics directive.
 */
-static void TikZ_Raster( 
+static void TikZ_Raster(
   unsigned int *raster,
   int w, int h,
   double x, double y,
@@ -1734,7 +1762,166 @@ static void TikZ_Raster(
   const pGEcontext plotParams, pDevDesc deviceInfo
 ){
 
-  warning( "The tikzDevice does not currently support including raster images in graphics output." );
+  /* Shortcut pointer to device information. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  /*
+   * Recover package namespace as the raster output function is not exported
+   * into the global environment.
+  */
+  SEXP TikZ_namespace;
+  PROTECT(
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
+
+  /*
+   * Prepare callback to R for creation of a PNG from raster data.  Seven
+   * parameters will be passed:
+   *
+   * - The name of the current output file.
+   *
+   * - The number of rasters that have been output so far.
+   *
+   * - The raster data.
+   *
+   * - The number of rows and columns in the raster data.
+   *
+   * - The desired dimensions of the final image, in inches.
+   *
+   * - The value of the interpolate variable.
+  */
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP, 8) );
+  SETCAR( RCallBack, install("tikz_writeRaster") );
+
+  SETCADR( RCallBack, mkString( tikzInfo->outFileName ) );
+  SET_TAG( CDR(RCallBack), install("fileName") );
+
+  SETCADDR( RCallBack, ScalarInteger( tikzInfo->rasterFileCount ) );
+  SET_TAG( CDDR(RCallBack), install("rasterCount") );
+
+  /*
+   * The raster values are stored as a 32 bit unsigned integer.  Every 8 bits
+   * contains an red, green, blue or alpha value (actual order is ABGR).  This
+   * is the tricky bit of dealing with the raster-- there is no easy way to send
+   * unsigned integers back into the R environment.  So... I gues we'll split
+   * things back to RBGA values, send back a list of four vectors and regenrate
+   * the whole shbang on the R side... there should be an easier way to deal
+   * with this.
+  */
+  SEXP red_vec, blue_vec, green_vec, alpha_vec;
+  PROTECT( red_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( blue_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( green_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( alpha_vec = allocVector( INTSXP, w * h ) );
+
+  /*
+   * Use the R_<color component> macros defined in GraphicsDevice.h to generate
+   * RGBA components from the raster data.  These macros are basically shorthand
+   * notation for C bitwise operators that extract 8 bit chunks from the 32 bit
+   * unsigned integers contained in the raster vector.
+   *
+   * NOTE:
+   *
+   * There is some funny business that happens below. In the definition of
+   * device_Raster from GraphicsDevice.h, the byte order of the colors entering
+   * this routine in the `raster` argument are specified to be ABGR. The color
+   * extraction macros assume the order is RGBA.
+   *
+   * In practice, it appears the byte order in `raster` is RBGA--hence the use
+   * of R_GREEN and R_BLUE are swapped below.
+  */
+  int i;
+  for( i = 0; i < h * w; i ++ ){
+    INTEGER(red_vec)[i] = R_RED(raster[i]);
+    INTEGER(green_vec)[i] = R_BLUE(raster[i]);
+    INTEGER(blue_vec)[i] = R_GREEN(raster[i]);
+    INTEGER(alpha_vec)[i] = R_ALPHA(raster[i]);
+  }
+
+  /*
+   * We will store all the vectors generated above in an R list named colors,
+   * this will make it easier to pass back into the R environment as an argument
+   * to an R function
+  */
+  SEXP colors;
+  PROTECT( colors =  allocVector( VECSXP, 4 ) );
+  SET_VECTOR_ELT( colors, 0, red_vec  );
+  SET_VECTOR_ELT( colors, 1, blue_vec );
+  SET_VECTOR_ELT( colors, 2, green_vec );
+  SET_VECTOR_ELT( colors, 3, alpha_vec );
+
+  /* We will also make this a named list. */
+  SEXP color_names;
+  PROTECT( color_names = allocVector( STRSXP, 4 ) );
+  SET_STRING_ELT( color_names, 0, mkChar("red") );
+  SET_STRING_ELT( color_names, 1, mkChar("green") );
+  SET_STRING_ELT( color_names, 2, mkChar("blue") );
+  SET_STRING_ELT( color_names, 3, mkChar("alpha") );
+
+  /* Apply the names to the list. */
+  setAttrib( colors, R_NamesSymbol, color_names );
+
+
+  SETCADDDR( RCallBack, colors );
+  SET_TAG( CDR(CDDR(RCallBack)), install("rasterData") );
+
+  SETCAD4R( RCallBack, ScalarInteger(h) );
+  SET_TAG( CDDR(CDDR(RCallBack)), install("nrows") );
+
+  SETCAD4R( CDR(RCallBack), ScalarInteger(w) );
+  SET_TAG( CDR(CDDR(CDDR(RCallBack))), install("ncols") );
+
+  /* Create a list containing the final width and height of the image */
+  SEXP final_dims, dim_names;
+
+  PROTECT( final_dims = allocVector(VECSXP, 2) );
+  SET_VECTOR_ELT(final_dims, 0, ScalarReal(width/dim2dev(1.0)));
+  SET_VECTOR_ELT(final_dims, 1, ScalarReal(height/dim2dev(1.0)));
+
+  PROTECT( dim_names = allocVector(STRSXP, 2) );
+  SET_STRING_ELT(dim_names, 0, mkChar("width"));
+  SET_STRING_ELT(dim_names, 1, mkChar("height"));
+
+  setAttrib(final_dims, R_NamesSymbol, dim_names);
+
+  SETCAD4R(CDDR(RCallBack), final_dims);
+  SET_TAG(CDDR(CDDR(CDDR(RCallBack))), install("finalDims"));
+
+  SETCAD4R(CDR(CDDR(RCallBack)), ScalarLogical(interpolate));
+  SET_TAG(CDR(CDDR(CDDR(CDDR(RCallBack)))), install("interpolate"));
+
+
+  SEXP rasterFile;
+  PROTECT( rasterFile = eval( RCallBack, TikZ_namespace ) );
+
+  /* Position the image using a node */
+  printOutput(tikzInfo, "\\node[inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f, %6.2f) {\n",
+    rot, x, y);
+  /* Include the image using PGF's native image handling */
+  printOutput(tikzInfo, "\t\\pgfimage[width=%6.2fpt,height=%6.2fpt,",
+      width, height);
+  /* Set PDF interpolation (not all viewers respect this, but they should) */
+  if (interpolate) {
+    printOutput(tikzInfo, "interpolate=true]");
+  } else {
+    printOutput(tikzInfo, "interpolate=false]");
+  }
+  /* Slap in the file name */
+  printOutput(tikzInfo, "{%s}", translateChar(asChar(rasterFile)));
+  printOutput(tikzInfo, "};\n");
+
+  if (tikzInfo->debug) { printOutput(tikzInfo, "\\draw[fill=red] (%6.2f, %6.2f) circle (1pt);", x, y); }
+
+  /*
+   * Increment the number of raster files we have created with this device.
+   * This is used to provide unique file names for each raster.
+  */
+  tikzInfo->rasterFileCount++;
+
+  UNPROTECT(11);
+  return;
 
 }
 

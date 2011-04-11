@@ -55,7 +55,7 @@ test_that('Device throws error when a path cannot be opened',{
 
   expect_that(
     tikz('/why/would/you/have/a/path/like/this.tex'),
-    throws_error('path does not exist!')
+    throws_error('directory does not exist or is not writable')
   )
 
 })
