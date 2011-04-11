@@ -43,7 +43,7 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
 
   switch(engine,
     pdftex = {
-      if (anyMultibyteUTF8Characters(texString)) {
+      if ( anyMultibyteUTF8Characters(texString) && getOption('tikzPdftexWarnUTF') ) {
         warning(strwrap("Attempting to calculate the width of a Unicode string
             using the pdftex engine. This may fail! See the Unicode section of
             ?tikzDevice for more information."))
@@ -178,9 +178,11 @@ function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
   }
 
 	if ( engine == 'pdftex' && !(charCode > 31 && charCode < 127 ) ) {
-    warning(strwrap("pdftex can only generate metrics for character codes
-        between 32 and 126! See the Unicode section of ?tikzDevice for more
-        information."))
+    if (getOption('tikzPdftexWarnUTF')) {
+      warning(strwrap("pdftex can only generate metrics for character codes
+          between 32 and 126! See the Unicode section of ?tikzDevice for more
+          information."))
+    }
 		return(NULL)
 	}
 

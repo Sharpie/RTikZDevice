@@ -874,17 +874,6 @@ static double TikZ_StrWidth( const char *str,
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  if (tikzInfo->engine == pdftex) {
-    /*
-     * We don't support UTF8 with the pdftex engine. Check the string for
-     * multibyte characters and throw a wobbly if any are found.
-     */
-    if (contains_multibyte_chars(str)) {
-      error("The TikZ device does not support UTF8 strings when the pdftex engine is in use!");
-      return(0.0);
-    }
-  }
-
   // Calculate font scaling factor.
   double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
 
