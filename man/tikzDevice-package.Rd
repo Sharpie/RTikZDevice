@@ -50,14 +50,17 @@ Support for native LaTeX output of R graphics
   }
 
   As of Version 0.6.0, the tikzDevice package includes support for the
-  \code{xetex} engine with support for \code{luatex} under development. The
-  tikzDevice defaults to using \code{pdftex} for calculating character and
-  string metrics.  However, if your text contains Unicode characters, we
-  strongly reccomend switching to \code{xetex} and the package will produce
+  \code{xetex} engine provided a recent version of TeX Live or MiKTeX is
+  available.
+
+  The tikzDevice defaults to using the \code{pdftex} engine, but this may be
+  changed by setting an option: \code{option(tikzDefaultEngine = 'xetex')}.
+  When working with text that contains Unicode characters, we strongly
+  reccomend switching to the \code{xetex} engine and the package will produce
   warning messages when multibyte characters are sent to the \code{pdftex}
-  engine (this may be disabled by setting \code{options(tikzPdftexWarnUTF =
-  FALSE)}. Unicode characters can be used with the \code{pdftex} engine with
-  two caveats:
+  engine. Users who find these warnings annoying may disable them by setting
+  \code{options(tikzPdftexWarnUTF = FALSE)} as it is possible to send Unicode
+  information to the \code{pdftex} engine with the following caveats:
 
   \itemize{
 
