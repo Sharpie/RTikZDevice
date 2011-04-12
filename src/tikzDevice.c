@@ -776,7 +776,6 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
       return;
     }
   }
-  */
 
   // Calculate font scaling factor.
   double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );

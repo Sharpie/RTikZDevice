@@ -109,7 +109,7 @@
 	\coordinate (titleIn) at ($(title.base west) - (6pt,24pt)$);
 		
 	\node[color=black!80,below=24pt of title.base east,anchor=east] (sub)
-		{\bfseries\itshape\Large \LaTeX Graphics for R};
+		{\bfseries\itshape\Large \LaTeX{} Graphics for R};
 
 \end{tikzpicture}
 \vfill	
@@ -239,7 +239,7 @@ The \pkg{tikzDevice} package allows for R graphics output in a native \LaTeX{} f
 
 This document is divided into three parts. The first part describes the functions that the package makes available to the \lang{R} user and provides examples of their capabilities. Besides the \lang{R} environment, use of the \TikZ{} device device requires the user to have a working \LaTeX{} compiler along with an installed version of the \TikZ{} package-- version 2.00 or greater. The second part of this documentation offers suggestions on how to get these tools working properly.
 
-The third part of the documentation is intended for those who are curious as to the details of how this package has been implemented. It attempts to explain how the \TikZ{} package does the things that it does and why it chooses to do them that way. The authors have attempted to write this part of the documentation in a way that is accessible to users as well as developers. This has been done in the hope that this project may serve as a case study in creating an R graphics device. This part of the documentation may also help those considering undertaking the transition from casual package-building to full-on hacking of the \lang{R} internals.
+The third part of the documentation is intended for those who are curious as to the details of how this package has been implemented. It attempts to explain how the \TikZ{} package does the things that it does and why it chooses to do them that way. The authors have attempted to write this part of the documentation in a way that is accessible to users as well as developers. This has been done in the hope that this project may serve as a case study in creating an \lang{R} graphics device. This part of the documentation may also help those considering undertaking the transition from casual package-building to full-on hacking of the \lang{R} internals.
 
 \section{Acknowledgements}
 
@@ -574,20 +574,20 @@ feature:
   A working version of \hologo{XeLaTeX} along with the packages \code{fontspec}
   and \code{xunicode} are required for direct processing of Unicode input.  If
   \code{tikzDevice} cannot find \hologo{XeLaTeX} then Unicode support cannot be
-  guarenteed.
+  guaranteed.
 
 \item[Encoding:] \code{tikzDevice} will try its best to convert characters from
   other encodings but do not count on it converting things correctly, best to
   do the conversion yourself beforehand to avoid unexpected output.
 
-\item[Fonts:] Having a Unicode character actually show up in your \LaTeX\
+\item[Fonts:] Having a Unicode character actually show up in your \LaTeX{}
   document relies on the font you use having the glyph available. We leave it
   up to the user to know for themselves what is available.  Otherwise you will
   likely just get no output in place of where the character should be.
 
 \item[plotmath:] There is specifically no support for input of plotmath
-  characters as unicode since the user can simply input \LaTeX\ math directly.
-  We strongly encourage the use of \LaTeX\ math over plotmath for style and
+  characters as unicode since the user can simply input \LaTeX{} math directly.
+  We strongly encourage the use of \LaTeX{} math over plotmath for style and
   consistency's sake.  A consequence of this is that most of the \lang{R}
   examples and demos of plotmath won't work without significant manipulation
   (your milage may vary but you may get anything from errors to warnings to
@@ -804,7 +804,7 @@ The resulting code may then be used inside a \code{tikzpicture} environment usin
 
 \subsubsection{\code{standAlone} Mode}
 
-When the \code{standAlone} option is passed to \code{tikz()}, the resulting \code{.tex} file will be a complete \LaTeX document designed to be compiled on its own.  This means that in addition to \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` the file will also contain \verb`\begin{document}`, \verb`\end{document}` and a \LaTeX{} preamble.  The \code{preview} package is also used in files produced by \code{standAlone} and is used to crop the pages in the resulting document to the bounding boxes of the figures that it contains.  Stand-alone output may be produced in the following manner:
+When the \code{standAlone} option is passed to \code{tikz()}, the resulting \code{.tex} file will be a complete \LaTeX{} document designed to be compiled on its own.  This means that in addition to \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` the file will also contain \verb`\begin{document}`, \verb`\end{document}` and a \LaTeX{} preamble.  The \code{preview} package is also used in files produced by \code{standAlone} and is used to crop the pages in the resulting document to the bounding boxes of the figures that it contains.  Stand-alone output may be produced in the following manner:
 
 <<standAloneExample,echo=T,results=hide,keep.source=T>>=
 require(tikzDevice)
@@ -832,7 +832,7 @@ dev.off()
     #%\Sexpr{print(pdfLink)}
 @
 
-Note that files produced using the \code{standAlone} option should not be included in \LaTeX documents using the \verb`\input{}` command! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
+Note that files produced using the \code{standAlone} option should not be included in \LaTeX{} documents using the \verb`\input{}` command! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
 
 \subsubsection{\code{console} output Mode}
 
@@ -860,7 +860,7 @@ Version 0.5.0 of \pkg{tikzDevice} introduced the \code{console} option.  Instead
  \end{document}
 \end{tikzCodeBlock}
 
-\subsubsection{Getting around special \LaTeX characters}
+\subsubsection{Getting around special \LaTeX{} characters}
 
 \subsubsection{Using the Global Options: An Xe\LaTeX{} example}
 
@@ -1157,7 +1157,7 @@ tlmgr install packagename
 
 Sometimes an automated package manager cannot be used. Common reasons may be that one is not available, as is the case with the TeX Live 2007 distribution, or that when running the package manager you do not have write access to the location where \LaTeX{} packages are stored, as is the case with accounts on shared computers. If this is the case, a manual install may be the best option for making a \LaTeX{} package available.
 
-Generally, the best place to find \LaTeX packages is the Comprehensive TeX Archive Network, or \lang{CTAN} located at \url{http://www.ctan.org}. In the case of the PGF/\TikZ{} package, the project homepage at \url{http://www.sourceforge.net/projects/pgf} is also a good place to obtain the package- especially if you would like to play with the bleeding-edge development version.
+Generally, the best place to find \LaTeX{} packages is the Comprehensive TeX Archive Network, or \lang{CTAN} located at \url{http://www.ctan.org}. In the case of the PGF/\TikZ{} package, the project homepage at \url{http://www.sourceforge.net/projects/pgf} is also a good place to obtain the package- especially if you would like to play with the bleeding-edge development version.
 
 Generally speaking, all \LaTeX{} packages are stored in a specially directory called a \code{texmf} folder. Most \TeX{} distributions allow for each user to have their own personal  \code{texmf} folder somewhere in their home path. The most usual locations, and here {\bfseries\itshape usual} is and unfortunately loose term, are as follows:
 
@@ -1516,7 +1516,7 @@ getLatexCharMetrics <- function( charCode ){
 
 The first thing we do is choose a place to create this input file. Now, when the \LaTeX{} compiler is run on a \code{.tex} file, a lot of additional files get created-- the whole process is a bit messy. Since the user probably wouldn't appreciate having to clean up our mess, we use the \code{tempdir()} function to retrieve a path to a {\itshape temporary directory} on the system. Here is the first place we benefit from the added level of abstraction granted by \lang{R}. Each operating system has different locations for temporary directories. If we were still working in \lang{C}, we would have to worry about such details. \lang{R} takes care of those details for us.
 
-Now that we have a place to work, we set up a couple of filenames- one for the input file, which ends in \code{.tex} and one for the \LaTeX{} log file, which ends in \code{.log}. We then open the \code{.tex} file for writing. The next step is to setup the preamble of the \LaTeX file.
+Now that we have a place to work, we set up a couple of filenames- one for the input file, which ends in \code{.tex} and one for the \LaTeX{} log file, which ends in \code{.log}. We then open the \code{.tex} file for writing. The next step is to setup the preamble of the \LaTeX{} file.
 
 \begin{tikzCodeBlock}[title={Setting up the preamble of a \LaTeX{} input file},listing style=sweavechunk]
   writeLines("\\documentclass{article}", texIn)

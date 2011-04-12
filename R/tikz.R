@@ -38,7 +38,7 @@
 #' document or a \code{tikzpicture} environment.  This is useful for embedding
 #' an generated graphic within an existing TikZ picture.
 #'
-#' In cases where both \code{standAole} and \code{bareBones} have been set to
+#' In cases where both \code{standAlone} and \code{bareBones} have been set to
 #' \code{TRUE}, the \code{standAlone} option will take precedence.
 #'
 #' @param file A character string indicating the desired path to the output

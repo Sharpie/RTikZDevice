@@ -34,7 +34,7 @@
 
 \section{Options That Affect Package Behavior}{
   The \pkg{tikzDevice} package is currently influenced by a number of global
-  options that may be set in \R\ scripts, from the \R\ console or in a
+  options that may be set in \R{} scripts, from the \R{} console or in a
   \code{.Rprofile} file. All of the options can be set by using
   \code{options(<option> = <value>)}.  These options allow for the use of
   custom \code{documentclass} declarations, LaTeX packages, and typesetting
@@ -65,14 +65,14 @@
 
     \item{\code{tikzMetricsDictionary}}{
       When using the graphics device provided by \pkg{tikzDevice}, you may
-      notice that \R\ appears to ``lag" or ``hang" when commands such as
+      notice that \R{} appears to ``lag" or ``hang" when commands such as
       \code{plot()} are executed. This is because the device must query the
       LaTeX compiler for string widths and font metrics. For a normal plot,
-      this may happen dozens or hundreds of times- hence \R\ becomes
+      this may happen dozens or hundreds of times- hence \R{} becomes
       unresponsive for a while. The good news is that the \code{\link{tikz}} code is
       designed to cache the results of these computations so they need only be
       performed once for each string or character. By default, these values are
-      stored in a temporary cache file which is deleted when \R\ is shut down.
+      stored in a temporary cache file which is deleted when \R{} is shut down.
       A location for a permanent cache file may be specified by setting the
       value of \code{tikzMetricsDictionary} in \code{.Rprofile} with
       \code{options(tikzMetricsDictionary = '/path/to/dictionary/location')}.
@@ -270,20 +270,3 @@ Till Tanatu, February 20, 2008
 \code{\link{tikz}}
 }
 
-\examples{
-  \dontrun{
-    td <- tempdir()
-    tf <- file.path(td,'example.tex')
-    oldwd <- getwd()
-    setwd(td)
-
-    tikz(tf,standAlone=T)
-      plot(-2:2, -2:2, type = "n", axes=F,
-          xlab='', ylab='', main='TikZ Device Example')
-        text(x,y,paste('\\\\Large$\\\\',syms,'$',sep=''))
-    dev.off()
-    tools::texi2dvi(tf,pdf=T)
-    system(paste(getOption('pdfviewer'),file.path(td,'example.pdf')))
-    setwd(oldwd)
-  }
-}
