@@ -86,8 +86,9 @@ to the development of the device!
 
 #### New Features
 
-- Unicode Support!!!! XeLaTeX will be used automatically (if available) to
-  calculate metrics and widths of unicode characters.
+- Unicode Support!!!! XeLaTeX may now be used calculate metrics and widths for
+  Unicode characters. PdfLaTeX remains the default LaTeX compiler, but this may
+  be changed by setting the global option `tikzDefaultEngine` to `xetex`.
 
 - New global option `tikzXelatexPackages` which contains packages necessary to
   use unicode characters with xelatex.  Specifically, the fontspec and the
@@ -99,8 +100,6 @@ to the development of the device!
 - New function anyMultibyteUTF8Characters() which will check if the given
   string contains any multibyte unicode characters.  Exposed in the package
   namespace since it is general and may be useful in other applications.
-
-- Added "_" to the list of default sanitize characters
 
 - The TikZ device now fully supports the `Raster` graphics primitive that was
   added in R 2.11.0 and no longer throws "not implemented" warnings when this
