@@ -17,13 +17,17 @@ help:
 	@echo ""
 	@echo "Development Tasks"
 	@echo "-----------------"
+	@echo "  deps       Install dependencies for package development"
 	@echo "  docs       Invike roxygen to generate Rd files in a seperate"
 	@echo "             directory"
 	@echo "  vignette   Build a copy of the package vignette"
 	@echo "  build      Invoke docs and then create a package"
+	@echo "  check      Invoke build and then check the package"
 	@echo "  install    Invoke build and then install the result"
 	@echo "  test       Install a new copy of the package and run it "
 	@echo "             through the testsuite"
+	@echo "  valgrind   Run package testsuite through the Valgrind debugger"
+	@echo "             to check for memory leaks"
 	@echo ""
 	@echo "Packaging Tasks"
 	@echo "---------------"
@@ -37,6 +41,10 @@ help:
 #------------------------------------------------------------------------------
 # Development Tasks
 #------------------------------------------------------------------------------
+deps:
+	"$(RBIN)/R" --vanilla --slave -e "install.packages(c('filehash','roxygen','testthat','ggplot2'))"
+
+
 docs:
 	cd ..;\
 		"$(RBIN)/R" --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)', '$(PKGSRC).build', use.Rd2=TRUE, overwrite=TRUE, unlink.target=TRUE)"
@@ -61,10 +69,17 @@ install: build
 	cd ..;\
 		"$(RBIN)/R" CMD INSTALL $(PKGNAME)_$(PKGVERS).tar.gz
 
+check: build
+	cd ..;\
+		"$(RBIN)/R" CMD check --no-tests $(PKGNAME)_$(PKGVERS).tar.gz
+
 test: install
 	cd tests;\
 		"$(RBIN)/Rscript" unit_tests.R
 
+valgrind: install
+	cd tests;\
+		"$(RBIN)/R" -d "valgrind --tool=memcheck --leak-check=full --dsymutil=yes" --vanilla < unit_tests.R
 
 #------------------------------------------------------------------------------
 # Packaging Tasks

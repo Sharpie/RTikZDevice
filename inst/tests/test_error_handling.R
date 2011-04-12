@@ -18,26 +18,20 @@ test_that('Device produces an error for unescaped characters',{
 
 })
 
-test_that('Device warns about the lower bound of the ASCII table if XeTeX disabled',{
-  xelatex <- getOption('tikzXelatex')
-  options(tikzXelatex = NULL)
-  on.exit(options(tikzXelatex = xelatex))
+test_that('Device warns about the lower bound of the ASCII table when using pdftex',{
 
   expect_that(
-    getLatexCharMetrics(31),
-    gives_warning('xelatex is not available')
+    getLatexCharMetrics(31, engine = 'pdftex'),
+    gives_warning('pdftex can only generate metrics for character codes between 32 and 126!')
   )
 
 })
 
-test_that('Device warns about the upper bound of the ASCII table if XeTeX disabled',{
-  xelatex <- getOption('tikzXelatex')
-  options(tikzXelatex = NULL)
-  on.exit(options(tikzXelatex = xelatex))
+test_that('Device warns about the upper bound of the ASCII table when using pdftex',{
 
   expect_that(
     getLatexCharMetrics(127),
-    gives_warning('xelatex is not available')
+    gives_warning('pdftex can only generate metrics for character codes between 32 and 126!')
   )
 
 })
@@ -46,7 +40,7 @@ test_that("Device won't accept non-numeric ASCII codes",{
 
   expect_that(
     getLatexCharMetrics('a'),
-    gives_warning('only accepts numbers')
+    gives_warning('getLatexCharMetrics only accepts integers!')
   )
 
 })
@@ -55,7 +49,7 @@ test_that('Device throws error when a path cannot be opened',{
 
   expect_that(
     tikz('/why/would/you/have/a/path/like/this.tex'),
-    throws_error('path does not exist!')
+    throws_error('directory does not exist or is not writable')
   )
 
 })
@@ -72,8 +66,8 @@ test_that('tikzAnnotate refuses to work with a non-tikzDevice',{
 test_that('UTF8 calculation fails when XeTeX cannot find a character in the current font.',{
 
   expect_that(
-    getLatexStrWidth('α'),
-    throws_error('TeX was unable to calculate metrics')
+    getLatexStrWidth('α', engine = 'xetex'),
+    gives_warning('XeLaTeX was unable to calculate metrics')
   )
 
 })

@@ -11,6 +11,9 @@
 % Extra text effects (strikethrough)
 \usepackage{ulem}
 
+% Various TeX logos---included in the Oberdiek bundle which contains hyperref,
+% so there is a good chance it will be installed.
+\usepackage{hologo}
 
 % Sexyness
 \usepackage{tikz}
@@ -23,6 +26,7 @@
 \usepackage[letterpaper,margin=1in]{geometry}
 \usepackage{epigraph}
 \usepackage{multicol}
+\usepackage{pdflscape}
 
 % Graphics control.
 \usepackage{graphicx}
@@ -75,7 +79,7 @@
 	{\large\url{http://r-forge.r-project.org/projects/tikzdevice}}
 }
 \author{Charlie Sharpsteen and Cameron Bracken}
-\date{Version \Sexpr{tikzDevice:::getTikzDeviceVersion()}-{\bfseries\color{red}Beta}\qquad December, 2010}
+\date{Version \Sexpr{tikzDevice:::getTikzDeviceVersion()}-{\bfseries\color{red}Beta}\qquad April, 2011}
 
 \begin{document}
 	
@@ -333,12 +337,30 @@ The \pkg{tikzDevice} package is  influenced by a number of options that may be s
 \addtolength\tikzShortenLine{-\leftmargini}
 \tikzset{/tikzCode/defaults/code body/.append style={text width=\tikzShortenLine}}
 
-\item[\code{tikzLatex}]{ Specifies the location of the \LaTeX{} compiler to be used by \pkg{tikzDevice}. Setting a default for this this option may help the package locate a missing compiler:
+  \item[\code{tikzDefaultEngine}] {
+    Specifies which typesetting engine functions in the \pkg{tikzDevice}
+    package will prefer. Current possible values are \hologo{pdfTeX} or
+    \hologo{XeTeX} which will respectively trigger the use of the
+    \hologo{pdfLaTeX} and \hologo{XeLaTeX} compilers.
 
-\begin{tikzCodeBlock}[title={Setting the default \LaTeX{} compiler in \code{.Rprofile}},listing style=sweavechunk]
-options( tikzLatex = '/path/to/latex/compiler' )
+\begin{tikzCodeBlock}[title={Choosing the \TeX\ engine},listing style=sweavechunk]
+options(tikzDefaultEngine = 'pdftex')
+# Or..
+options(tikzDefaultEngine = 'xetex')
 \end{tikzCodeBlock}
-}
+  }
+
+  \item[\code{tikzLatex} and \code{tikzXelatex}] {
+    Specifies the location of the \LaTeX{} and \hologo{XeLaTeX} compilers to be
+    used by \pkg{tikzDevice}. Setting a default for this this option may help
+    the package locate a missing compiler:
+
+\begin{tikzCodeBlock}[title={Setting default compilers in \code{.Rprofile}},listing style=sweavechunk]
+options(tikzLatex = '/path/to/latex/compiler')
+options(tikzXelatex = '/path/to/xelatex/compiler')
+\end{tikzCodeBlock}
+  }
+
 \item[\code{tikzMetricsDictionary}]{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \lang{R} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the \LaTeX{} compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \lang{R} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \lang{R} is shut down. A location for a permanent cache file may be specified:
 
 \begin{tikzCodeBlock}[title={Setting a location in \code{.Rprofile} for a permanent metrics dictionary},listing style=sweavechunk]
@@ -358,7 +380,12 @@ options( tikzDocumentDeclaration = "\\documentclass{article}" )
 options( tikzFooter = c( "\\end{document}" ) )
 \end{tikzCodeBlock} 
 
-\item[\code{tikzLatexPackages}]{ A character vector. These are the packages which are included when using the \code{standAlone} option as well as when font metrics are calculated.  If you use additional packages that affect fonts, such as mathpazo which provides a Palatino-style font, these packages should be added to this list.}
+  \item[\code{tikzLatexPackages} and \code{tikzXelatexPackages}]{
+    Character vectors. These are the packages which are included when using the
+    \code{standAlone} option as well as when font metrics are calculated.  If you
+    use additional packages that affect fonts, such as mathpazo which provides a
+    Palatino-style font, these packages should be added to this list.
+
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
 options( tikzLatexPackages = c(
   "\\usepackage{tikz}",
@@ -373,10 +400,15 @@ options( tikzLatexPackages = c(
   getOption( "tikzLatexPackages" ),
   "\\usepackage{mathpazo}"
 ))
-\end{tikzCodeBlock} 
+\end{tikzCodeBlock}
+  }
 
-
-\item[\code{tikzMetricPackages}]{ A character vector. These are the extra packages which are additionally loaded when doing font metric calculations.  As you see below, the font encoding is set to Type 1. This is very important so that character codes of \LaTeX{} and \lang{R} match up.}
+\item[\code{tikzMetricPackages} and \code{tikzUnicodeMetricPackages}] {
+    Character vectors. These are the extra packages which are additionally
+    loaded when doing font metric calculations.  As you see below, the font
+    encoding is set to Type 1. This is very important so that character codes
+    of \LaTeX{} and \lang{R} match up. The Unicode metric packages are used
+    when a \hologo{XeTeX} engine is in use.
 
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
 options( tikzMetricPackages = c(
@@ -385,6 +417,7 @@ options( tikzMetricPackages = c(
   "\\usetikzlibrary{calc}")
 )
 \end{tikzCodeBlock}
+  }
 
 
 \item[\code{tikzSanitizeCharacters}]{A character vector of special latex characters to replace. These values should correspond to the replacement values from the \code{tikzReplacementCharacters} option.}
@@ -399,6 +432,21 @@ options( tikzSanitizeCharacters = c('%','$','}','{','^') )
 options( tikzReplacementCharacters = c('\\%','\\$','\\','\\','\\^'))
 \end{tikzCodeBlock}
 
+  \item[\code{tikzRasterResolution}] {
+    When \code{tikz} is requested to add a raster to a graphic, the
+    raster is written to a PNG file which is then included into the LaTeX
+    code. This option controls the resolution (dpi) at which the PNG files
+    are created.
+
+\begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
+options(tikzRasterResolution = 300)
+\end{tikzCodeBlock}
+  }
+
+  \item[\code{tikzPdftexWarnUTF}] {
+    A \code{TRUE/FALSE} value that controls whether warnings are printed if
+    Unicode characters are sent to a device using the \hologo{pdfTeX} engine.
+  }
 \end{description}
 
 For convenience the function \code{setTikzDefaults()} is provided which sets all the global options back to their original values.
@@ -425,8 +473,9 @@ The \code{tikz()} function opens a new graphics device and may be called with th
 
 \begin{Verbatim}[frame=single]
 tikz(file = "Rplots.tex", width = 7, height = 7,
-  bg="transparent", fg="black", pointsize = 10, standAlone = FALSE, 
+  bg="transparent", fg="black", pointsize = 10, standAlone = FALSE,
   bareBones = FALSE, console = FALSE, sanitize = FALSE,
+  engine = getOption("tikzDefaultEngine'),
   documentDeclaration = getOption("tikzDocumentDeclaration"),
   packages = getOption("tikzLatexPackages"),
   footer = getOption("tikzFooter"))
@@ -442,13 +491,23 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
 \item[\code{standAlone}]{ A logical value indicating whether the resulting file should be suitable for direct processing by \LaTeX .}
 \item[\code{bareBones}]{ A logical value indicating whether the resulting \TikZ{} code produced without being placed within a \LaTeX{} \code{tikzpicture} environment.}
 \item[\code{console}]{Should the output of \code{tikz} be directed to the \lang{R} console (default FALSE). This is useful for dumping tikz output directly into a \LaTeX{} document via sink. If \code{TRUE}, the file argument is ignored. Setting \code{file=''} is equivalent to setting \code{console=TRUE}.}
-\item[\code{sanitize}]{	 Should special latex characters be replaced (Default \code{FALSE}). See the section ``Options That Affect Package Behavior'' for which characters are replaced.}
+\item[\code{sanitize}]{Should special latex characters be replaced (Default \code{FALSE}). See the section ``Options That Affect Package Behavior'' for which characters are replaced.}
+\item[\code{engine}] {
+  A string specifying which TeX engine to use. Possible values are 'pdftex' and
+  'xetex'.
+}
 \item[\code{documentDeclaration}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
 \item[\code{packages}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
 \item[\code{footer}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
 \end{description}
 
-The first five options should be familiar to anyone who has used the default graphics devices shipped with \lang{R}. The options \code{file}, \code{width}, \code{height}, \code{bg} and \code{fg} represent the standard graphics parameters currently implemented by \pkg{tikzDevice}. The last two options, \code{standAlone} and \code{bareBones}, are specific to the \code{tikz()} graphics device and affect the structure the output file. Using these options \code{tikz()} supports three modes of output: 
+The first five options should be familiar to anyone who has used the default
+graphics devices shipped with \lang{R}. The options \code{file}, \code{width},
+\code{height}, \code{bg} and \code{fg} represent the standard graphics
+parameters currently implemented by \pkg{tikzDevice}. The last two options,
+\code{standAlone} and \code{bareBones}, are specific to the \code{tikz()}
+graphics device and affect the structure the output file. Using these options
+\code{tikz()} supports three modes of output:
 
 \begin{itemize}
 
@@ -462,16 +521,29 @@ The first five options should be familiar to anyone who has used the default gra
 
 \subsection{Font Size Calculations}
 \label{subsec:fontCalc}
-The overarching goal of the ‘tikzDevice’ is to provide seamless integration between text in R graphics and the text of LaTeX documents that contain those graphics.  In order to achieve this integration the device must translate font sizes specified in R to corresponding font sizes in LaTeX.  The issue is that font sizes in LaTeX are controlled by a ``base font size'' that is specified at the beginning of the document- typically 10pt.  There is no easy way in LaTeX to change the font size to a new numerical value, such as 16pt for a plot title.  Fortunately, the TikZ graphics system allows text to be resized using a scaling factor.  The \code{tikzDevice} calculates a scaling factor used to approximate other font sizes using the following three inputs:
+The overarching goal of the `tikzDevice' is to provide seamless integration
+between text in R graphics and the text of LaTeX documents that contain those
+graphics.  In order to achieve this integration the device must translate font
+sizes specified in R to corresponding font sizes in LaTeX.  The issue is that
+font sizes in LaTeX are controlled by a ``base font size'' that is specified at
+the beginning of the document- typically 10pt.  There is no easy way in LaTeX
+to change the font size to a new numerical value, such as 16pt for a plot
+title.  Fortunately, the TikZ graphics system allows text to be resized using a
+scaling factor.  The \code{tikzDevice} calculates a scaling factor used to
+approximate other font sizes using the following three inputs:
 
 \begin{itemize}
 
   \item{The ``base font size'' specified when the graphics device is
           created.}
 
-  \item{The ``character expansion factor'' parameter, specified using the ‘cex’ argument to functions such as described in the documentation of the \lang{R} function \code{par()}.}
+  \item{The ``character expansion factor'' parameter, specified using the `cex'
+    argument to functions such as described in the documentation of the
+    \lang{R} function \code{par()}.}
   
-  \item{The ``font size'' parameter, specified using the `ps’ argument to functions such as \code{par()} or the `fontsize’ argument to functions such as \code{gpar()}.}
+  \item{The ``font size'' parameter, specified using the `ps' argument to
+    functions such as \code{par()} or the `fontsize' argument to functions such
+    as \code{gpar()}.}
 
 \end{itemize}
 
@@ -492,41 +564,45 @@ This regular expression will return 10 as the base pointsize to be used by the d
 
 \subsection{UTF-8 Output}
 
-Version 0.6.0 introduced support for (multibyte) Unicode characters in the text of graphics.  There are a few important implications/limitations of this feature:
+Version 0.6.0 introduced support for (multibyte) Unicode characters in the text
+of graphics.  There are a few important implications/limitations of this
+feature:
 
 \begin{description}
 
 \item[System Requirements:]
-A working version of XeLaTeX along with the packages fontspec and xunicode are required for direct processing of Unicode input.  If \code{tikzDevice} cannot find XeLaTeX then it will default to only allowing ASCII characters.
+  A working version of \hologo{XeLaTeX} along with the packages \code{fontspec}
+  and \code{xunicode} are required for direct processing of Unicode input.  If
+  \code{tikzDevice} cannot find \hologo{XeLaTeX} then Unicode support cannot be
+  guarenteed.
 
-\item[Automatic Detection of Unicode Characters:]
+\item[Encoding:] \code{tikzDevice} will try its best to convert characters from
+  other encodings but do not count on it converting things correctly, best to
+  do the conversion yourself beforehand to avoid unexpected output.
 
-\code{tikzDevice} will automatically recognize multibyte characters such that the metrics and string width for the character/string will be calculated using the \code{tikzUnicodeMetricPackages} and \code{tikzXelatexPackages} via a call to XeLaTeX (from the option \code{tikzXelatex}).
+\item[Fonts:] Having a Unicode character actually show up in your \LaTeX\
+  document relies on the font you use having the glyph available. We leave it
+  up to the user to know for themselves what is available.  Otherwise you will
+  likely just get no output in place of where the character should be.
 
-\item[Unicode character and the \code{standAlone} option:]
-There is no way to know before a tikz device is opened and the \code{standAlone} header is written whether any of the text input will have unicode characters. Consequently you must set the values of \code{tikzLatexPackages} manually before you open the device:
-
-\begin{tikzCodeBlock}[listing style=sweavechunk]
-options(tikzLatexPackages=getOption('tikzXelatexPackages'))
-\end{tikzCodeBlock}
-
-or
-
-\begin{tikzCodeBlock}[listing style=sweavechunk]
-tikz(..., packages=getOption('tikzXelatexPackages'))
-\end{tikzCodeBlock}
-
-\item[Encoding:] \code{tikzDevice} will try its best to convert characters from other encodings but do not count on it converting things correctly, best to do the conversion yourself beforehand to avoid unexpected output.
-
-\item[Fonts:] Having a Unicode character actually show up in your LaTeX document relies on the font you use having the glyph available. We leave it up to the user to know for themselves what is available.  Otherwise you will likely just get no output in place of where the character should be.
-
-\item[plotmath:] There is specifically no support for input of plotmath characters as unicode since the user can simply input LaTeX math directly.  We strongly encourage the use of LaTeX math over plotmath for style and consistency's sake.  A consequence of this is that most of the \lang{R} examples and demos of plotmath won't work without significant manipulation (your milage may vary but you may get anything from errors to warnings to documents that mysteriously won't compile).  That is not to say that the output could not be duplicated with \code{tikzDevice} but the examples will not work out of the box.
+\item[plotmath:] There is specifically no support for input of plotmath
+  characters as unicode since the user can simply input \LaTeX\ math directly.
+  We strongly encourage the use of \LaTeX\ math over plotmath for style and
+  consistency's sake.  A consequence of this is that most of the \lang{R}
+  examples and demos of plotmath won't work without significant manipulation
+  (your milage may vary but you may get anything from errors to warnings to
+  documents that mysteriously won't compile).  That is not to say that the
+  output could not be duplicated with \code{tikzDevice} but the examples will
+  not work out of the box.
 
 \item[Compiling:]
-A graphic that contains UTF-8 characters must be compiled with XeLaTeX (or possibly LuaLaTeX) with the xunicode and fontspec packages enabled.
+  A graphic that contains UTF-8 characters should be compiled with
+  \hologo{XeLaTeX} (or possibly \hologo{LuaLaTeX}) with the \code{xunicode} and
+  \code{fontspec} packages enabled.
 
 \item[ASCII only:]
-Everything should be exactly the same as previous versions if only ASCII (single byte) characters are used (i.e. character codes less than 132).
+  Everything should be exactly the same as previous versions if only ASCII
+  (single byte) characters are used (i.e. character codes less than 132).
 
 \end{description}
 
@@ -919,54 +995,27 @@ setTikzDefaults()
 \caption{An example using \TikZ{} annotation.}\label{fig:annotation}
 \end{figure}
 
-\subsubsection{Plotmath vs. tikzDevice output with mathematical output and UTF-8 Characters}
+\begin{landscape}
 
-This exmple shows how UTF-8 characters and latex mathematics can be used to reproduce an example from \code{?text}.  Some characters might not show up in the vignette, see the source code for the complete example.  Figures \ref{fig:plotmathDefault} and \ref{fig:plotmathTikz} show the difference between \code{tikz()} output and the \code{pdf()} device.
+\subsubsection{\code{tikz()} vs. \code{pdf()} for \code{plotmath} symbols and Unicode characters}
 
-\begin{tikzCodeBlock}[title={Plotmath example replicated with tikzDevice},listing style=sweavechunk]
-options(tikzLatexPackages=getOption('tikzXelatexPackages'))
-options(tikzLatex='xelatex')
-options(tikzSanitizeCharacters = c(getOption("tikzSanitizeCharacters"),"\\"))
-options(tikzReplacementCharacters = c(getOption("tikzReplacementCharacters"),"\\textbackslash"))
-
-tikz("plotmath.tex",width=7,height=7)
-## The following two examples use latin1 characters: these may not
-## appear correctly (or be omitted entirely).
-plot(1:10, 1:10, main = "text(...) examples\n~~~~~~~~~~~~~~",
-     sub = "R is GNU ©, but not ® ...")
-mtext("«Latin-1 accented chars»: éè øØ å<Å æ<Æ", side=3)
-points(c(6,2), c(2,1), pch = 3, cex = 4, col = "red")
-text(6, 2, "the text is CENTERED around (x,y) = (6,2) by default",
-     cex = .8)
-text(2, 1, "or Left/Bottom - JUSTIFIED at (2,1) by 'adj = c(0,0)'",
-     adj = c(0,0))
-text(4, 9, "$\\displaystyle\\hat{\\beta} = (X^tX)^{-1}X^ty$")
-text(4, 8.4,
-    sanitizeTexString("\\displaystyle\\hat{\\beta} = (X^tX)^{-1}X^ty"),
-    cex = .75)
-text(4, 7,
-    "$\\displaystyle\\bar{x} = \\displaystyle\\sum_{i=1}^n\\frac{x_i}{n}$")
-
-## Two more latin1 examples
-text(5,10.2,
-     "Le français, c'est façile: Règles, Liberté, Egalité, Fraternité...")
-text(5,9.8,
-     "Jetz no chli züritüütsch: (noch ein bißchen Zürcher deutsch)")
-
-dev.off()
-\end{tikzCodeBlock}
+This is a side-by-side example showing how \code{tikz(..., engine = 'xetex')} handles UTF-8
+characters and plotmath symbols compared to the standard R \code{pdf()} device.
 
 \begin{figure}[!h]
 \centering
-\includegraphics{img/plotmathDefault.pdf}
-\caption{Default output with plotmath and the pdf device.}\label{fig:plotmathDefault}
+  \begin{minipage}{4.25in}
+    \includegraphics[width=4.25in]{img/plotmathDefault.pdf}
+    \caption{\code{example(text)} using the standard \code{pdf()} device.}\label{fig:plotmathDefault}
+  \end{minipage}
+  \vspace{1em}
+  \begin{minipage}{4.25in}
+    \includegraphics[width=4.25in]{img/plotmathTikz.pdf}
+    \caption{\code{example(text)} using \code{tikz(..., engine = 'xetex')}.}\label{fig:plotmathTikz}
+  \end{minipage}
 \end{figure}
 
-\begin{figure}[!h]
-\centering
-\includegraphics{img/plotmathTikz.pdf}
-\caption{Plotmath output and UTF8 characters replicated with \code{tikz()} annotation.}\label{fig:plotmathTikz}
-\end{figure}
+\end{landscape}
 
 % Return to the normal working directory
 <<pathStepOut,results=hide>>=
@@ -1260,10 +1309,10 @@ Font metrics are measurements associated with the glyphs, or printed characters,
 
 \node[anchor=north,outer sep=0pt] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Ascent};
 
-\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below=0.25em of title] (char) {A};
+\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below=0.25em of title] (char) {g};
 \draw[color=black,very thick] (char.base west) -- (char.base east);
 \draw[color=black,very thick] (char.north west) -- (char.north east);
-\draw[color=red,very thick,<->,>=stealth] ([xshift=10pt]char.south west) -- ([xshift=10pt]char.north west);
+\draw[color=red,very thick,<->,>=stealth] ([xshift=10pt]char.base west) -- ([xshift=10pt]char.north west);
 
 
 \newdimen\yone
@@ -1276,7 +1325,9 @@ Font metrics are measurements associated with the glyphs, or printed characters,
 \yone = \pgfmathresult pt
 
 \node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
-Ascent is the distance between the baseline and the tallest point on a character's glyph. For the "A" printed to the left, the ascent has been calculated as: \the\yone
+Ascent is the distance between the baseline and the tallest point on a
+character's glyph. For the "g" printed to the left, the ascent has been
+calculated as: \the\yone
 };
 \end{tikzpicture}
 
@@ -1291,7 +1342,7 @@ Ascent is the distance between the baseline and the tallest point on a character
 \node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {g};
 \draw[color=black,very thick] (char.base west) -- (char.base east);
 \draw[color=black,very thick] (char.south west) -- (char.south east);
-\draw[color=red,very thick,<-,>=stealth] ([xshift=10pt]char.south west) -- +(0,-6pt); 
+\draw[color=red,very thick,<-,>=stealth] ([xshift=10pt]char.south west) -- +(0,-6pt);
 \draw[color=red,very thick,<-,>=stealth] ([xshift=10pt]char.base west) -- +(0,+6pt);
 
 
@@ -1305,7 +1356,9 @@ Ascent is the distance between the baseline and the tallest point on a character
 \yone = \pgfmathresult pt
 
 \node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
-Descent is the distance between the baseline and the lowest point on a character's glyph. For the "g" printed to the left, the descent has been calculated as: \the\yone 
+Descent is the distance between the baseline and the lowest point on a
+character's glyph. For the "g" printed to the left, the descent has been
+calculated as: \the\yone
 };
 \end{tikzpicture}
 
@@ -1317,10 +1370,10 @@ Descent is the distance between the baseline and the lowest point on a character
 
 \node[outer sep=0pt,anchor=north] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Width};
 
-\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {X};
+\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {g};
 \draw[color=black,very thick] (char.south west) -- (char.north west);
 \draw[color=black,very thick] (char.south east) -- (char.north east);
-\draw[color=red,very thick,<->,>=stealth] (char.mid west) -- (char.mid east); 
+\draw[color=red,very thick,<->,>=stealth] (char.base west) -- (char.base east);
 
 \newdimen\xone
 \newdimen\xtwo
@@ -1332,8 +1385,8 @@ Descent is the distance between the baseline and the lowest point on a character
 \xone = \pgfmathresult pt
 
 \node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
-Width is the distance between the left and right sides of a character's glyph. For the "X" printed to the left, the width has been calculated as: \the\xone 
-};
+Width is the distance between the left and right sides of a character's glyph.
+For the "g" printed to the left, the width has been calculated as: \the\xone};
 \end{tikzpicture}
 
 Providing font metrics and string widths is without a doubt most difficult task a \lang{R} graphics device must undertake. The calculation of string widths is made even difficult for the \pkg{tikzDevice} as we attempt to process arbitrary \LaTeX{} strings. Inside \lang{R} the string ``\verb`$\alpha$`" literally has 8 characters, but when it is typeset it only has one: $\alpha$.

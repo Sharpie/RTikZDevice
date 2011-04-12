@@ -20,6 +20,11 @@
 #include <Rinternals.h>
 #include <R_ext/GraphicsEngine.h>
 
+/* Check R Graphics Engine for minimum supported version */
+#if R_GE_version < 6
+#error "This version of the tikzDevice must be compiled against R 2.11.0 or newer!"
+#endif
+
 
 /*
  * tikz_engine can take on possible values from a list of all the TeX engines
@@ -40,8 +45,9 @@ typedef enum {
 */
 typedef struct {
 	FILE *outputFile;
-	char outFileName[128];
+  char *outFileName;
   tikz_engine engine;
+  int rasterFileCount;
 	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
@@ -121,10 +127,6 @@ TikZ_Path( double *x, double *y,
 );
 #endif
 
-
-/* Raster routines are only defined for R >= 2.11.0, Graphics Engine >= 6 */
-#if R_GE_version >= 6
-
 static void TikZ_Raster( 
   unsigned int *raster,
   int w, int h,
@@ -136,8 +138,6 @@ static void TikZ_Raster(
 );
 
 static SEXP TikZ_Cap( pDevDesc deviceInfo );
-
-#endif
 
 /* Dummy routines. */
 static void TikZ_Activate( pDevDesc deviceInfo );
@@ -155,9 +155,9 @@ static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
 static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo);
 static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo);
 static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo);
-static void SetLineStyle(int lty, int lwd, tikzDevDesc *tikzInfo);
+static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo);
 static void SetDashPattern(int lty, tikzDevDesc *tikzInfo);
-static void SetLineWeight(int lwd, tikzDevDesc *tikzInfo);
+static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo);
 static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
 static void SetLineEnd(R_GE_linejoin lend, tikzDevDesc *tikzInfo);
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
@@ -165,6 +165,7 @@ static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
 SEXP TikZ_GetEngine(SEXP device_num);
+SEXP TikZ_DeviceInfo(SEXP device_num);
 double dim2dev( double length );
 static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
