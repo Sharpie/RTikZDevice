@@ -11,9 +11,9 @@
   \tabular{ll}{
     Package: \tab tikzDevice\cr
     Type: \tab Package\cr
-    Version: \tab 0.35\cr
-    Date: \tab 2009-07-16\cr
-    License: \tab GPL 2.0 or greater\cr
+    Version: \tab 0.6.0\cr
+    Date: \tab 2011-04-13\cr
+    License: \tab GPL 3.0 or greater\cr
     LazyLoad: \tab yes\cr
   }
 }

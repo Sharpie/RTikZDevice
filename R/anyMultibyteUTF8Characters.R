@@ -18,6 +18,7 @@
 #' @author Cameron Bracken \email{cameron.bracken@@gmail.com}
 #' @seealso \code{\link{tikz}}
 #' @keywords character
+#' @encoding UTF8
 #' @examples
 #'
 #' # TRUE
