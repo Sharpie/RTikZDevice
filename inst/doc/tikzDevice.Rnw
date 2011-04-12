@@ -1309,10 +1309,10 @@ Font metrics are measurements associated with the glyphs, or printed characters,
 
 \node[anchor=north,outer sep=0pt] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Ascent};
 
-\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below=0.25em of title] (char) {A};
+\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below=0.25em of title] (char) {g};
 \draw[color=black,very thick] (char.base west) -- (char.base east);
 \draw[color=black,very thick] (char.north west) -- (char.north east);
-\draw[color=red,very thick,<->,>=stealth] ([xshift=10pt]char.south west) -- ([xshift=10pt]char.north west);
+\draw[color=red,very thick,<->,>=stealth] ([xshift=10pt]char.base west) -- ([xshift=10pt]char.north west);
 
 
 \newdimen\yone
@@ -1325,7 +1325,9 @@ Font metrics are measurements associated with the glyphs, or printed characters,
 \yone = \pgfmathresult pt
 
 \node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
-Ascent is the distance between the baseline and the tallest point on a character's glyph. For the "A" printed to the left, the ascent has been calculated as: \the\yone
+Ascent is the distance between the baseline and the tallest point on a
+character's glyph. For the "g" printed to the left, the ascent has been
+calculated as: \the\yone
 };
 \end{tikzpicture}
 
@@ -1340,7 +1342,7 @@ Ascent is the distance between the baseline and the tallest point on a character
 \node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {g};
 \draw[color=black,very thick] (char.base west) -- (char.base east);
 \draw[color=black,very thick] (char.south west) -- (char.south east);
-\draw[color=red,very thick,<-,>=stealth] ([xshift=10pt]char.south west) -- +(0,-6pt); 
+\draw[color=red,very thick,<-,>=stealth] ([xshift=10pt]char.south west) -- +(0,-6pt);
 \draw[color=red,very thick,<-,>=stealth] ([xshift=10pt]char.base west) -- +(0,+6pt);
 
 
@@ -1354,7 +1356,9 @@ Ascent is the distance between the baseline and the tallest point on a character
 \yone = \pgfmathresult pt
 
 \node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
-Descent is the distance between the baseline and the lowest point on a character's glyph. For the "g" printed to the left, the descent has been calculated as: \the\yone 
+Descent is the distance between the baseline and the lowest point on a
+character's glyph. For the "g" printed to the left, the descent has been
+calculated as: \the\yone
 };
 \end{tikzpicture}
 
@@ -1366,10 +1370,10 @@ Descent is the distance between the baseline and the lowest point on a character
 
 \node[outer sep=0pt,anchor=north] (title) at ($(centerpoint) + (4em,0)$) {\bfseries Width};
 
-\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {X};
+\node[scale=4,text=black!40,inner sep=0pt,outer sep=0pt,below= 0.25em of title.south] (char) {g};
 \draw[color=black,very thick] (char.south west) -- (char.north west);
 \draw[color=black,very thick] (char.south east) -- (char.north east);
-\draw[color=red,very thick,<->,>=stealth] (char.mid west) -- (char.mid east); 
+\draw[color=red,very thick,<->,>=stealth] (char.base west) -- (char.base east);
 
 \newdimen\xone
 \newdimen\xtwo
@@ -1381,8 +1385,8 @@ Descent is the distance between the baseline and the lowest point on a character
 \xone = \pgfmathresult pt
 
 \node[anchor = north west,outer sep=0pt,text width=0.6\textwidth] at ($(centerpoint) + (8em, 0)$){
-Width is the distance between the left and right sides of a character's glyph. For the "X" printed to the left, the width has been calculated as: \the\xone 
-};
+Width is the distance between the left and right sides of a character's glyph.
+For the "g" printed to the left, the width has been calculated as: \the\xone};
 \end{tikzpicture}
 
 Providing font metrics and string widths is without a doubt most difficult task a \lang{R} graphics device must undertake. The calculation of string widths is made even difficult for the \pkg{tikzDevice} as we attempt to process arbitrary \LaTeX{} strings. Inside \lang{R} the string ``\verb`$\alpha$`" literally has 8 characters, but when it is typeset it only has one: $\alpha$.
