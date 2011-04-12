@@ -4,11 +4,11 @@
 
 ## Description
 
-The tikzDevice package new graphics device for R which enables direct
-output of graphics in a LaTeX-friendly way.  Plotting commands issued
-by R functions are transformed into LaTeX code blocks.  These blocks
-are interpreted with the help of TikZ-- a graphics library for TeX and
-friends written by Till Tantau.
+The tikzDevice package provides a graphics device for R that enables direct
+output of graphics in a LaTeX-friendly way.  Plotting commands issued by R
+functions are transformed into LaTeX code blocks.  These blocks are interpreted
+with the help of TikZ-- a graphics library for TeX and friends written by Till
+Tantau.
 
 The tikzDevice supports three main modes of output:
 
@@ -51,10 +51,15 @@ Stable versions of the tikzDevice may be downloaded from CRAN:
 
     install.packages( 'tikzDevice' )
 
-Development versions may be obtained from R-Forge:
+Development builds may be obtained from R-Forge:
 
-    install.packages( 'tikzDevice', 
+    install.packages( 'tikzDevice',
       repos='http://r-forge.r-project.net' )
+
+Bleeding-edge source code is available from GitHub:
+
+    git clone git://github.com/Sharpie/RTikZDevice.git
+
 
 
 ## Reporting Bugs and Getting Help
@@ -63,24 +68,31 @@ The tikzDevice has a dedicated mailing list courtesy of R-Forge.  The
 mailing list is the easiest way to get answers for questions related
 to usage:
 
-  tikzdevice-bugs @at@ lists.r-forge.r-project.org 
+  tikzdevice-bugs @at@ lists.r-forge.r-project.org
+
+The mailing list may also be accessed through Google Groups:
+
+  https://groups.google.com/forum/#!forum/tikzdevice
+
 
 Primary development takes place on GitHub.  Bugs and feature requests
 may be made by opening issues at the primary repository:
 
-  http://github.com/Sharpie/RTikZDevice/issues
+  https://github.com/Sharpie/RTikZDevice/issues
 
 Adventurous users are encouraged to fork the repository and contribute
-to the development of the device!
+to the development of the package!
 
 
 ## Latest Changes
-*See the CHANGELOG for changes that occurred in previous releases*
+*See the [CHANGELOG][2] for changes that occurred in previous releases*
+
+  [2]:https://github.com/Sharpie/RTikZDevice/blob/master/CHANGELOG.md
+
 
 ---
 
-### Version: 0.5.4
-*Under development, will most likely become 0.6.0*
+### Version: 0.6.0
 
 ---
 
@@ -123,19 +135,17 @@ to the development of the device!
 #### Depreciation Notices
 
 - Versions of R < 2.11.0 are no longer supported due to lack of required
-  functions for handling Unicode strings. From now on, the tikzDevice will only
-  be tested and supported against the version of R distributed in Debian-stable
-  or newer. This is necessary to manage the burden of maintaining
-  version-specific code.
+  functions for handling Unicode strings.
 
 
 #### Behind the Scenes
 
 - New Makefile for executing common development tasks.
 
-- Package documentation now handled by `roxygen`.  Thanks to Hadley Wickham and
-  Yihui Xie for the `Rd2roxygen` package which facilitated this switch.
+- Package documentation now handled by `roxygen`.  Many thanks to Hadley
+  Wickham and Yihui Xie for the `Rd2roxygen` package which facilitated this
+  switch.
 
 - Package test suite completely overhauled and now based on Hadley Wickham's
-  `test_that` package.
+  `test_that` unit testing framework.
 
