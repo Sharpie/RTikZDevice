@@ -8,6 +8,11 @@ if (nchar(Sys.getenv('R_TESTS')) == 0){
   require(tools)
   require(evaluate)
 
+  test_args <- commandArgs(TRUE)
+  torture_mem <- any(str_detect(test_args, '--use-gctorture'))
+
+  if (torture_mem) { gctorture(TRUE) }
+
   # Ensure tikzDevice options have been set to their default values.
   setTikzDefaults(overwrite = TRUE)
   options(tikzMetricsDictionary = NULL)
