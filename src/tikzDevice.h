@@ -159,7 +159,7 @@ static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo);
 static void SetDashPattern(int lty, tikzDevDesc *tikzInfo);
 static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo);
 static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
-static void SetLineEnd(R_GE_linejoin lend, tikzDevDesc *tikzInfo);
+static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo);
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 
 /* Auxilury routines*/

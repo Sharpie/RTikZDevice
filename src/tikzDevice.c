@@ -1599,7 +1599,7 @@ static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo){
   
 }
 
-static void SetLineEnd(R_GE_linejoin lend, tikzDevDesc *tikzInfo){
+static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo){
   
   
   switch (lend) {
