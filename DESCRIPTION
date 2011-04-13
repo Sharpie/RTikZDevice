@@ -5,6 +5,8 @@ Version: 0.6.0
 Date: 2011-04-13
 Author: Charlie Sharpsteen and Cameron Bracken
 Maintainer: The tikzDevice team <tikzdevice-bugs@lists.r-forge.r-project.org>
+URL: https://github.com/Sharpie/RTikZDevice
+BugReports: https://github.com/Sharpie/RTikZDevice/issues
 Description: The TikZ device enables LaTeX-ready output from R graphics
         functions. This is done by producing code that can be understood by
         the TikZ graphics language. All text in a graphic output with the
