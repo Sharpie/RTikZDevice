@@ -16,6 +16,18 @@ else
 gc_torture:=
 endif
 
+# Controls which tests to run. Use thusly:
+#
+#     make test TESTS=list,of,comma,seperated,tags
+#
+# Tags must be single words
+ifneq ($(TESTS),)
+test_tags:=--run-tests=$(TESTS)
+else
+test_tags:=
+endif
+
+
 .PHONY: help
 
 help:
@@ -82,11 +94,11 @@ check: build
 
 test: install
 	cd tests;\
-		"$(RBIN)/Rscript" unit_tests.R $(gc_torture)
+		"$(RBIN)/Rscript" unit_tests.R $(gc_torture) $(test_tags)
 
 valgrind: install
 	cd tests;\
-		"$(RBIN)/R" -d "valgrind --tool=memcheck --leak-check=full --dsymutil=yes" --vanilla < unit_tests.R --args $(gc_torture)
+		"$(RBIN)/R" -d "valgrind --tool=memcheck --leak-check=full --dsymutil=yes" --vanilla < unit_tests.R --args $(gc_torture) $(test_tags)
 
 #------------------------------------------------------------------------------
 # Packaging Tasks
