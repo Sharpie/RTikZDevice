@@ -265,8 +265,10 @@ static Rboolean TikZ_Setup(
   }
 
   /* Copy TikZ-specific information to the tikzInfo variable. */
-  strcpy( tikzInfo->outFileName, fileName);
+  tikzInfo->outFileName = (char*) calloc(strlen(fileName) + 1, sizeof(char));
+  strcpy(tikzInfo->outFileName, fileName);
   tikzInfo->engine = engine;
+  tikzInfo->rasterFileCount = 1;
   tikzInfo->firstPage = TRUE;
   tikzInfo->debug = DEBUG;
   tikzInfo->standAlone = standAlone;
@@ -606,6 +608,9 @@ static void TikZ_Close( pDevDesc deviceInfo){
   /* Close the file and destroy the tikzInfo structure. */
   if(tikzInfo->console == FALSE)
     fclose(tikzInfo->outputFile);
+
+  /* Deallocate pointers */
+  free(tikzInfo->outFileName);
   free(tikzInfo);
 
 }
@@ -776,15 +781,20 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
 
   // Prepare to call back to R in order to retrieve character metrics.
+  SEXP TikZ_namespace;
+  PROTECT(
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
   
   // Call out to R to retrieve the latexParseCharForMetrics function.
   // Note: this code will eventually call a different function that provides
   // caching of the results. Right now we're directly calling the function
   // that activates LaTeX.
-  SEXP metricFun = findFun( install("getLatexCharMetrics"), R_GlobalEnv );
+  SEXP metricFun = findFun( install("getLatexCharMetrics"), TikZ_namespace );
 
   SEXP RCallBack;
-  PROTECT( RCallBack = allocVector(LANGSXP,4) );
+  PROTECT( RCallBack = allocVector(LANGSXP,5) );
 
   // Place the function into the first slot of the SEXP.
   SETCAR( RCallBack, metricFun );
@@ -799,8 +809,21 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   SETCADDDR( RCallBack,  ScalarInteger( plotParams->fontface ) );
   SET_TAG( CDR(CDDR( RCallBack )), install("face") );
 
+  /*
+   * Set the TeX engine based on tikzInfo
+   */
+  switch (tikzInfo->engine) {
+    case pdftex:
+      SETCAD4R(RCallBack, mkString("pdftex"));
+      break;
+    case xetex:
+      SETCAD4R(RCallBack, mkString("xetex"));
+      break;
+  }
+  SET_TAG(CDDR(CDDR(RCallBack)), install("engine"));
+
   SEXP RMetrics;
-  PROTECT( RMetrics = eval( RCallBack, R_GlobalEnv ) );
+  PROTECT( RMetrics = eval( RCallBack, TikZ_namespace ) );
 
   // Recover the metrics.
   *ascent = REAL(RMetrics)[0];
@@ -811,7 +834,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   printOutput( tikzInfo, "%% Calculated character metrics. ascent: %f, descent: %f, width: %f\n",
     *ascent, *descent, *width);
 
-  UNPROTECT(2);
+  UNPROTECT(3);
 
   return;
 
@@ -851,17 +874,6 @@ static double TikZ_StrWidth( const char *str,
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  if (tikzInfo->engine == pdftex) {
-    /*
-     * We don't support UTF8 with the pdftex engine. Check the string for
-     * multibyte characters and throw a wobbly if any are found.
-     */
-    if (contains_multibyte_chars(str)) {
-      error("The TikZ device does not support UTF8 strings when the pdftex engine is in use!");
-      return(0.0);
-    }
-  }
-
   // Calculate font scaling factor.
   double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
 
@@ -900,27 +912,36 @@ static double TikZ_StrWidth( const char *str,
    *   fucking wicked.
    *
   */
-  
-  // Call out to R to retrieve the getLatexStrWidth function.
-  SEXP widthFun = findFun( install("getLatexStrWidth"), R_GlobalEnv );
 
   /*
-   * Create a SEXP that will be the R function call. The SEXP will
-   * have four components- the R function being called, the string 
-   * being passed and the current value of the graphics parameters
-   * cex and fontface. Therefore it is allocated as a  LANGSXP
-   * vector of length 4. This is done inside a PROTECT() function
-   * to keep the R garbage collector from saying "Hmmm... what's
-   * this? Looks like noone is using it so I guess I will nuke it."
+   * Find the namespace of the TikZ package.
+   */
+  SEXP TikZ_namespace;
+  PROTECT(
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
+
+  // Call out to R to retrieve the getLatexStrWidth function.
+  SEXP widthFun = findFun(install("getLatexStrWidth"), TikZ_namespace);
+
+  /*
+   * Create a SEXP that will be the R function call. The SEXP will have five
+   * components- the R function being called, the string being passed, the
+   * current value of the graphics parameters cex and fontface and the TeX
+   * engine to be used. Therefore it is allocated as a  LANGSXP vector of
+   * length 5. This is done inside a PROTECT() function to keep the R garbage
+   * collector from saying "Hmmm... what's this? Looks like noone is using it
+   * so I guess I will nuke it."
   */
   SEXP RCallBack;
-  PROTECT( RCallBack = allocVector(LANGSXP,4) );
+  PROTECT( RCallBack = allocVector(LANGSXP, 5) );
 
   // Place the function into the first slot of the SEXP.
   SETCAR( RCallBack, widthFun );
 
   //If using the sanitize option call back to R for the sanitized string
-  char *cleanString = 0;
+  char *cleanString = NULL;
   if(tikzInfo->sanitize == TRUE){
     cleanString = Sanitize( str );
     // Place the sanitized string into the second slot of the SEXP.
@@ -943,6 +964,19 @@ static double TikZ_StrWidth( const char *str,
   SET_TAG( CDR(CDDR( RCallBack )), install("face") );
 
   /*
+   * Set the TeX engine based on tikzInfo
+   */
+  switch (tikzInfo->engine) {
+    case pdftex:
+      SETCAD4R(RCallBack, mkString("pdftex"));
+      break;
+    case xetex:
+      SETCAD4R(RCallBack, mkString("xetex"));
+      break;
+  }
+  SET_TAG(CDDR(CDDR(RCallBack)), install("engine"));
+
+  /*
    * Call the R function, capture the result.
    * PROTECT may not be necessary here, but I'm doing
    * it just in case the SEXP holds a pointer to an
@@ -950,7 +984,7 @@ static double TikZ_StrWidth( const char *str,
    * decides to nuke.
   */
   SEXP RStrWidth;
-  PROTECT( RStrWidth = eval( RCallBack, R_GlobalEnv ) );
+  PROTECT( RStrWidth = eval( RCallBack, TikZ_namespace ) );
 
   /*
    * Why REAL()[0] instead of asReal(CAR())? I have no fucking
@@ -978,9 +1012,11 @@ static double TikZ_StrWidth( const char *str,
   */
   double width = REAL(RStrWidth)[0];
 
-  // Since we called PROTECT twice, we must call UNPROTECT
-  // and pass the number 2.
-  UNPROTECT(2);
+  /*
+   * Since we called PROTECT thrice, we must call UNPROTECT
+   * and pass the number 3.
+   */
+  UNPROTECT(3);
   if(tikzInfo->sanitize == TRUE){ free(cleanString); }
   
   /*Show only for debugging*/
@@ -1085,7 +1121,7 @@ static void TikZ_Text( double x, double y, const char *str,
     "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
     fontScale, x, y);
   
-  char *cleanString = 0;
+  char *cleanString = NULL;
   if(tikzInfo->sanitize == TRUE){
     //If using the sanitize option call back to R for the sanitized string
     cleanString = Sanitize( tikzString );
@@ -1315,7 +1351,61 @@ TikZ_Path( double *x, double *y,
   const pGEcontext plotParams, pDevDesc deviceInfo
 ){
 
-  warning( "This version of the TikZ graphics device does not support polypath rendering" );
+  int i, j, index;
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing polypath with %i subpaths\n", npoly); }
+
+  /*Define the colors for fill and border*/
+  StyleDef(TRUE, plotParams, deviceInfo);
+
+  /*
+   * Start drawing, open an options bracket.
+   *
+   * We use \filldraw instead of the normal \draw, because filldraw has builtin
+   * support for handling rule-based filling of operlaping polygons as R expects.
+   *
+   * Thank you TikZ!
+   */
+  printOutput(tikzInfo,"\n\\filldraw[");
+
+  /* Define the draw styles */
+  StyleDef(FALSE, plotParams, deviceInfo);
+
+  /*
+   * Select rule to be used for overlapping fills as specified by the 'winding'
+   * parameter. See the "Graphic Parameters: Interior Rules" section of the PGF
+   * manual for details.
+   */
+  if (winding) {
+    printOutput(tikzInfo, "nonzero rule");
+  } else {
+    printOutput(tikzInfo, "even odd rule");
+  }
+
+  printOutput(tikzInfo, "]");
+
+
+  /* Draw polygons */
+  index = 0;
+  for (i = 0; i < npoly; i++) {
+
+    if(tikzInfo->debug) { printOutput(tikzInfo, "\n%% Drawing subpath: %i\n", i); }
+
+    printOutput(tikzInfo, "\n\t(%6.2f,%6.2f) --\n", x[index],y[index]);
+    index++;
+
+    for (j = 1; j < nper[i]; j++) {
+      printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n", x[index],y[index]);
+      index++;
+    }
+
+    printOutput(tikzInfo, "\tcycle" );
+
+  }
+
+  /* Close the \filldraw command */
+  printOutput(tikzInfo, ";\n");
 
 }
 #endif
@@ -1406,7 +1496,7 @@ static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo){
   }
 }
 
-static void SetLineStyle(int lty, int lwd, tikzDevDesc *tikzInfo){
+static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo){
     
   SetLineWeight(lwd, tikzInfo);
   
@@ -1460,10 +1550,10 @@ static void SetDashPattern(int lty, tikzDevDesc *tikzInfo){
   printOutput(tikzInfo, ",");
 }
 
-static void SetLineWeight(int lwd, tikzDevDesc *tikzInfo){
+static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo){
   
   /*Set the line width, 0.4pt is the TikZ default so scale lwd=1 to that*/
-  if(lwd != 1)
+  if(lwd != 1.0)
     printOutput(tikzInfo,"line width=%4.1fpt,",0.4*lwd);
 }
 
@@ -1509,7 +1599,7 @@ static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo){
   
 }
 
-static void SetLineEnd(R_GE_linejoin lend, tikzDevDesc *tikzInfo){
+static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo){
   
   
   switch (lend) {
@@ -1551,6 +1641,29 @@ SEXP TikZ_GetEngine(SEXP device_num){
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   return(ScalarInteger(tikzInfo->engine));
+}
+
+/*
+ * Returns information stored in the tikzDevDesc structure for a given device.
+ */
+SEXP TikZ_DeviceInfo(SEXP device_num){
+
+  int dev_index = asInteger(device_num);
+  pDevDesc deviceInfo = GEgetDevice(dev_index - 1)->dev;
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  SEXP info, names;
+  PROTECT( info = allocVector(VECSXP, 1) );
+  PROTECT( names = allocVector(STRSXP, 1) );
+
+  SET_VECTOR_ELT(info, 0, mkString(tikzInfo->outFileName));
+  SET_STRING_ELT(names, 0, mkChar("output_file"));
+
+  setAttrib(info, R_NamesSymbol, names);
+
+  UNPROTECT(2);
+  return(info);
+
 }
 
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
@@ -1670,7 +1783,7 @@ Rboolean contains_multibyte_chars(const char *str){
  * say PNG, and then dropping a node in the TikZ output that contains
  * an \includegraphics directive.
 */
-static void TikZ_Raster( 
+static void TikZ_Raster(
   unsigned int *raster,
   int w, int h,
   double x, double y,
@@ -1680,7 +1793,166 @@ static void TikZ_Raster(
   const pGEcontext plotParams, pDevDesc deviceInfo
 ){
 
-  warning( "The tikzDevice does not currently support including raster images in graphics output." );
+  /* Shortcut pointer to device information. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  /*
+   * Recover package namespace as the raster output function is not exported
+   * into the global environment.
+  */
+  SEXP TikZ_namespace;
+  PROTECT(
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
+
+  /*
+   * Prepare callback to R for creation of a PNG from raster data.  Seven
+   * parameters will be passed:
+   *
+   * - The name of the current output file.
+   *
+   * - The number of rasters that have been output so far.
+   *
+   * - The raster data.
+   *
+   * - The number of rows and columns in the raster data.
+   *
+   * - The desired dimensions of the final image, in inches.
+   *
+   * - The value of the interpolate variable.
+  */
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP, 8) );
+  SETCAR( RCallBack, install("tikz_writeRaster") );
+
+  SETCADR( RCallBack, mkString( tikzInfo->outFileName ) );
+  SET_TAG( CDR(RCallBack), install("fileName") );
+
+  SETCADDR( RCallBack, ScalarInteger( tikzInfo->rasterFileCount ) );
+  SET_TAG( CDDR(RCallBack), install("rasterCount") );
+
+  /*
+   * The raster values are stored as a 32 bit unsigned integer.  Every 8 bits
+   * contains an red, green, blue or alpha value (actual order is ABGR).  This
+   * is the tricky bit of dealing with the raster-- there is no easy way to send
+   * unsigned integers back into the R environment.  So... I gues we'll split
+   * things back to RBGA values, send back a list of four vectors and regenrate
+   * the whole shbang on the R side... there should be an easier way to deal
+   * with this.
+  */
+  SEXP red_vec, blue_vec, green_vec, alpha_vec;
+  PROTECT( red_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( blue_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( green_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( alpha_vec = allocVector( INTSXP, w * h ) );
+
+  /*
+   * Use the R_<color component> macros defined in GraphicsDevice.h to generate
+   * RGBA components from the raster data.  These macros are basically shorthand
+   * notation for C bitwise operators that extract 8 bit chunks from the 32 bit
+   * unsigned integers contained in the raster vector.
+   *
+   * NOTE:
+   *
+   * There is some funny business that happens below. In the definition of
+   * device_Raster from GraphicsDevice.h, the byte order of the colors entering
+   * this routine in the `raster` argument are specified to be ABGR. The color
+   * extraction macros assume the order is RGBA.
+   *
+   * In practice, it appears the byte order in `raster` is RBGA--hence the use
+   * of R_GREEN and R_BLUE are swapped below.
+  */
+  int i;
+  for( i = 0; i < h * w; i ++ ){
+    INTEGER(red_vec)[i] = R_RED(raster[i]);
+    INTEGER(green_vec)[i] = R_BLUE(raster[i]);
+    INTEGER(blue_vec)[i] = R_GREEN(raster[i]);
+    INTEGER(alpha_vec)[i] = R_ALPHA(raster[i]);
+  }
+
+  /*
+   * We will store all the vectors generated above in an R list named colors,
+   * this will make it easier to pass back into the R environment as an argument
+   * to an R function
+  */
+  SEXP colors;
+  PROTECT( colors =  allocVector( VECSXP, 4 ) );
+  SET_VECTOR_ELT( colors, 0, red_vec  );
+  SET_VECTOR_ELT( colors, 1, blue_vec );
+  SET_VECTOR_ELT( colors, 2, green_vec );
+  SET_VECTOR_ELT( colors, 3, alpha_vec );
+
+  /* We will also make this a named list. */
+  SEXP color_names;
+  PROTECT( color_names = allocVector( STRSXP, 4 ) );
+  SET_STRING_ELT( color_names, 0, mkChar("red") );
+  SET_STRING_ELT( color_names, 1, mkChar("green") );
+  SET_STRING_ELT( color_names, 2, mkChar("blue") );
+  SET_STRING_ELT( color_names, 3, mkChar("alpha") );
+
+  /* Apply the names to the list. */
+  setAttrib( colors, R_NamesSymbol, color_names );
+
+
+  SETCADDDR( RCallBack, colors );
+  SET_TAG( CDR(CDDR(RCallBack)), install("rasterData") );
+
+  SETCAD4R( RCallBack, ScalarInteger(h) );
+  SET_TAG( CDDR(CDDR(RCallBack)), install("nrows") );
+
+  SETCAD4R( CDR(RCallBack), ScalarInteger(w) );
+  SET_TAG( CDR(CDDR(CDDR(RCallBack))), install("ncols") );
+
+  /* Create a list containing the final width and height of the image */
+  SEXP final_dims, dim_names;
+
+  PROTECT( final_dims = allocVector(VECSXP, 2) );
+  SET_VECTOR_ELT(final_dims, 0, ScalarReal(width/dim2dev(1.0)));
+  SET_VECTOR_ELT(final_dims, 1, ScalarReal(height/dim2dev(1.0)));
+
+  PROTECT( dim_names = allocVector(STRSXP, 2) );
+  SET_STRING_ELT(dim_names, 0, mkChar("width"));
+  SET_STRING_ELT(dim_names, 1, mkChar("height"));
+
+  setAttrib(final_dims, R_NamesSymbol, dim_names);
+
+  SETCAD4R(CDDR(RCallBack), final_dims);
+  SET_TAG(CDDR(CDDR(CDDR(RCallBack))), install("finalDims"));
+
+  SETCAD4R(CDR(CDDR(RCallBack)), ScalarLogical(interpolate));
+  SET_TAG(CDR(CDDR(CDDR(CDDR(RCallBack)))), install("interpolate"));
+
+
+  SEXP rasterFile;
+  PROTECT( rasterFile = eval( RCallBack, TikZ_namespace ) );
+
+  /* Position the image using a node */
+  printOutput(tikzInfo, "\\node[inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f, %6.2f) {\n",
+    rot, x, y);
+  /* Include the image using PGF's native image handling */
+  printOutput(tikzInfo, "\t\\pgfimage[width=%6.2fpt,height=%6.2fpt,",
+      width, height);
+  /* Set PDF interpolation (not all viewers respect this, but they should) */
+  if (interpolate) {
+    printOutput(tikzInfo, "interpolate=true]");
+  } else {
+    printOutput(tikzInfo, "interpolate=false]");
+  }
+  /* Slap in the file name */
+  printOutput(tikzInfo, "{%s}", translateChar(asChar(rasterFile)));
+  printOutput(tikzInfo, "};\n");
+
+  if (tikzInfo->debug) { printOutput(tikzInfo, "\\draw[fill=red] (%6.2f, %6.2f) circle (1pt);", x, y); }
+
+  /*
+   * Increment the number of raster files we have created with this device.
+   * This is used to provide unique file names for each raster.
+  */
+  tikzInfo->rasterFileCount++;
+
+  UNPROTECT(11);
+  return;
 
 }
 

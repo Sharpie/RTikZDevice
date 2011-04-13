@@ -38,7 +38,7 @@
 #' document or a \code{tikzpicture} environment.  This is useful for embedding
 #' an generated graphic within an existing TikZ picture.
 #'
-#' In cases where both \code{standAole} and \code{bareBones} have been set to
+#' In cases where both \code{standAlone} and \code{bareBones} have been set to
 #' \code{TRUE}, the \code{standAlone} option will take precedence.
 #'
 #' @param file A character string indicating the desired path to the output
@@ -50,7 +50,7 @@
 #' @param pointsize Base pointsize used in the LaTeX document.  This option is
 #'   only used if a valid pointsize cannot be extracted from the value of
 #'   \code{getOption("tikzDocumentDeclaration")}.  See the section ``Font Size
-#'   Calculations'' for more details.
+#'   Calculations'' in \link{tikzDevice-package} for more details.
 #' @param standAlone A logical value indicating whether the output file should
 #'   be suitable for direct processing by LaTeX. A value of \code{FALSE}
 #'   indicates that the file is intended for inclusion in a larger document.
@@ -67,10 +67,18 @@
 #' @param sanitize Should special latex characters be replaced (Default FALSE).
 #'   See the section ``Options That Affect Package Behavior'' for which
 #'   characters are replaced.
+#' @param engine a string specifying which TeX engine to use. Possible values
+#'   are 'pdftex' and 'xetex'. See the Unicode section of
+#'   \link{tikzDevice-package} for details.
 #' @param documentDeclaration See the sections ``Options That Affect Package
-#'   Behavior'' and ``Font Size Calculations'' for more details.
-#' @param packages See the section ``Options That Affect Package Behavior.''
-#' @param footer See the section ``Options That Affect Package Behavior.''
+#'   Behavior'' and ``Font Size Calculations'' of \link{tikzDevice-package}
+#'   for more details.
+#' @param packages See the section ``Options That Affect Package Behavior'' of
+#'   \link{tikzDevice-package}.
+#' @param footer See the section ``Options That Affect Package Behavior'' of
+#'   \link{tikzDevice-package}.
+#'
+#'
 #' @return \code{tikz()} returns no values.
 #'
 #' @note To compile the output of \code{tikz} a working installation of LaTeX
@@ -169,7 +177,7 @@
 #'
 #' @export
 tikz <-
-function (file = "Rplots.tex", width = 7, height = 7,
+function (file = "./Rplots.tex", width = 7, height = 7,
   bg="transparent", fg="black", pointsize = 10, standAlone = FALSE,
   bareBones = FALSE, console = FALSE, sanitize = FALSE,
   engine = getOption("tikzDefaultEngine"),
@@ -178,8 +186,25 @@ function (file = "Rplots.tex", width = 7, height = 7,
   footer = getOption("tikzFooter")
 ){
 
-  if(!file.exists(dirname(file)))
-    stop(paste("Cannot create",file,"because the path does not exist! If you are trying to save a plot to a location other than the working directory, check to make sure that directory exists."))
+  tryCatch({
+    # Ok, this sucks. We copied the function signature of pdf() and got `file`
+    # as an argument to our function. We should have copied png() and used
+    # `filename`.
+
+    # file_path_as_absolute can give us the absolute path to the output
+    # file---but it has to exist first. So, we use file() to "touch" the
+    # path.
+    touch_file <- suppressWarnings(file(file, 'w'))
+    close(touch_file)
+
+    file <- tools::file_path_as_absolute(file)
+  },
+  error = function(e) {
+    stop(simpleError(paste(
+      "Cannot create:\n\t", file,
+      "\nBecause the directory does not exist or is not writable."
+    )))
+  })
 
   # Determine which TeX engine is being used.
   switch(engine,

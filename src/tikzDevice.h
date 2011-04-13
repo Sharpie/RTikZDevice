@@ -45,8 +45,9 @@ typedef enum {
 */
 typedef struct {
 	FILE *outputFile;
-	char outFileName[128];
+  char *outFileName;
   tikz_engine engine;
+  int rasterFileCount;
 	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
@@ -154,16 +155,17 @@ static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
 static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo);
 static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo);
 static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo);
-static void SetLineStyle(int lty, int lwd, tikzDevDesc *tikzInfo);
+static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo);
 static void SetDashPattern(int lty, tikzDevDesc *tikzInfo);
-static void SetLineWeight(int lwd, tikzDevDesc *tikzInfo);
+static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo);
 static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
-static void SetLineEnd(R_GE_linejoin lend, tikzDevDesc *tikzInfo);
+static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo);
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 
 /* Auxilury routines*/
 void tikzAnnotate(const char **annotation, int *size);
 SEXP TikZ_GetEngine(SEXP device_num);
+SEXP TikZ_DeviceInfo(SEXP device_num);
 double dim2dev( double length );
 static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);

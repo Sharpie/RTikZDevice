@@ -19,6 +19,10 @@
 #'   applied to device output.
 #' @param face an integer in the range [1-5] that specifies the font face to
 #'   use. See \link{par} for details.
+#' @param engine a string specifying which TeX engine to use. Possible values
+#'   are 'pdftex' and 'xetex'. See the Unicode section of \link{tikzDevice} for
+#'   details.
+#'
 #'
 #' @return \item{width}{The width of \code{texString} in point size.}
 #'
@@ -39,36 +43,45 @@
 #'
 #' @export
 getLatexStrWidth <-
-function( texString, cex = 1, face= 1){
+function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
 
-  # Check if any of the characters in the given string are multibyte UTF-8, or
-  # if the currently open graphics device is a tikzDevice using the xetex
-  # engine. If so, use the special XeLaTeX packages
-  multibyte <- anyMultibyteUTF8Characters(texString) | ifelse(
-    isTikzDevice(),
-    getTikzDeviceEngine() == 'xetex',
-    FALSE
+  switch(engine,
+    pdftex = {
+      if ( anyMultibyteUTF8Characters(texString) && getOption('tikzPdftexWarnUTF') ) {
+        warning(strwrap("Attempting to calculate the width of a Unicode string
+            using the pdftex engine. This may fail! See the Unicode section of
+            ?tikzDevice for more information."))
+      }
+      packages <- getOption("tikzLatexPackages")
+    },
+
+    xetex = {
+      if (is.null(getOption('tikzXelatex'))) {
+        stop(strwrap("Cannot find XeLaTeX! Please check your system
+            configuration or manually provide a value for
+            options(tikzXelatex)"))
+      }
+      packages <- getOption("tikzXelatexPackages")
+    },
+    {#ELSE
+      stop('Unsupported TeX engine: ', engine,
+        '\nAvailable choices are:\n',
+        '\tpdftex\n',
+        '\txetex\n')
+    }
   )
-
-  if( multibyte ){
-    if(is.null(getOption('tikzXelatex')))
-      stop("Your string currently contains non-ASCII UTF-8 characters but XeLaTeX is not available, please specify a value for tikzXelatex or remove non-ASCII characters.")
-    packages <- getOption("tikzXelatexPackages")
-  }else{
-    packages <- getOption("tikzLatexPackages")
-  }
 
 	# Create an object that contains the string and it's
 	# properties.
 	TeXMetrics <- list( type='string', scale=cex, face=face, value=texString,
 	 	documentDeclaration = getOption("tikzDocumentDeclaration"),
-		packages = packages, multibyte = multibyte)
-		
+		packages = packages, engine = engine)
+
 
 	# Check to see if we have a width stored in
 	# our dictionary for this string.
 	width <- queryMetricsDictionary( TeXMetrics )
-	
+
 	if( width > 0 ){
 
 		# Positive string width means there was a
@@ -81,12 +94,17 @@ function( texString, cex = 1, face= 1){
 		# Call LaTeX and get one.
 		width <- getMetricsFromLatex( TeXMetrics )
 
-		# Store the width in the dictionary so we don't
-		# have to do this again.
-		storeMetricsInDictionary( TeXMetrics, width )
+    if (is.null(width)) {
+      # Something went wrong. Return 0
+      return(0)
+    } else {
+      # Store the width in the dictionary so we don't
+      # have to do this again.
+      storeMetricsInDictionary( TeXMetrics, width )
 
-		# Return the width.
-		return( width )
+      # Return the width.
+      return( width )
+    }
 
 	}
 }
@@ -109,6 +127,10 @@ function( texString, cex = 1, face= 1){
 #'   applied to device output.
 #' @param face an integer in the range [1-5] that specifies the font face to
 #'   use. See \link{par} for details.
+#' @param engine a string specifying which TeX engine to use. Possible values
+#'   are 'pdftex' and 'xetex'. See the Unicode section of \link{tikzDevice} for
+#'   details.
+#'
 #'
 #' @return \item{metrics}{A numeric vector holding ascent, descent, width
 #'   character metrics. Values should all be nonnegative. }
@@ -132,44 +154,58 @@ function( texString, cex = 1, face= 1){
 #'
 #' @export
 getLatexCharMetrics <-
-function( charCode, cex = 1, face = 1 ){
+function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
 
-	# This function is pretty much an exact duplicate of
-	# getLatexStrWidth, these two functions should be 
-	# generalized and combined.
+  # This function is pretty much an exact duplicate of getLatexStrWidth, these
+  # two functions should be generalized and combined.
+  switch(engine,
+    pdftex = {
+      packages <- getOption('tikzLatexPackages')
+    },
 
-	# We must be given a valid integer character code.
-	if( !is.numeric(charCode) || (
-      is.null(getOption('tikzXelatex')) && !(charCode > 31 && charCode < 127 )
-    )
-  ){
-		warning("Sorry, xelatex is not available so this function currently only accepts numbers between 32 and 126!")
+    xetex = {
+      if (is.null(getOption('tikzXelatex'))) {
+        stop(strwrap("Cannot find XeLaTeX! Please check your system
+            configuration or manually provide a value for
+            options(tikzXelatex)"))
+      }
+      packages <- getOption('tikzXelatexPackages')
+    },
+    {#ELSE
+      stop('Unsupported TeX engine: ', engine,
+        '\nAvailable choices are:\n',
+        '\tpdftex\n',
+        '\txetex\n')
+    }
+  )
+
+	# We must be given an integer character code.
+  if ( !is.numeric(charCode) ) {
+    warning("getLatexCharMetrics only accepts integers!")
+		return(NULL)
+  }
+
+	if ( engine == 'pdftex' && !(charCode > 31 && charCode < 127 ) ) {
+    if (getOption('tikzPdftexWarnUTF')) {
+      warning(strwrap("pdftex can only generate metrics for character codes
+          between 32 and 126! See the Unicode section of ?tikzDevice for more
+          information."))
+    }
 		return(NULL)
 	}
 
 	# Coerce the charCode to integer in case someone was being funny
   # and passed a float.
-	charCode <- as.integer( charCode )
-
+  #
   # IMPORTANT: The charCode must be in UTF-8 encoding or else funny business
   #            will likely occur.
-  multibyte <- anyMultibyteUTF8Characters(intToUtf8( charCode )) | ifelse(
-    isTikzDevice(),
-    getTikzDeviceEngine() == 'xetex',
-    FALSE
-  )
-
-  packages <-
-  if(multibyte)
-    getOption("tikzXelatexPackages")
-  else
-    getOption("tikzLatexPackages")
+	charCode <- as.integer( charCode )
 
 	# Create an object that contains the character and it's
 	# properties.
 	TeXMetrics <- list( type='char', scale=cex, face=face, value=charCode,
 		documentDeclaration = getOption("tikzDocumentDeclaration"),
-		packages = packages, multibyte = multibyte)
+		packages = packages, engine = engine)
 
 	# Check to see if we have metrics stored in
 	# our dictionary for this character.
@@ -187,11 +223,16 @@ function( charCode, cex = 1, face = 1 ){
 		# Call LaTeX to obtain them.
 		metrics <- getMetricsFromLatex( TeXMetrics )
 
-		# Store the metrics in the dictionary so we don't
-		# have to do this again.
-		storeMetricsInDictionary( TeXMetrics, metrics )
+    if (is.null(metrics)) {
+      # Couldn't get metrics for some reason, return 0
+      return(c(0, 0, 0))
+    } else {
+      # Store the metrics in the dictionary so we don't
+      # have to do this again.
+      storeMetricsInDictionary( TeXMetrics, metrics )
 
-		return( metrics )
+      return( metrics )
+    }
 
 	}
 }
@@ -237,14 +278,15 @@ function( TeXMetrics ){
 	#
 	# Load important packages for calculating metrics, must use different
 	# packages for (multibyte) unicode characters.
-	
-	if(TeXMetrics$multibyte){
-	  writeLines(getOption("tikzXelatexPackages"), texIn)
-	  writeLines(getOption("tikzUnicodeMetricPackages"), texIn)
-	}else{
-	  writeLines(getOption("tikzLatexPackages"), texIn)
-	writeLines(getOption("tikzMetricPackages"), texIn)
-	}
+  writeLines(TeXMetrics$packages, texIn)
+  switch(TeXMetrics$engine,
+    pdftex = {
+      writeLines(getOption('tikzMetricPackages'), texIn)
+    },
+    xetex = {
+      writeLines(getOption('tikzUnicodeMetricPackages'), texIn)
+    }
+  )
 
 	writeLines("\\batchmode", texIn)
 
@@ -349,8 +391,10 @@ function( TeXMetrics ){
 	close( texIn )
 
 	# Recover the latex command. Use XeLaTeX if the character is not ASCII
-	latexCmd <- ifelse(TeXMetrics$multibyte,
-	  getOption('tikzXelatex'), getOption('tikzLatex'))
+	latexCmd <- switch(TeXMetrics$engine,
+    pdftex = getOption('tikzLatex'),
+    xetex  = getOption('tikzXelatex')
+  )
 
 	# Append the batchmode flag to increase LaTeX 
 	# efficiency.
@@ -367,6 +411,20 @@ function( TeXMetrics ){
 	# Read the contents of the log file.
 	logContents <- readLines( texOut )
 	close( texOut )
+
+  if (TeXMetrics$engine == 'xetex') {
+    # Check to see if XeLaTeX was unable to typeset any Unicode characters.
+    missing_glyphs <- logContents[grep('^\\s*Missing character: There is no',
+        logContents )]
+
+    if (length(missing_glyphs)) {
+      warning('XeLaTeX was unable to calculate metrics for some characters:\n',
+        paste('\t', missing_glyphs, collapse = '\n') )
+
+      # Bail out of the calculation
+      return(NULL)
+    }
+  }
 
 	# Recover width by finding the line containing
 	# tikzTeXWidth in the logfile.

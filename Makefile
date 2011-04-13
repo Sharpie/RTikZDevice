@@ -18,7 +18,7 @@ help:
 	@echo "Development Tasks"
 	@echo "-----------------"
 	@echo "  deps       Install dependencies for package development"
-	@echo "  docs       Invike roxygen to generate Rd files in a seperate"
+	@echo "  docs       Invoke roxygen to generate Rd files in a seperate"
 	@echo "             directory"
 	@echo "  vignette   Build a copy of the package vignette"
 	@echo "  build      Invoke docs and then create a package"

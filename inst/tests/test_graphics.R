@@ -268,6 +268,82 @@ test_graphs <- list(
     })
   ),
 
+  list(
+    short_name = 'polypath',
+    description = 'Test polypath support',
+    graph_code = quote({
+      # From example(polypath)
+       plotPath <- function(x, y, col="grey", rule="winding") {
+           plot.new()
+           plot.window(range(x, na.rm=TRUE), range(y, na.rm=TRUE))
+           polypath(x, y, col=col, rule=rule)
+           if (!is.na(col))
+               mtext(paste("Rule:", rule), side=1, line=0)
+       }
+
+       plotRules <- function(x, y, title) {
+           plotPath(x, y)
+           plotPath(x, y, rule="evenodd")
+           mtext(title, side=3, line=0)
+           plotPath(x, y, col=NA)
+       }
+
+       op <- par(mfrow=c(5, 3), mar=c(2, 1, 1, 1))
+
+       plotRules(c(.1, .1, .9, .9, NA, .2, .2, .8, .8),
+                 c(.1, .9, .9, .1, NA, .2, .8, .8, .2),
+                 title="Nested rectangles, both clockwise")
+       plotRules(x=c(.1, .1, .9, .9, NA, .2, .8, .8, .2),
+                 y=c(.1, .9, .9, .1, NA, .2, .2, .8, .8),
+                 title="Nested rectangles, outer clockwise, inner anti-clockwise")
+       plotRules(x=c(.1, .1, .4, .4, NA, .6, .9, .9, .6),
+                 y=c(.1, .4, .4, .1, NA, .6, .6, .9, .9),
+                 title="Disjoint rectangles")
+       plotRules(x=c(.1, .1, .6, .6, NA, .4, .4, .9, .9),
+                 y=c(.1, .6, .6, .1, NA, .4, .9, .9, .4),
+                 title="Overlapping rectangles, both clockwise")
+       plotRules(x=c(.1, .1, .6, .6, NA, .4, .9, .9, .4),
+                 y=c(.1, .6, .6, .1, NA, .4, .4, .9, .9),
+                 title="Overlapping rectangles, one clockwise, other anti-clockwise")
+
+       par(op)
+
+    })
+  ),
+
+  list(
+   short_name = 'base_raster',
+   description = 'Test raster support in base graphics',
+   graph_code = quote({
+
+     plot(c(100, 250), c(300, 450), type = "n", xlab="", ylab="")
+     image <- as.raster(matrix(rep(0:1,5*3), ncol=5, nrow=3))
+     rasterImage(image, 100, 300, 150, 350, interpolate=FALSE)
+     rasterImage(image, 100, 400, 150, 450)
+     rasterImage(image, 200, 300, 200 + xinch(.5), 300 + yinch(.3),
+              interpolate=FALSE)
+            rasterImage(image, 200, 400, 250, 450, angle=15,
+              interpolate=FALSE)
+
+   })
+  ),
+
+  list(
+   short_name = 'grid_raster',
+   description = 'Test raster support in grid graphics',
+   graph_code = quote({
+
+     suppressPackageStartupMessages(require(grid))
+     suppressPackageStartupMessages(require(lattice))
+
+     plt <- levelplot(volcano, panel = panel.levelplot.raster,
+          col.regions = topo.colors, cuts = 30, interpolate = TRUE)
+
+     print(plt)
+
+   })
+  ),
+
   # New pdfLaTeX tests go here
   #list(
   #  short_name = 'something_suitable_as_a_filename',
