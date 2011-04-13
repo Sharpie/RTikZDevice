@@ -1,5 +1,5 @@
 do_graphics_test <- function(short_name, description, graph_code,
-  uses_xetex = FALSE, graph_options = NULL, skip_if = NULL){
+  uses_xetex = FALSE, graph_options = NULL, skip_if = NULL, ...) {
 
   context(description)
 

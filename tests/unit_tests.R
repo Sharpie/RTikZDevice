@@ -9,7 +9,13 @@ if (nchar(Sys.getenv('R_TESTS')) == 0){
   require(evaluate)
 
   test_args <- commandArgs(TRUE)
-  torture_mem <- any(str_detect(test_args, '--use-gctorture'))
+  torture_mem <- any(str_detect(test_args, '^--use-gctorture'))
+
+  if ( length(tags_to_run <- test_args[str_detect(test_args, '^--run-tests')]) ) {
+    tags_to_run <- unlist(str_split(
+        str_split(tags_to_run, '=')[[1]][2],
+        ',' ))
+  }
 
   if (torture_mem) { gctorture(TRUE) }
 
