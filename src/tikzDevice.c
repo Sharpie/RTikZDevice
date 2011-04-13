@@ -941,7 +941,7 @@ static double TikZ_StrWidth( const char *str,
   SETCAR( RCallBack, widthFun );
 
   //If using the sanitize option call back to R for the sanitized string
-  char *cleanString = 0;
+  char *cleanString = NULL;
   if(tikzInfo->sanitize == TRUE){
     cleanString = Sanitize( str );
     // Place the sanitized string into the second slot of the SEXP.
@@ -1121,7 +1121,7 @@ static void TikZ_Text( double x, double y, const char *str,
     "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
     fontScale, x, y);
   
-  char *cleanString = 0;
+  char *cleanString = NULL;
   if(tikzInfo->sanitize == TRUE){
     //If using the sanitize option call back to R for the sanitized string
     cleanString = Sanitize( tikzString );
