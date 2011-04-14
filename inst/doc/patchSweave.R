@@ -601,25 +601,8 @@ if( as.integer(R.Version()[['svn rev']]) <= 52157 ){
                   cat(" (label=", options$label, ")", sep = "")
               cat("\n")
           }
-                      if (length(dce) > leading)
-                        cat("\n", paste( dce[-(1L:leading)], sep="", collapse="\n"),
-                            file=chunkout, append=TRUE, sep="")
-          linesout[thisline + 1L:length(dce)] <- srcline
-          thisline <- thisline + length(dce)
-                  }
 
-                                          # tmpcon <- textConnection("output", "w")
-                                          # avoid the limitations (and overhead) of output text connections
-                  tmpcon <- file()
-                  sink(file=tmpcon)
-                  err <- NULL
-                  if(options$eval) err <- evalFunc(ce, options)
-                  cat("\n") # make sure final line is complete
-                  sink()
-                  output <- readLines(tmpcon)
-                  close(tmpcon)
-                  ## delete empty output
-                  if(length(output) == 1L & output[1L] == "") output <- NULL
+          chunkprefix <- RweaveChunkPrefix(options)
 
           if (options$split) {
               ## [x][[1L]] avoids partial matching of x
@@ -858,35 +841,6 @@ if( as.integer(R.Version()[['svn rev']]) <= 52157 ){
                   linesout[thisline + 1L] <- srcline
                   thisline <- thisline + 1L
               }
-          } else {
-                      dce <- deparse(ce, width.cutoff=0.75*getOption("width"))
-                      leading <- 1L
-                  }
-                  if(object$debug)
-                      cat("\nRnw> ", paste(dce, collapse="\n+  "),"\n")
-                  if(options$echo && length(dce)){
-                      if(!openSinput){
-                          if(!openSchunk){
-                              cat("\\begin{tikzCodeBlock}[listing style=sweavechunk]\n",
-                                  file=chunkout, append=TRUE)
-                              linesout[thisline + 1L] <- srcline
-                              thisline <- thisline + 1L
-                              openSchunk <- TRUE
-                              firstChunkLine <- TRUE
-                          }
-                          if( !is.null(options$wrapinput) ){
-                            cat( options$wrapinput[1],
-                              file=chunkout, append=TRUE)
-                          }
-                          openSinput <- TRUE
-                      }
-          if( firstChunkLine ) {
-            cat(paste(dce[1L:leading], sep="", collapse="\n"),
-              file=chunkout, append=TRUE, sep="")
-            firstChunkLine <- FALSE
-          }else{
-            cat("\n", paste(dce[1L:leading], sep="", collapse="\n"),
-              file=chunkout, append=TRUE, sep="")
           }
           object$linesout <- c(object$linesout, linesout)
           object

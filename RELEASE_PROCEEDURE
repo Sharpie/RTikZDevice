@@ -3,6 +3,15 @@ TikZ Device Release Proceedure
 
 (Or, "how to move commits from GitHub to RForge")
 
+**NOTE**:
+
+I recently moved from tagging releases on the master branch to tagging them on
+r-forge because the r-forge branch contains pre-built NAMESPACE and .Rd files.
+That way users can download a tag tarball and feed it right to R CMD INSTALL.
+
+Unfortunately this messed up some of the steps below, so this document is no
+longer entirely accurate.
+
 Steps:
 
   * Check out the branch synced with R-Forge:
@@ -11,7 +20,7 @@ Steps:
 
   * Bring in master branch as a squashed merge, but do not commit:
 
-      git merge --squash --no-commit master
+      git merge -srecursive -Xtheirs --no-commit master
 
   * Run `make release` to update the vignette PDFs and the R man pages along
     with the version number in inst/GIT_VERSION.
