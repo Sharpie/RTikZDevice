@@ -567,18 +567,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
     
   /* Start the tikz environment if we have not specified a bare bones plot. */
   if( tikzInfo->bareBones != TRUE ){
-
     printOutput(tikzInfo, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-
-    /* 
-     * For now, print an invisible rectangle to ensure all of the plotting 
-     * area is used. Once color options are implemented, this could be 
-     * replaced with a call to TikZ_Rectangle, if feasible.
-    */
-    printOutput(tikzInfo, 
-        "\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
-        deviceInfo->right,deviceInfo->top);
-
   }
 
   return TRUE;
@@ -641,23 +630,20 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
       /* Start a new TikZ envioronment. */
       printOutput(tikzInfo, 
         "\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-      
-      /* 
-       * For now, print an invisible rectangle to ensure all of the plotting 
-       * area is used. Once color options are implemented, this could be 
-       * replaced with a call to TikZ_Rectangle, if feasible.
-      */
-      printOutput(tikzInfo, 
-        "\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
-        deviceInfo->right,deviceInfo->top);
-
     } // End if not bare bones.
-        
-    /*Define default colors*/
-    SetColor(plotParams->col, TRUE, tikzInfo);
-    SetFill(plotParams->fill, TRUE, tikzInfo);
-    
-  }
+
+  } /* End if first page */
+
+
+  /* Define default colors */
+  SetColor(plotParams->col, TRUE, tikzInfo);
+  SetFill(plotParams->fill, TRUE, tikzInfo);
+
+  /* Fill canvas background */
+  printOutput(tikzInfo, "\\fill[color=fillColor,");
+  SetAlpha(plotParams->col, TRUE, tikzInfo);
+  printOutput(tikzInfo, "] (0,0) rectangle (%6.2f,%6.2f);\n",
+    deviceInfo->right,deviceInfo->top);
 
 }
 
