@@ -93,20 +93,14 @@ to the development of the package!
 ---
 
 ### Version: 0.6.1
-*Under Development*
 
 ---
 
-#### New Features
-
-
 #### Bug Fixes
 
+- Fixed a bug where `tikz` was not applying background color to the plot
+  canvas.
 
-#### Depreciation Notices
-
-
-#### Behind the Scenes
-
-
+- Fixed a Vignette bug caused by an incorrect merge that was breaking the CRAN
+  build.
 
