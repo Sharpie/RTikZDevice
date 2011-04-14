@@ -1,5 +1,21 @@
 ---
 
+### Version: 0.6.1
+Released: 4-14-2011
+
+---
+
+#### Bug Fixes
+
+- Fixed a bug where `tikz` was not applying background color to the plot
+  canvas.
+
+- Fixed a Vignette bug caused by an incorrect merge that was breaking the CRAN
+  build.
+
+
+---
+
 ### Version: 0.6.0
 Released: 4-13-2011
 
