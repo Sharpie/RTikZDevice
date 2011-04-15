@@ -1337,61 +1337,8 @@ MetaP_Path( double *x, double *y,
   const pGEcontext plotParams, pDevDesc deviceInfo
 ){
 
-  int i, j, index;
-  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-
-  if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing polypath with %i subpaths\n", npoly); }
-
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
-
-  /*
-   * Start drawing, open an options bracket.
-   *
-   * We use \filldraw instead of the normal \draw, because filldraw has builtin
-   * support for handling rule-based filling of operlaping polygons as R expects.
-   *
-   * Thank you MetaP!
-   */
-  printOutput(tikzInfo,"\n\\filldraw[");
-
-  /* Define the draw styles */
-  StyleDef(FALSE, plotParams, deviceInfo);
-
-  /*
-   * Select rule to be used for overlapping fills as specified by the 'winding'
-   * parameter. See the "Graphic Parameters: Interior Rules" section of the PGF
-   * manual for details.
-   */
-  if (winding) {
-    printOutput(tikzInfo, "nonzero rule");
-  } else {
-    printOutput(tikzInfo, "even odd rule");
-  }
-
-  printOutput(tikzInfo, "]");
-
-
-  /* Draw polygons */
-  index = 0;
-  for (i = 0; i < npoly; i++) {
-
-    if(tikzInfo->debug) { printOutput(tikzInfo, "\n%% Drawing subpath: %i\n", i); }
-
-    printOutput(tikzInfo, "\n\t(%6.2f,%6.2f) --\n", x[index],y[index]);
-    index++;
-
-    for (j = 1; j < nper[i]; j++) {
-      printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n", x[index],y[index]);
-      index++;
-    }
-
-    printOutput(tikzInfo, "\tcycle" );
-
-  }
-
-  /* Close the \filldraw command */
-  printOutput(tikzInfo, ";\n");
+  warning("The MetaPost device does not implement polypaths");
+  return R_NilValue;
 
 }
 #endif
@@ -1600,23 +1547,6 @@ static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo){
   }
 }
 
-static void tikzAnnotate(const char **annotation, int *size){
-  
-  //1. Get values of tikzInfo and deviceInfo
-  //2. Print out annotation 
-  pDevDesc deviceInfo = GEcurrentDevice()->dev;
-  
-  /* Shortcut pointers to variables of interest. */
-  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-    
-  int i = 0;
-    
-  if(tikzInfo->debug == TRUE)
-    printOutput(tikzInfo,"\n%% Annotating Graphic\n");
-  
-  for(i = 0; i < size[0]; ++i)
-    printOutput(tikzInfo, "%s\n", annotation[i] );
-}
 
 /*
  * Returns the engine used by a given tikzDevice
@@ -1779,166 +1709,8 @@ static void MetaP_Raster(
   const pGEcontext plotParams, pDevDesc deviceInfo
 ){
 
-  /* Shortcut pointer to device information. */
-  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-
-  /*
-   * Recover package namespace as the raster output function is not exported
-   * into the global environment.
-  */
-  SEXP MetaP_namespace;
-  PROTECT(
-    MetaP_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
-
-  /*
-   * Prepare callback to R for creation of a PNG from raster data.  Seven
-   * parameters will be passed:
-   *
-   * - The name of the current output file.
-   *
-   * - The number of rasters that have been output so far.
-   *
-   * - The raster data.
-   *
-   * - The number of rows and columns in the raster data.
-   *
-   * - The desired dimensions of the final image, in inches.
-   *
-   * - The value of the interpolate variable.
-  */
-  SEXP RCallBack;
-  PROTECT( RCallBack = allocVector(LANGSXP, 8) );
-  SETCAR( RCallBack, install("tikz_writeRaster") );
-
-  SETCADR( RCallBack, mkString( tikzInfo->outFileName ) );
-  SET_TAG( CDR(RCallBack), install("fileName") );
-
-  SETCADDR( RCallBack, ScalarInteger( tikzInfo->rasterFileCount ) );
-  SET_TAG( CDDR(RCallBack), install("rasterCount") );
-
-  /*
-   * The raster values are stored as a 32 bit unsigned integer.  Every 8 bits
-   * contains an red, green, blue or alpha value (actual order is ABGR).  This
-   * is the tricky bit of dealing with the raster-- there is no easy way to send
-   * unsigned integers back into the R environment.  So... I gues we'll split
-   * things back to RBGA values, send back a list of four vectors and regenrate
-   * the whole shbang on the R side... there should be an easier way to deal
-   * with this.
-  */
-  SEXP red_vec, blue_vec, green_vec, alpha_vec;
-  PROTECT( red_vec = allocVector( INTSXP, w * h ) );
-  PROTECT( blue_vec = allocVector( INTSXP, w * h ) );
-  PROTECT( green_vec = allocVector( INTSXP, w * h ) );
-  PROTECT( alpha_vec = allocVector( INTSXP, w * h ) );
-
-  /*
-   * Use the R_<color component> macros defined in GraphicsDevice.h to generate
-   * RGBA components from the raster data.  These macros are basically shorthand
-   * notation for C bitwise operators that extract 8 bit chunks from the 32 bit
-   * unsigned integers contained in the raster vector.
-   *
-   * NOTE:
-   *
-   * There is some funny business that happens below. In the definition of
-   * device_Raster from GraphicsDevice.h, the byte order of the colors entering
-   * this routine in the `raster` argument are specified to be ABGR. The color
-   * extraction macros assume the order is RGBA.
-   *
-   * In practice, it appears the byte order in `raster` is RBGA--hence the use
-   * of R_GREEN and R_BLUE are swapped below.
-  */
-  int i;
-  for( i = 0; i < h * w; i ++ ){
-    INTEGER(red_vec)[i] = R_RED(raster[i]);
-    INTEGER(green_vec)[i] = R_BLUE(raster[i]);
-    INTEGER(blue_vec)[i] = R_GREEN(raster[i]);
-    INTEGER(alpha_vec)[i] = R_ALPHA(raster[i]);
-  }
-
-  /*
-   * We will store all the vectors generated above in an R list named colors,
-   * this will make it easier to pass back into the R environment as an argument
-   * to an R function
-  */
-  SEXP colors;
-  PROTECT( colors =  allocVector( VECSXP, 4 ) );
-  SET_VECTOR_ELT( colors, 0, red_vec  );
-  SET_VECTOR_ELT( colors, 1, blue_vec );
-  SET_VECTOR_ELT( colors, 2, green_vec );
-  SET_VECTOR_ELT( colors, 3, alpha_vec );
-
-  /* We will also make this a named list. */
-  SEXP color_names;
-  PROTECT( color_names = allocVector( STRSXP, 4 ) );
-  SET_STRING_ELT( color_names, 0, mkChar("red") );
-  SET_STRING_ELT( color_names, 1, mkChar("green") );
-  SET_STRING_ELT( color_names, 2, mkChar("blue") );
-  SET_STRING_ELT( color_names, 3, mkChar("alpha") );
-
-  /* Apply the names to the list. */
-  setAttrib( colors, R_NamesSymbol, color_names );
-
-
-  SETCADDDR( RCallBack, colors );
-  SET_TAG( CDR(CDDR(RCallBack)), install("rasterData") );
-
-  SETCAD4R( RCallBack, ScalarInteger(h) );
-  SET_TAG( CDDR(CDDR(RCallBack)), install("nrows") );
-
-  SETCAD4R( CDR(RCallBack), ScalarInteger(w) );
-  SET_TAG( CDR(CDDR(CDDR(RCallBack))), install("ncols") );
-
-  /* Create a list containing the final width and height of the image */
-  SEXP final_dims, dim_names;
-
-  PROTECT( final_dims = allocVector(VECSXP, 2) );
-  SET_VECTOR_ELT(final_dims, 0, ScalarReal(width/dim2dev(1.0)));
-  SET_VECTOR_ELT(final_dims, 1, ScalarReal(height/dim2dev(1.0)));
-
-  PROTECT( dim_names = allocVector(STRSXP, 2) );
-  SET_STRING_ELT(dim_names, 0, mkChar("width"));
-  SET_STRING_ELT(dim_names, 1, mkChar("height"));
-
-  setAttrib(final_dims, R_NamesSymbol, dim_names);
-
-  SETCAD4R(CDDR(RCallBack), final_dims);
-  SET_TAG(CDDR(CDDR(CDDR(RCallBack))), install("finalDims"));
-
-  SETCAD4R(CDR(CDDR(RCallBack)), ScalarLogical(interpolate));
-  SET_TAG(CDR(CDDR(CDDR(CDDR(RCallBack)))), install("interpolate"));
-
-
-  SEXP rasterFile;
-  PROTECT( rasterFile = eval( RCallBack, MetaP_namespace ) );
-
-  /* Position the image using a node */
-  printOutput(tikzInfo, "\\node[inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f, %6.2f) {\n",
-    rot, x, y);
-  /* Include the image using PGF's native image handling */
-  printOutput(tikzInfo, "\t\\pgfimage[width=%6.2fpt,height=%6.2fpt,",
-      width, height);
-  /* Set PDF interpolation (not all viewers respect this, but they should) */
-  if (interpolate) {
-    printOutput(tikzInfo, "interpolate=true]");
-  } else {
-    printOutput(tikzInfo, "interpolate=false]");
-  }
-  /* Slap in the file name */
-  printOutput(tikzInfo, "{%s}", translateChar(asChar(rasterFile)));
-  printOutput(tikzInfo, "};\n");
-
-  if (tikzInfo->debug) { printOutput(tikzInfo, "\\draw[fill=red] (%6.2f, %6.2f) circle (1pt);", x, y); }
-
-  /*
-   * Increment the number of raster files we have created with this device.
-   * This is used to provide unique file names for each raster.
-  */
-  tikzInfo->rasterFileCount++;
-
-  UNPROTECT(11);
-  return;
+  warning("The MetaPost device does not implement raster images." );
+  return R_NilValue;
 
 }
 
@@ -1956,7 +1728,7 @@ static void MetaP_Raster(
 */
 static SEXP MetaP_Cap( pDevDesc deviceInfo ){
 
-  warning( "The tikzDevice does not currently support capturing device output to a raster image." );
+  warning("The MetaPost device does not currently support capturing device output to a raster image.");
   return R_NilValue;
 
 }

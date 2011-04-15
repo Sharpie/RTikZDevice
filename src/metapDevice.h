@@ -163,7 +163,6 @@ static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo);
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 
 /* Auxilury routines*/
-static void tikzAnnotate(const char **annotation, int *size);
 SEXP MetaP_GetEngine(SEXP device_num);
 SEXP MetaP_DeviceInfo(SEXP device_num);
 static double dim2dev( double length );
