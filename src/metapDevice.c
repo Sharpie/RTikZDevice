@@ -275,7 +275,9 @@ static Rboolean MetaP_Setup(
   tikzInfo->bareBones = bareBones;
   tikzInfo->firstClip = TRUE;
   tikzInfo->oldFillColor = 0;
+  tikzInfo->fill_color = NULL;
   tikzInfo->oldDrawColor = 0;
+  tikzInfo->draw_color = NULL;
   tikzInfo->oldLineType = 0;
   tikzInfo->plotParams = plotParams;
   tikzInfo->stringWidthCalls = 0;
@@ -599,6 +601,8 @@ static void MetaP_Close( pDevDesc deviceInfo){
 
   /* Deallocate pointers */
   free(tikzInfo->outFileName);
+  free(tikzInfo->fill_color);
+  free(tikzInfo->draw_color);
   free(tikzInfo);
 
 }
@@ -642,8 +646,10 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
   SetFill(plotParams->fill, TRUE, tikzInfo);
 
   /* Fill canvas background */
-  printOutput(tikzInfo, "fill unitsquare xscaled %6.2f yscaled %6.2f withcolor white;\n",
+  printOutput(tikzInfo, "fill unitsquare xscaled %6.2f yscaled %6.2f",
     deviceInfo->right,deviceInfo->top);
+  SetFill(plotParams->fill, FALSE, tikzInfo);
+  printOutput(tikzInfo, ";\n");
 
 }
 
@@ -1365,10 +1371,14 @@ static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo){
         R_GREEN(color)/255.0,
         R_BLUE(color)/255.0);
     }
+
+    if ( tikzInfo->fill_color ) free(tikzInfo->fill_color);
+    tikzInfo->fill_color = MetaP_GetColorName(color);
+
   }else{
     //Quick hack to not show fill colors with polylines
     if(tikzInfo->polyLine == FALSE)
-      printOutput(tikzInfo, "fill=fillColor,");
+      printOutput(tikzInfo, " withcolor \\MPcolor{%s}", tikzInfo->fill_color);
   }
   
 }
@@ -1384,9 +1394,12 @@ static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo){
         R_RED(color)/255.0,
         R_GREEN(color)/255.0,
         R_BLUE(color)/255.0);
+
+      if ( tikzInfo->draw_color ) free(tikzInfo->draw_color);
+      tikzInfo->draw_color = MetaP_GetColorName(color);
     }
   }else{
-    printOutput(tikzInfo, "color=drawColor,");
+    printOutput(tikzInfo, " withcolor \\MPcolor{%s}", tikzInfo->draw_color);
   }
 }
 
@@ -1558,6 +1571,40 @@ SEXP MetaP_SetColors(SEXP color_list, SEXP device_num){
   R_PreserveObject(tikzInfo->colors);
 
   return R_NilValue;
+
+}
+
+
+static char *MetaP_GetColorName(int rgb_value){
+
+  SEXP TikZ_namespace;
+  PROTECT(
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
+
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP, 2) );
+  SETCAR( RCallBack, install("get_or_set_color") );
+
+  SEXP rgb_vec;
+  PROTECT( rgb_vec = allocVector(INTSXP, 3) );
+  INTEGER(rgb_vec)[0] = R_RED(rgb_value);
+  INTEGER(rgb_vec)[1] = R_GREEN(rgb_value);
+  INTEGER(rgb_vec)[2] = R_BLUE(rgb_value);
+
+  SETCADR( RCallBack, rgb_vec );
+  SET_TAG( CDR(RCallBack), install("rgb_value") );
+
+  SEXP color_name_sexp;
+  PROTECT( color_name_sexp = eval( RCallBack, TikZ_namespace ) );
+  const char *name_string = CHAR(asChar(color_name_sexp));
+  char *color_name = (char *) calloc(strlen(name_string) + 1, sizeof(char));
+  strcpy(color_name, name_string);
+
+  UNPROTECT(4);
+
+  return( color_name );
 
 }
 

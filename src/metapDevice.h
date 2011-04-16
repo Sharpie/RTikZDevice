@@ -54,7 +54,9 @@ typedef struct {
 	Rboolean bareBones;
 	Rboolean firstClip;
 	int oldFillColor;
+  char *fill_color;
 	int oldDrawColor;
+  char *draw_color;
 	int oldLineType;
 	pGEcontext plotParams;
 	int stringWidthCalls;
@@ -169,6 +171,7 @@ static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 SEXP MetaP_GetEngine(SEXP device_num);
 SEXP MetaP_DeviceInfo(SEXP device_num);
 SEXP MetaP_SetColors(SEXP color_list, SEXP device_num);
+static char *MetaP_GetColorName(int rgb_value);
 static double dim2dev( double length );
 static void Print_MetaP_Header( tikzDevDesc *tikzInfo );
 static void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);

@@ -22,6 +22,7 @@ metap_color <- function(color_name, rgb_value, spot_name = NULL) {
 
 #' @export
 format.metap_color <- function(color, ...) {
+  # Generates ConTeXt code for defining colors and spot colors.
   red = color$rgb_value[1]
   green = color$rgb_value[2]
   blue = color$rgb_value[3]
@@ -83,8 +84,63 @@ add_metap_color <- function(color_list, color) {
 }
 
 
+get_or_set_color <- function(rgb_value) {
+  # This function is called from the C code of the MetaPost device, it's job is
+  # to search the global color list and the device's own color list to retrieve
+  # the name assigned to a given RGB value. If no definition exists, the RGB
+  # value is added to the device's color list under a generic name.
+
+  # Search device specific list.
+  dev_num <- dev.cur()
+  color_tag <- rgb2col(rgb_value)
+  color_list <- getDeviceInfo(dev_num)$colors
+  if ( is.null(color_list) ) color_list <- list()
+
+  color <- color_list[[color_tag]]
+
+  if ( is.null(color) ) {
+    # Try the global list.
+    color <- getOption('metapColors')[[color_tag]]
+  }
+
+  if ( is.null(color) ) {
+    # Still Null. Color not defined yet. Add to device color list.
+    if ( is.null(attr(color_list, 'n_color_defs')) ) {
+      # Simple integer counter used to generate unique names for undefined
+      # colors.
+      attr(color_list, 'n_color_defs') <- 1
+    }
+
+    n <- attr(color_list, 'n_color_defs')
+    # Color names have to contain only letters. Will convert the integer
+    # `n_def` to a suitable combination of letters A-Z.
+    color_name <- c(rep(26, (n - (n %% 26)) / 26), n %% 26)
+    color_name <- paste('MetaPostColor', LETTERS[color_name], sep = '')
+
+    color <- metap_color(color_name, rgb_value)
+
+    attr(color_list, 'n_color_defs') <- n + 1
+    color_list <- add_metap_color(color_list, color)
+    setMetapColors(color_list, dev_num)
+
+  }
+
+  if ( is.null(color$spot_name) ) {
+    return(color$color_name)
+  } else {
+    return(
+      paste(color$color_name, 'Spot', sep = '')
+    )
+  }
+
+}
+
+
 #' @export
 define_metap_color <- function(color_name, rgb_value, spot_name = NULL, dev_num = dev.cur()) {
+  # User visible function for adding or altering colors in the global color
+  # list or a device-specific color list. If -1 is passed for dev_num, this
+  # function alters the global list.
 
   color <- metap_color(color_name, rgb_value, spot_name)
 
@@ -99,6 +155,8 @@ define_metap_color <- function(color_name, rgb_value, spot_name = NULL, dev_num 
         ( names(dev.list()[dev_num - 1]) != 'metapost output' )
        ) { stop("Can only set colors on a metapost device!") }
 
+    color_list <- getDeviceInfo(dev_num)$colors
+    if (is.null(color_list)) color_list <- list()
     color_list <- add_metap_color(getDeviceInfo(dev_num)$colors, color)
     setMetapColors(color_list, dev_num)
 
