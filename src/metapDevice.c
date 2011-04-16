@@ -199,7 +199,7 @@ SEXP metapDevice ( SEXP args ){
      * Session.  The user will now see a device labeled "tikz output"
      * when running functions such as dev.list().
     */ 
-    GEaddDevice2( tikzDev, "tikz output" );
+    GEaddDevice2( tikzDev, "metapost output" );
 
   } END_SUSPEND_INTERRUPTS;
 
@@ -554,21 +554,14 @@ static Rboolean MetaP_Open( pDevDesc deviceInfo ){
   /* Print header comment */
   Print_MetaP_Header( tikzInfo );
 
-  /* Header for a standalone LaTeX document*/
-  if(tikzInfo->standAlone == TRUE){
-    printOutput(tikzInfo,"%s",tikzInfo->documentDeclaration);
-    printOutput(tikzInfo,"%s",tikzInfo->packages);
-    printOutput(tikzInfo,"\\begin{document}\n\n");
-  }
+  printOutput(tikzInfo, "\\usemodule[tikz]\n");
+  printOutput(tikzInfo, "\\starttext\n\n");
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE)
     printOutput(tikzInfo,"%% Beginning tikzpicture\n");
-    
-  /* Start the tikz environment if we have not specified a bare bones plot. */
-  if( tikzInfo->bareBones != TRUE ){
-    printOutput(tikzInfo, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-  }
+
+  printOutput(tikzInfo, "\\starttikzpicture[x=1pt,y=1pt]\n");
 
   return TRUE;
 
@@ -579,15 +572,11 @@ static void MetaP_Close( pDevDesc deviceInfo){
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  printOutput(tikzInfo, "\\end{scope}\n");
+  printOutput(tikzInfo, "\\stopscope\n");
 
-  /* End the tikz environment if we're not doing a bare bones plot. */
-  if( tikzInfo->bareBones != TRUE )
-    printOutput(tikzInfo, "\\end{tikzpicture}\n");
+  printOutput(tikzInfo, "\\stoptikzpicture\n");
   
-  /* Close off the standalone document*/
-  if(tikzInfo->standAlone == TRUE)
-    printOutput(tikzInfo,"\n\\end{document}\n");
+  printOutput(tikzInfo,"\n\\stoptext\n");
   
   if(tikzInfo->debug == TRUE) 
     printOutput(tikzInfo,
@@ -613,24 +602,20 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
     tikzInfo->firstPage = FALSE;
   }else{
 
-    /* End the current MetaP environment, unless we are making bare bones code. */
-    if( tikzInfo->bareBones != TRUE ){
-      
-      printOutput(tikzInfo, "\\end{scope}\n");
-      printOutput(tikzInfo, "\\end{tikzpicture}\n");
-      
-      /*Next clipping region will be the first on the page*/
-      tikzInfo->firstClip = TRUE;
+    printOutput(tikzInfo, "\\stopscope\n");
+    printOutput(tikzInfo, "\\stoptikzpicture\n");
+    
+    /*Next clipping region will be the first on the page*/
+    tikzInfo->firstClip = TRUE;
 
-      /*Show only for debugging*/
-      if(tikzInfo->debug == TRUE) 
-        printOutput(tikzInfo,
-          "%% Beginning new tikzpicture 'page'\n");
+    /*Show only for debugging*/
+    if(tikzInfo->debug == TRUE) 
+      printOutput(tikzInfo,
+        "%% Beginning new tikzpicture 'page'\n");
 
-      /* Start a new MetaP envioronment. */
-      printOutput(tikzInfo, 
-        "\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-    } // End if not bare bones.
+    /* Start a new MetaP envioronment. */
+    printOutput(tikzInfo, 
+      "\n\\starttikzpicture}[x=1pt,y=1pt]\n");
 
   } /* End if first page */
 
@@ -659,12 +644,12 @@ static void MetaP_Clip( double x0, double x1,
   deviceInfo->clipRight = x1;
   
   if(tikzInfo->firstClip == FALSE){
-    printOutput(tikzInfo, "\\end{scope}\n");
+    printOutput(tikzInfo, "\\stopscope\n");
   }else{
     tikzInfo->firstClip = FALSE;
   }
   
-  printOutput(tikzInfo, "\\begin{scope}\n");
+  printOutput(tikzInfo, "\\startscope\n");
   printOutput(tikzInfo,
     "\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
     x0,y0,x1,y1);
@@ -1399,7 +1384,7 @@ static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo){
     if(color != tikzInfo->oldFillColor){
       tikzInfo->oldFillColor = color;
       printOutput(tikzInfo,
-        "\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+        "\\unprotect\n\\pgfutil@definecolor{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n\\protect\n",
         R_RED(color)/255.0,
         R_GREEN(color)/255.0,
         R_BLUE(color)/255.0);
@@ -1419,7 +1404,7 @@ static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo){
     if(color != tikzInfo->oldDrawColor){
       tikzInfo->oldDrawColor = color;
       printOutput(tikzInfo,
-        "\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+        "\\unprotect\n\\pgfutil@definecolor{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}\n\\protect\n",
         R_RED(color)/255.0,
         R_GREEN(color)/255.0,
         R_BLUE(color)/255.0);
