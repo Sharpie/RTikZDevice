@@ -1043,32 +1043,32 @@ static double MetaP_StrWidth( const char *str,
  * The rotation value is given in degrees.
 */
 static void MetaP_Text( double x, double y, const char *str,
-    double rot, double hadj, const pGEcontext plotParams, 
+    double rot, double hadj, const pGEcontext plotParams,
     pDevDesc deviceInfo){
-  
+
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-  
+
   double tol = 0.01;
-  
+
   // Append font face commands depending on which font R is using.
-  char *tikzString = (char *) calloc( strlen(str) + 21, sizeof(char) );
+  char *tikzString = (char *) calloc( strlen(str) + 6, sizeof(char) );
 
   switch( plotParams->fontface ){
-  
+
     case 2:
       // R is requesting bold font.
-      strcat( tikzString, "\\bfseries " );
+      strcat( tikzString, "\\bf " );
       break;
 
     case 3:
       // R is requesting italic font.
-      strcat( tikzString, "\\itshape " );
+      strcat( tikzString, "\\it " );
       break;
 
     case 4:
       // R is requesting bold italic font.
-      strcat( tikzString, "\\bfseries\\itshape " );
+      strcat( tikzString, "\\bs " );
       break;
 
   } // End font face switch.
@@ -1078,74 +1078,66 @@ static void MetaP_Text( double x, double y, const char *str,
 
   // Calculate font scaling factor.
   double fontScale = MetaP_ScaleFont( plotParams, deviceInfo );
-  
+
   /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
+  if(tikzInfo->debug == TRUE)
     printOutput(tikzInfo,
       "%% Drawing node at x = %f, y = %f\n",
       x,y);
 
-  // Print out a definition for the text color.
-  SetColor( plotParams->col, TRUE, tikzInfo );  
-
   /* Start a node for the text, open an options bracket. */
-  printOutput(tikzInfo,"\n\\node[");
+  printOutput(tikzInfo,"label.");
 
-  /* Rotate the text if desired. */
-  if( rot != 0 )
-    printOutput(tikzInfo, "rotate=%6.2f,", rot );
-
-  /* More options would go here such as scaling, color etc. */
-  
-  // Add a reference to the text color to the node options.
-  SetColor( plotParams->col, FALSE, tikzInfo );
-  /* End options, print coordinates and string. */
-  printOutput(tikzInfo, "anchor=");
-  
   //Justify the text
   if(fabs(hadj - 0.0) < tol){
     //Left Justified
-    printOutput(tikzInfo, "base west,");
+    printOutput(tikzInfo, "urt(btex ");
   }
   if(fabs(hadj - 0.5) < tol){
     //Center Justified
-    printOutput(tikzInfo, "base,");
+    printOutput(tikzInfo, "top(btex ");
   }
   if(fabs(hadj - 1) < tol){
     //Right Justified
-    printOutput(tikzInfo, "base east,");
+    printOutput(tikzInfo, "ulft(btex ");
   }
-    
-  printOutput(tikzInfo, 
-    "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
-    fontScale, x, y);
-  
+
   char *cleanString = NULL;
   if(tikzInfo->sanitize == TRUE){
     //If using the sanitize option call back to R for the sanitized string
     cleanString = Sanitize( tikzString );
   	if(tikzInfo->debug == TRUE)
     	printOutput(tikzInfo,"\n%% Sanatized %s to %s\n",tikzString,cleanString);
-    printOutput(tikzInfo, "%s%%\n};\n", cleanString);
+    printOutput(tikzInfo, "%s etex, ", cleanString);
   }else{
-    printOutput(tikzInfo, "%s%%\n};\n", tikzString);
+    printOutput(tikzInfo, "%s etex, ", tikzString);
   }
 
-  /* 
-   * Since we no longer need tikzString, 
+  printOutput(tikzInfo, "(%6.2f,%6.2f))", x, y);
+
+  /* Rotate the text if desired. */
+  if ( rot != 0 ) {
+    printOutput(tikzInfo, " rotatedaround ((%6.2f, %6.2f), %6.2f)", x, y, rot);
+  }
+
+  /* Finally, clean up */
+  printOutput(tikzInfo, ";\n");
+
+  /*
+   * Since we no longer need tikzString,
    * we should free the memory that it is being stored in.
   */
   free( tikzString );
   if(tikzInfo->sanitize == TRUE){ free( cleanString ); }
 
-  /* 
-   * Add a small red marker to indicate the 
+  /*
+   * Add a small red marker to indicate the
    * point the text string is being aligned to.
-  */
   if( DEBUG == TRUE )
-    printOutput(tikzInfo, 
-      "\n\\draw[color=red, fill=red] (%6.2f,%6.2f) circle (0.5pt);\n", 
+    printOutput(tikzInfo,
+      "\n\\draw[color=red, fill=red] (%6.2f,%6.2f) circle (0.5pt);\n",
       x, y);
+  */
 
 }
 
