@@ -9,7 +9,7 @@
 #define HAVE_METAPDEV_H
 
 #ifndef DEBUG
-#define DEBUG FALSE
+#define DEBUG TRUE
 #endif
 
 /* Use default graphics engine function declarations. */
