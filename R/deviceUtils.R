@@ -144,7 +144,15 @@ setTikzDefaults <- function( overwrite = TRUE ){
 
     tikzRasterResolution = 300,
 
-    tikzPdftexWarnUTF = TRUE
+    tikzPdftexWarnUTF = TRUE,
+
+    metapColors = list(
+      # May not be necessary to define black as a spot color because if all colors
+      # are converted to CMYK from RGB, then it can easily be isolated using the K
+      # channel.
+      '#000000' = metap_color('Black', c(0,0,0)),
+      '#FFFFFF' = metap_color('White', c(255,255,255))
+    )
 
   )
 
