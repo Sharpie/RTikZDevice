@@ -1156,26 +1156,16 @@ static void MetaP_Line( double x1, double y1,
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
+  double x[] = {x1, x2};
+  double y[] = {y1, y2};
+
   /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
+  if(tikzInfo->debug == TRUE)
     printOutput(tikzInfo,
       "%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
       x1,y1,x2,y2);
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
-
-  /* Start drawing a line, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-  
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
-
-  /* More options would go here such as line thickness, style, color etc. */
-  
-  /* End options, print coordinates. */
-  printOutput(tikzInfo, "] (%6.2f,%6.2f) -- (%6.2f,%6.2f);\n",
-    x1,y1,x2,y2);
+  MetaP_DrawLines(2, x, y, plotParams, deviceInfo, FALSE);
 
 }
 
@@ -1251,42 +1241,14 @@ static void MetaP_Polyline( int n, double *x, double *y,
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
+  if(tikzInfo->debug == TRUE)
     printOutput(tikzInfo,
       "%% Starting Polyline\n");
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  MetaP_DrawLines(n, x, y, plotParams, deviceInfo, FALSE);
 
-  /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-
-  /* More options would go here such as line thickness, style and color */
-  /*Define the draw styles*/
-  //Setting polyline is a quick hack so that the fill color is not set for poylines
-  tikzInfo->polyLine = TRUE;
-  StyleDef(FALSE, plotParams, deviceInfo);
-  tikzInfo->polyLine = FALSE;
-
-  /* End options, print first set of coordinates. */
-  printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
-    x[0],y[0]);
-  
-  /* Print coordinates for the middle segments of the line. */
-  int i;
-  for ( i = 1; i < n-1; i++ ){
-    
-    printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n",
-      x[i],y[i]);
-
-  }
-
-  /* Print last set of coordinates. End path. */
-  printOutput(tikzInfo, "\t(%6.2f,%6.2f);\n",
-    x[n-1],y[n-1]);
-    
   /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
+  if(tikzInfo->debug == TRUE)
     printOutput(tikzInfo,
       "%% End Polyline\n");
 
@@ -1299,44 +1261,49 @@ static void MetaP_Polygon( int n, double *x, double *y,
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
+  if(tikzInfo->debug == TRUE)
     printOutput(tikzInfo,
       "%% Starting Polygon\n");
-      
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
-  
-  /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-  
-  /* 
-   * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
-  */
-  
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
 
-  /* End options, print first set of coordinates. */
-  printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
-    x[0],y[0]);
-  
+  MetaP_DrawLines(n, x, y, plotParams, deviceInfo, TRUE);
+
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE)
+    printOutput(tikzInfo,
+      "%% End Polyline\n");
+
+}
+
+static void MetaP_DrawLines(int n, double *x, double *y,
+  pGEcontext plotParams, pDevDesc deviceInfo, Rboolean close_path) {
+
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  /* Start drawing*/
+  printOutput(tikzInfo,"draw ((%6.2f,%6.2f)",
+      x[0], y[0]);
+
   /* Print coordinates for the middle segments of the line. */
   int i;
   for ( i = 1; i < n; i++ ){
-    
-    printOutput(tikzInfo, "\t(%6.2f,%6.2f) --\n",
+
+    printOutput(tikzInfo, " --\n\t(%6.2f,%6.2f)",
       x[i],y[i]);
 
   }
 
-  /* End path by cycling to first set of coordinates. */
-  printOutput(tikzInfo, "\tcycle;\n" );
+  if (close_path) {
 
-  /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
-    printOutput(tikzInfo,
-      "%% End Polyline\n");
+    printOutput(tikzInfo, " --\n\tcycle);\n");
+
+  } else {
+
+    printOutput(tikzInfo, ");\n");
+
+  }
+
+
 
 }
 

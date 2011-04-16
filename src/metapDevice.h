@@ -112,6 +112,8 @@ static void MetaP_Polyline( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 static void MetaP_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
+static void MetaP_DrawLines( int n, double *x, double *y,
+		pGEcontext plotParams, pDevDesc deviceInfo, Rboolean close_path );
 
 /*
  * Path routine, a polygon with "holes", was added in R 2.12.0,
