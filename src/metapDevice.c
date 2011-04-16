@@ -1208,29 +1208,14 @@ static void MetaP_Rectangle( double x0, double y0,
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
+  if(tikzInfo->debug == TRUE)
     printOutput(tikzInfo,
       "%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f\n",
       x0,y0,x1,y1);
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
-
-  /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
-
-  /* 
-   * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
-  */
-  
-  /* End options, print coordinates. */
-  printOutput(tikzInfo, 
-    "] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-    x0,y0,x1,y1);
+  printOutput(tikzInfo,
+    "draw unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
+    x1 - x0, y1 - y0, x0, y0);
 
 }
 
