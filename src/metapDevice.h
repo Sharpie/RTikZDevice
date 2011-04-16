@@ -64,6 +64,7 @@ typedef struct {
 	Rboolean polyLine;
 	Rboolean console;
 	Rboolean sanitize;
+  SEXP colors;
 } tikzDevDesc;
 
 
@@ -167,6 +168,7 @@ static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 /* Auxilury routines*/
 SEXP MetaP_GetEngine(SEXP device_num);
 SEXP MetaP_DeviceInfo(SEXP device_num);
+SEXP MetaP_SetColors(SEXP color_list, SEXP device_num);
 static double dim2dev( double length );
 static void Print_MetaP_Header( tikzDevDesc *tikzInfo );
 static void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);

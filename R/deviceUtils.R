@@ -175,7 +175,7 @@ isTikzDevice <- function(which = dev.cur()){
   if (which == 1){ return(FALSE) }
 
   dev_name <- names(dev.list()[which - 1])
-  return(dev_name == 'tikz output')
+  return(dev_name == 'tikz output' || dev_name == 'metapost output')
 }
 
 getTikzDeviceEngine <- function(dev_num = dev.cur()){
@@ -204,11 +204,27 @@ getDeviceInfo <- function(dev_num = dev.cur()) {
     stop("The specified device is not a tikz device!")
   }
 
-  device_info <- .Call('TikZ_DeviceInfo', dev_num, PACKAGE = 'tikzDevice')
+  device_info <- switch( names(dev.list()[dev_num - 1]),
+    'tikz output' = .Call('TikZ_DeviceInfo', dev_num, PACKAGE = 'tikzDevice'),
+    'metapost output' = .Call('MetaP_DeviceInfo', dev_num, PACKAGE = 'tikzDevice'),
+  )
 
   return(device_info)
 
 }
+
+
+setMetapColors <- function(color_list, dev_num = dev.cur()) {
+
+  if ( dev_num == 1 ||
+      ( names(dev.list()[dev_num - 1]) != 'metapost output' )
+     ) { stop("Can only set colors on a metapost device!") }
+
+  .Call('MetaP_SetColors', color_list, dev_num, PACKAGE = 'tikzDevice')
+
+  invisible()
+}
+
 
 tikz_writeRaster <-
 function(

@@ -286,6 +286,10 @@ static Rboolean MetaP_Setup(
   tikzInfo->console = console;
   tikzInfo->sanitize = sanitize;
 
+  /* A SEXP pointer to an object that will hold a list of defined colors */
+  tikzInfo->colors = R_NilValue;
+
+
   /* Incorporate tikzInfo into deviceInfo. */
   deviceInfo->deviceSpecific = (void *) tikzInfo;
 
@@ -1526,11 +1530,14 @@ SEXP MetaP_DeviceInfo(SEXP device_num){
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   SEXP info, names;
-  PROTECT( info = allocVector(VECSXP, 1) );
-  PROTECT( names = allocVector(STRSXP, 1) );
+  PROTECT( info = allocVector(VECSXP, 2) );
+  PROTECT( names = allocVector(STRSXP, 2) );
 
   SET_VECTOR_ELT(info, 0, mkString(tikzInfo->outFileName));
   SET_STRING_ELT(names, 0, mkChar("output_file"));
+
+  SET_VECTOR_ELT(info, 1, tikzInfo->colors);
+  SET_STRING_ELT(names, 1, mkChar("colors"));
 
   setAttrib(info, R_NamesSymbol, names);
 
@@ -1538,6 +1545,22 @@ SEXP MetaP_DeviceInfo(SEXP device_num){
   return(info);
 
 }
+
+SEXP MetaP_SetColors(SEXP color_list, SEXP device_num){
+
+  int dev_index = asInteger(device_num);
+  pDevDesc deviceInfo = GEgetDevice(dev_index - 1)->dev;
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if (tikzInfo->colors != R_NilValue) R_ReleaseObject(tikzInfo->colors);
+
+  tikzInfo->colors = color_list;
+  R_PreserveObject(tikzInfo->colors);
+
+  return R_NilValue;
+
+}
+
 
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
   
