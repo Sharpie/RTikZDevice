@@ -571,7 +571,14 @@ static void MetaP_Close( pDevDesc deviceInfo){
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  printOutput(tikzInfo, "%%Stopping clip.\n");
+  double cx0, cx1, cy0, cy1;
+  cx0 = deviceInfo->clipLeft;
+  cx1 = deviceInfo->clipRight;
+  cy0 = deviceInfo->clipBottom;
+  cy1 = deviceInfo->clipTop;
+  printOutput(tikzInfo, "clip currentpicture to unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
+      cx1 - cx0, cy1 - cy0, cx0, cy0);
+  printOutput(tikzInfo, "popcurrentpicture;\n");
 
   printOutput(tikzInfo, "\\stopMPpage\n");
   
@@ -601,7 +608,14 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
     tikzInfo->firstPage = FALSE;
   }else{
 
-    printOutput(tikzInfo, "%%Stopping clip.\n");
+    double cx0, cx1, cy0, cy1;
+    cx0 = deviceInfo->clipLeft;
+    cx1 = deviceInfo->clipRight;
+    cy0 = deviceInfo->clipBottom;
+    cy1 = deviceInfo->clipTop;
+    printOutput(tikzInfo, "clip currentpicture to unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
+        cx1 - cx0, cy1 - cy0, cx0, cy0);
+    printOutput(tikzInfo, "popcurrentpicture;\n");
     printOutput(tikzInfo, "\\stopMPpage\n");
     
     /*Next clipping region will be the first on the page*/
@@ -624,29 +638,42 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
   SetFill(plotParams->fill, TRUE, tikzInfo);
 
   /* Fill canvas background */
-  printOutput(tikzInfo, "\tfill unitsquare xscaled %6.2f yscaled %6.2f withcolor white;\n",
+  printOutput(tikzInfo, "fill unitsquare xscaled %6.2f yscaled %6.2f withcolor white;\n",
     deviceInfo->right,deviceInfo->top);
 
 }
 
 static void MetaP_Clip( double x0, double x1, 
     double y0, double y1, pDevDesc deviceInfo ){
-  
+
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  /*
+   * Difference between MetaPost and TikZ: The clipping operation is done at
+   * the end of the scope rather than the beginning.
+   */
+  double cx0, cx1, cy0, cy1;
+  cx0 = deviceInfo->clipLeft;
+  cx1 = deviceInfo->clipRight;
+  cy0 = deviceInfo->clipBottom;
+  cy1 = deviceInfo->clipTop;
+
+  if(tikzInfo->firstClip == FALSE){
+    printOutput(tikzInfo, "clip currentpicture to unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
+        cx1 - cx0, cy1 - cy0, cx0, cy0);
+    printOutput(tikzInfo, "popcurrentpicture;\n");
+  }else{
+    tikzInfo->firstClip = FALSE;
+  }
 
   deviceInfo->clipBottom = y0;
   deviceInfo->clipLeft = x0;
   deviceInfo->clipTop = y1;
   deviceInfo->clipRight = x1;
   
-  if(tikzInfo->firstClip == FALSE){
-    printOutput(tikzInfo, "%%Stopping clip.\n");
-  }else{
-    tikzInfo->firstClip = FALSE;
-  }
 
-  printOutput(tikzInfo, "%%Starting clip.\n");
+  printOutput(tikzInfo, "pushcurrentpicture;\n");
   /*
   printOutput(tikzInfo,
     "\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
@@ -1176,8 +1203,11 @@ static void MetaP_Circle( double x, double y, double r,
    * origin is shifted or the results will be funky. Also, the scale applies to
    * the whole circle, so it is a *diameter*. This means we need to multiply
    * radius by 2.
+   *
+   * MetaPost also has a unitcircle, but I believe this is anchored at the
+   * lower left corner rather than the center.
    */
-  printOutput(tikzInfo, "\tdraw fullcircle scaled %6.2f shifted (%6.2f,%6.2f);\n",
+  printOutput(tikzInfo, "draw fullcircle scaled %6.2f shifted (%6.2f,%6.2f);\n",
     r * 2.0,x,y);
 }
 
