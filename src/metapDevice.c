@@ -554,14 +554,13 @@ static Rboolean MetaP_Open( pDevDesc deviceInfo ){
   /* Print header comment */
   Print_MetaP_Header( tikzInfo );
 
-  printOutput(tikzInfo, "\\usemodule[tikz]\n");
   printOutput(tikzInfo, "\\starttext\n\n");
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE)
-    printOutput(tikzInfo,"%% Beginning tikzpicture\n");
+    printOutput(tikzInfo,"%% Beginning MetaPost graphic\n");
 
-  printOutput(tikzInfo, "\\starttikzpicture[x=1pt,y=1pt]\n");
+  printOutput(tikzInfo, "\\startMPpage\n");
 
   return TRUE;
 
@@ -572,9 +571,9 @@ static void MetaP_Close( pDevDesc deviceInfo){
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  printOutput(tikzInfo, "\\stopscope\n");
+  printOutput(tikzInfo, "%%Stopping clip.\n");
 
-  printOutput(tikzInfo, "\\stoptikzpicture\n");
+  printOutput(tikzInfo, "\\stopMPpage\n");
   
   printOutput(tikzInfo,"\n\\stoptext\n");
   
@@ -602,8 +601,8 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
     tikzInfo->firstPage = FALSE;
   }else{
 
-    printOutput(tikzInfo, "\\stopscope\n");
-    printOutput(tikzInfo, "\\stoptikzpicture\n");
+    printOutput(tikzInfo, "%%Stopping clip.\n");
+    printOutput(tikzInfo, "\\stopMPpage\n");
     
     /*Next clipping region will be the first on the page*/
     tikzInfo->firstClip = TRUE;
@@ -611,11 +610,11 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
     /*Show only for debugging*/
     if(tikzInfo->debug == TRUE) 
       printOutput(tikzInfo,
-        "%% Beginning new tikzpicture 'page'\n");
+        "%% Beginning new MetaPost graphic\n");
 
     /* Start a new MetaP envioronment. */
     printOutput(tikzInfo, 
-      "\n\\starttikzpicture}[x=1pt,y=1pt]\n");
+      "\n\\startMPpage\n");
 
   } /* End if first page */
 
@@ -625,9 +624,7 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
   SetFill(plotParams->fill, TRUE, tikzInfo);
 
   /* Fill canvas background */
-  printOutput(tikzInfo, "\\fill[color=fillColor,");
-  SetAlpha(plotParams->col, TRUE, tikzInfo);
-  printOutput(tikzInfo, "] (0,0) rectangle (%6.2f,%6.2f);\n",
+  printOutput(tikzInfo, "\tfill unitsquare xscaled %6.2f yscaled %6.2f withcolor white;\n",
     deviceInfo->right,deviceInfo->top);
 
 }
@@ -644,16 +641,18 @@ static void MetaP_Clip( double x0, double x1,
   deviceInfo->clipRight = x1;
   
   if(tikzInfo->firstClip == FALSE){
-    printOutput(tikzInfo, "\\stopscope\n");
+    printOutput(tikzInfo, "%%Stopping clip.\n");
   }else{
     tikzInfo->firstClip = FALSE;
   }
-  
-  printOutput(tikzInfo, "\\startscope\n");
+
+  printOutput(tikzInfo, "%%Starting clip.\n");
+  /*
   printOutput(tikzInfo,
     "\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
     x0,y0,x1,y1);
-  
+  */
+
   /*
    *     *** UGLY HACK ***
    * 
@@ -675,11 +674,13 @@ static void MetaP_Clip( double x0, double x1,
   tikzInfo->oldDrawColor = -999;
   tikzInfo->oldLineType = -999;
 
+  /* Tikz Debugging code
   if(tikzInfo->debug == TRUE)
     printOutput(tikzInfo,
       "\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
       x0,y0,x1,y1);
-      
+  */
+
   /*Define the colors for fill and border*/
   StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
 }
@@ -1164,23 +1165,20 @@ static void MetaP_Circle( double x, double y, double r,
       x,y,r);
 
   /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  //StyleDef(TRUE, plotParams, deviceInfo);
 
-  /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-
-  /* 
-   * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
-  */ 
-  
   /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
+  //StyleDef(FALSE, plotParams, deviceInfo);
 
-  
-  /* End options, print coordinates. */
-  printOutput(tikzInfo, "] (%6.2f,%6.2f) circle (%6.2f);\n",
-    x,y,r);
+
+  /*
+   * Draw circle. Note for MetaPost, the circle has to be scaled before its
+   * origin is shifted or the results will be funky. Also, the scale applies to
+   * the whole circle, so it is a *diameter*. This means we need to multiply
+   * radius by 2.
+   */
+  printOutput(tikzInfo, "\tdraw fullcircle scaled %6.2f shifted (%6.2f,%6.2f);\n",
+    r * 2.0,x,y);
 }
 
 static void MetaP_Rectangle( double x0, double y0,
@@ -1384,7 +1382,7 @@ static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo){
     if(color != tikzInfo->oldFillColor){
       tikzInfo->oldFillColor = color;
       printOutput(tikzInfo,
-        "\\unprotect\n\\pgfutil@definecolor{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n\\protect\n",
+        "%% Would need RBG fill: {%4.2f,%4.2f,%4.2f}\n",
         R_RED(color)/255.0,
         R_GREEN(color)/255.0,
         R_BLUE(color)/255.0);
@@ -1404,7 +1402,7 @@ static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo){
     if(color != tikzInfo->oldDrawColor){
       tikzInfo->oldDrawColor = color;
       printOutput(tikzInfo,
-        "\\unprotect\n\\pgfutil@definecolor{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}\n\\protect\n",
+        "%% Would need RGB draw: {%4.2f,%4.2f,%4.2f}\n",
         R_RED(color)/255.0,
         R_GREEN(color)/255.0,
         R_BLUE(color)/255.0);
