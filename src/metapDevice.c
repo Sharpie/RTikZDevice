@@ -567,8 +567,6 @@ static Rboolean MetaP_Open( pDevDesc deviceInfo ){
     printOutput(tikzInfo,"%% Beginning MetaPost graphic\n");
 
   printOutput(tikzInfo, "\\startMPpage\n");
-  /* Define reusable path variable */
-  printOutput(tikzInfo, "\tpath p;\n\n");
 
   return TRUE;
 
@@ -663,11 +661,18 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
     printOutput(tikzInfo, 
       "\n\\startMPpage\n");
 
-    /* Define reusable path variable */
-    printOutput(tikzInfo, "\tpath p;\n\n");
-
   } /* End if first page */
 
+
+  /* Define reusable path variable */
+  printOutput(tikzInfo, "\tpath p;\n\n");
+  /*
+   * Define default pen and other graphics parameters. 0.4pt matches the
+   * default used by TikZ
+   */
+  printOutput(tikzInfo, "\tpickup pencircle scaled 0.4pt;");
+  printOutput(tikzInfo, "\tlinecap := butt;");
+  printOutput(tikzInfo, "\tlinejoin := mitered;");
 
   /* Fill canvas background */
   printOutput(tikzInfo, "\tp := unitsquare xscaled %6.2f yscaled %6.2f;\n",
@@ -1454,35 +1459,37 @@ static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo){
 static void SetDashPattern(int lty, tikzDevDesc *tikzInfo){
   char dashlist[8];
   int i, nlty;
-  
+
   /* From ?par
-   * Line types can either be specified by giving an index into a small 
-   * built-in table of line types (1 = solid, 2 = dashed, etc, see lty 
-   * above) or directly as the lengths of on/off stretches of line. This 
-   * is done with a string of an even number (up to eight) of characters, 
-   * namely non-zero (hexadecimal) digits which give the lengths in 
-   * consecutive positions in the string. For example, the string "33" 
-   * specifies three units on followed by three off and "3313" specifies 
-   * three units on followed by three off followed by one on and finally 
-   * three off. The ‘units’ here are (on most devices) proportional to lwd, 
+   * Line types can either be specified by giving an index into a small
+   * built-in table of line types (1 = solid, 2 = dashed, etc, see lty
+   * above) or directly as the lengths of on/off stretches of line. This
+   * is done with a string of an even number (up to eight) of characters,
+   * namely non-zero (hexadecimal) digits which give the lengths in
+   * consecutive positions in the string. For example, the string "33"
+   * specifies three units on followed by three off and "3313" specifies
+   * three units on followed by three off followed by one on and finally
+   * three off. The ‘units’ here are (on most devices) proportional to lwd,
    * and with lwd = 1 are in pixels or points or 1/96 inch.
 
-   * The five standard dash-dot line types (lty = 2:6) correspond to 
+   * The five standard dash-dot line types (lty = 2:6) correspond to
    * c("44", "13", "1343", "73", "2262").
-   * 
-   * (0=blank, 1=solid (default), 2=dashed, 
-   *  3=dotted, 4=dotdash, 5=longdash, 6=twodash) 
+   *
+   * (0=blank, 1=solid (default), 2=dashed,
+   *  3=dotted, 4=dotdash, 5=longdash, 6=twodash)
   */
-  
+
   /*Retrieve the line type pattern*/
   for(i = 0; i < 8 && lty & 15 ; i++) {
     dashlist[i] = lty & 15;
     lty = lty >> 4;
   }
-  nlty = i; i = 0; 
-  
-  printOutput(tikzInfo, "dash pattern=");
-  
+  nlty = i; i = 0;
+
+  if (nlty < 2) return;
+
+  printOutput(tikzInfo, " dashed dashpattern(");
+
   /*Set the dash pattern*/
   while(i < nlty){
     if( (i % 2) == 0 ){
@@ -1492,7 +1499,9 @@ static void SetDashPattern(int lty, tikzDevDesc *tikzInfo){
     }
     i++;
   }
-  printOutput(tikzInfo, ",");
+
+  printOutput(tikzInfo, ")");
+
 }
 
 static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo){
@@ -1597,7 +1606,37 @@ static void MetaP_DrawStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo, Rboole
 
   } else if (code & 1) {
 
-    printOutput(tikzInfo, "\tdraw p ");
+    /*
+     * Start a graphics group so that variables like linecap, and mitre limit
+     * can be adjusted.
+     */
+    printOutput(tikzInfo, "\tbegingroup;\n");
+    switch (plotParams->lend) {
+      case GE_ROUND_CAP:
+        printOutput(tikzInfo, "\t\tinterim linecap := rounded;\n");
+        break;
+      case GE_BUTT_CAP:
+        /*Default if nothing is specified*/
+        break;
+      case GE_SQUARE_CAP:
+        printOutput(tikzInfo, "\t\tinterim linecap := squared;\n");
+    }
+
+    switch (plotParams->ljoin) {
+      case GE_ROUND_JOIN:
+        printOutput(tikzInfo, "\t\tinterim linejoin := rounded;\n");
+        break;
+      case GE_MITRE_JOIN:
+        /*Default if nothing is specified*/
+        if(plotParams->lmitre != 10)
+          printOutput(tikzInfo, "\t\tinterim miterlimit := %4.2fpt;\n",plotParams->lmitre);
+        break;
+      case GE_BEVEL_JOIN:
+        printOutput(tikzInfo, "\t\tinterim linejoin := beveled;\n");
+    }
+
+
+    printOutput(tikzInfo, "\t\tdraw p");
 
     color = plotParams->col;
     if(color != tikzInfo->oldDrawColor){
@@ -1608,14 +1647,20 @@ static void MetaP_DrawStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo, Rboole
 
     color_name = tikzInfo->draw_color;
 
+    /* Additional actions for drawing paths such as line width and dashing */
+    SetDashPattern(plotParams->lty, tikzInfo);
+    if(plotParams->lwd != 1.0)
+      printOutput(tikzInfo," withpen pencircle scaled %4.1fpt", 0.4*plotParams->lwd);
+
   } else {
     /* Assuming code was 0 */
     return;
   }
 
-  printOutput(tikzInfo, "withcolor \\MPcolor{%s}", color_name);
+  printOutput(tikzInfo, " withcolor \\MPcolor{%s};\n", color_name);
 
-  printOutput(tikzInfo, ";\n");
+  /* Finish graphics group for altered linejoins, etc */
+  if ( !fill && (code & 1) ) printOutput(tikzInfo, "\tendgroup;\n");
 
 }
 
