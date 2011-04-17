@@ -739,15 +739,6 @@ static void MetaP_Clip( double x0, double x1,
   tikzInfo->oldDrawColor = -999;
   tikzInfo->oldLineType = -999;
 
-  /* Tikz Debugging code
-  if(tikzInfo->debug == TRUE)
-    printOutput(tikzInfo,
-      "\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-      x0,y0,x1,y1);
-  */
-
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
 }
 
 static void MetaP_Size( double *left, double *right,
@@ -1213,13 +1204,6 @@ static void MetaP_Circle( double x, double y, double r,
       "%% Drawing Circle at x = %f, y = %f, r = %f\n",
       x,y,r);
 
-  /*Define the colors for fill and border*/
-  //StyleDef(TRUE, plotParams, deviceInfo);
-
-  /*Define the draw styles*/
-  //StyleDef(FALSE, plotParams, deviceInfo);
-
-
   /*
    * Draw circle. Note for MetaPost, the circle has to be scaled before its
    * origin is shifted or the results will be funky. Also, the scale applies to
@@ -1354,221 +1338,6 @@ MetaP_Path( double *x, double *y,
 #endif
 
 
-/* This function either prints out the color definitions for outline and fill 
- * colors or the style tags in the \draw[] command, the defineColor parameter 
- * tells if the color/style is being defined or used.
- * SetLineStyle and CheckAndSetAlpha are only run if the style is being used 
- * because there are no color definitions outside of the draw command. 
-*/
-static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
-            pDevDesc deviceInfo){
-  
-  /* Shortcut pointers to variables of interest. */
-  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-  
-  /*From devPS.c, PS_Circle()*/
-  int code;
-  /* code is set as follows */
-  /* code == 0, nothing to draw */
-  /* code == 1, outline only */
-  /* code == 2, fill only */
-  /* code == 3, outline and fill */
-
-  code = 3 - 2 * (R_TRANSPARENT(plotParams->fill)) - 
-          (R_TRANSPARENT(plotParams->col));
-
-  if (code) {
-    if(code & 1) {
-      /* Define outline draw color*/
-      SetColor(plotParams->col, defineColor, tikzInfo);
-      if(defineColor == FALSE){
-        SetLineStyle(plotParams->lty, plotParams->lwd, tikzInfo);
-        SetLineEnd(plotParams->lend, tikzInfo);
-        SetLineJoin(plotParams->ljoin, 
-              plotParams->lmitre, tikzInfo);
-      }
-    }
-    if(code & 2){
-      /* Define fill color*/
-      SetFill(plotParams->fill, defineColor, tikzInfo);
-    }
-  }
-  /*Set Alpha*/
-  if(defineColor == FALSE){
-    /*Set Fill opacity Alpha*/
-    SetAlpha(plotParams->fill, TRUE, tikzInfo);
-    /*Set Draw opacity Alpha*/
-    SetAlpha(plotParams->col, FALSE, tikzInfo);
-  }
-  
-}
-
-static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo){
-  
-  if(def == TRUE){
-    if(color != tikzInfo->oldFillColor){
-      tikzInfo->oldFillColor = color;
-      printOutput(tikzInfo,
-        "%% Would need RBG fill: {%4.2f,%4.2f,%4.2f}\n",
-        R_RED(color)/255.0,
-        R_GREEN(color)/255.0,
-        R_BLUE(color)/255.0);
-
-      if ( tikzInfo->fill_color ) free(tikzInfo->fill_color);
-      tikzInfo->fill_color = MetaP_GetColorName(color);
-    }
-
-  }else{
-    //Quick hack to not show fill colors with polylines
-    if(tikzInfo->polyLine == FALSE)
-      printOutput(tikzInfo, " withcolor \\MPcolor{%s}", tikzInfo->fill_color);
-  }
-  
-}
-
-
-static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo){
-  
-  if(def == TRUE){
-    if(color != tikzInfo->oldDrawColor){
-      tikzInfo->oldDrawColor = color;
-      printOutput(tikzInfo,
-        "%% Would need RGB draw: {%4.2f,%4.2f,%4.2f}\n",
-        R_RED(color)/255.0,
-        R_GREEN(color)/255.0,
-        R_BLUE(color)/255.0);
-
-      if ( tikzInfo->draw_color ) free(tikzInfo->draw_color);
-      tikzInfo->draw_color = MetaP_GetColorName(color);
-    }
-  }else{
-    printOutput(tikzInfo, " withcolor \\MPcolor{%s}", tikzInfo->draw_color);
-  }
-}
-
-static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo){
-    
-  SetLineWeight(lwd, tikzInfo);
-  
-  if (lty && lwd) {
-  
-    SetDashPattern(lty, tikzInfo);
-  }
-}
-
-static void SetDashPattern(int lty, tikzDevDesc *tikzInfo){
-  char dashlist[8];
-  int i, nlty;
-
-  /* From ?par
-   * Line types can either be specified by giving an index into a small
-   * built-in table of line types (1 = solid, 2 = dashed, etc, see lty
-   * above) or directly as the lengths of on/off stretches of line. This
-   * is done with a string of an even number (up to eight) of characters,
-   * namely non-zero (hexadecimal) digits which give the lengths in
-   * consecutive positions in the string. For example, the string "33"
-   * specifies three units on followed by three off and "3313" specifies
-   * three units on followed by three off followed by one on and finally
-   * three off. The ‘units’ here are (on most devices) proportional to lwd,
-   * and with lwd = 1 are in pixels or points or 1/96 inch.
-
-   * The five standard dash-dot line types (lty = 2:6) correspond to
-   * c("44", "13", "1343", "73", "2262").
-   *
-   * (0=blank, 1=solid (default), 2=dashed,
-   *  3=dotted, 4=dotdash, 5=longdash, 6=twodash)
-  */
-
-  /*Retrieve the line type pattern*/
-  for(i = 0; i < 8 && lty & 15 ; i++) {
-    dashlist[i] = lty & 15;
-    lty = lty >> 4;
-  }
-  nlty = i; i = 0;
-
-  if (nlty < 2) return;
-
-  printOutput(tikzInfo, " dashed dashpattern(");
-
-  /*Set the dash pattern*/
-  while(i < nlty){
-    if( (i % 2) == 0 ){
-      printOutput(tikzInfo, "on %dpt ", dashlist[i]);
-    }else{
-      printOutput(tikzInfo, "off %dpt ", dashlist[i]);
-    }
-    i++;
-  }
-
-  printOutput(tikzInfo, ")");
-
-}
-
-static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo){
-  
-  /*Set the line width, 0.4pt is the MetaP default so scale lwd=1 to that*/
-  if(lwd != 1.0)
-    printOutput(tikzInfo,"line width=%4.1fpt,",0.4*lwd);
-}
-
-static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo){
-  
-  /* If the parameter fill == TRUE then set the fill opacity otherwise set 
-   * the outline opacity
-  */
-  
-  unsigned int alpha = R_ALPHA(color);
-  
-  /*draw opacity and fill opacity separately here*/
-  if(!R_OPAQUE(color)){
-    if(fill == TRUE)
-      printOutput(tikzInfo,"fill opacity=%4.2f,",alpha/255.0);
-    else
-      printOutput(tikzInfo,"draw opacity=%4.2f,",alpha/255.0);
-  }
-  
-}
-
-
-static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, 
-            tikzDevDesc *tikzInfo){
-  
-  switch (ljoin) {
-    case GE_ROUND_JOIN:
-      printOutput(tikzInfo, "line join=round,");
-      break;
-    case GE_MITRE_JOIN:
-      /*Default if nothing is specified*/
-      SetMitreLimit(lmitre, tikzInfo);
-      break;
-    case GE_BEVEL_JOIN:
-      printOutput(tikzInfo, "line join=bevel,");
-  }
-}
-
-static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo){
-  
-  if(lmitre != 10)
-    printOutput(tikzInfo, "mitre limit=%4.2f,",lmitre);
-  
-}
-
-static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo){
-  
-  
-  switch (lend) {
-    case GE_ROUND_CAP:
-      printOutput(tikzInfo, "line cap=round,");
-      break;
-    case GE_BUTT_CAP:
-      /*Default if nothing is specified*/
-      break;
-    case GE_SQUARE_CAP:
-      printOutput(tikzInfo, "line cap=rect,");
-  }
-}
-
-
 /*
  * This routine assumes that the main graphics routines have stored a path
  * definition in a MetaPost variable `p`. The routine then fills or draws `p`
@@ -1672,6 +1441,55 @@ static void MetaP_DrawStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo, Rboole
 
   /* Finish graphics group for altered linejoins, etc */
   if ( !fill && (code & 1) ) printOutput(tikzInfo, "\tendgroup;\n");
+
+}
+
+
+static void SetDashPattern(int lty, tikzDevDesc *tikzInfo){
+  char dashlist[8];
+  int i, nlty;
+
+  /* From ?par
+   * Line types can either be specified by giving an index into a small
+   * built-in table of line types (1 = solid, 2 = dashed, etc, see lty
+   * above) or directly as the lengths of on/off stretches of line. This
+   * is done with a string of an even number (up to eight) of characters,
+   * namely non-zero (hexadecimal) digits which give the lengths in
+   * consecutive positions in the string. For example, the string "33"
+   * specifies three units on followed by three off and "3313" specifies
+   * three units on followed by three off followed by one on and finally
+   * three off. The ‘units’ here are (on most devices) proportional to lwd,
+   * and with lwd = 1 are in pixels or points or 1/96 inch.
+
+   * The five standard dash-dot line types (lty = 2:6) correspond to
+   * c("44", "13", "1343", "73", "2262").
+   *
+   * (0=blank, 1=solid (default), 2=dashed,
+   *  3=dotted, 4=dotdash, 5=longdash, 6=twodash)
+  */
+
+  /*Retrieve the line type pattern*/
+  for(i = 0; i < 8 && lty & 15 ; i++) {
+    dashlist[i] = lty & 15;
+    lty = lty >> 4;
+  }
+  nlty = i; i = 0;
+
+  if (nlty < 2) return;
+
+  printOutput(tikzInfo, " dashed dashpattern(");
+
+  /*Set the dash pattern*/
+  while(i < nlty){
+    if( (i % 2) == 0 ){
+      printOutput(tikzInfo, "on %dpt ", dashlist[i]);
+    }else{
+      printOutput(tikzInfo, "off %dpt ", dashlist[i]);
+    }
+    i++;
+  }
+
+  printOutput(tikzInfo, ")");
 
 }
 
