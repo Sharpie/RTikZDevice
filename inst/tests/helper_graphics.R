@@ -63,7 +63,7 @@ create_graph <- function(graph_code, graph_file, uses_xetex){
 
     engine = ifelse(uses_xetex, 'xetex', 'pdftex')
 
-    tikz(file = graph_file, standAlone = TRUE, engine = engine)
+    metapost(file = graph_file, engine = engine)
     on.exit(dev.off())
 
     eval(graph_code)
@@ -74,10 +74,13 @@ create_graph <- function(graph_code, graph_file, uses_xetex){
 
 compile_graph <- function(graph_file, uses_xetex){
 
+  oldwd <- getwd()
+  on.exit(setwd(oldwd))
+  setwd(test_work_dir)
+
   tex_cmd <- ifelse(uses_xetex, getOption('tikzXelatex'), getOption('tikzLatex'))
-  silence <- system(paste(tex_cmd, '-interaction=batchmode',
-    '-output-directory', test_work_dir,
-    graph_file ), intern = TRUE)
+  print(paste('context', '--batchmode', graph_file ))
+  silence <- system(paste('context', '--batchmode', graph_file ), intern = TRUE)
 
   output_pdf = sub('tex$', 'pdf', graph_file)
   file.rename(output_pdf, file.path(test_output_dir, basename(output_pdf)))

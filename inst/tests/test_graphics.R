@@ -169,23 +169,23 @@ test_graphs <- list(
     })
   ),
 
-  list(
-    short_name = 'string_placement',
-    description = 'Test string placement and TeX symbol generation',
-    graph_code = quote({
-      syms <-c('alpha','theta','tau','beta','vartheta','pi','upsilon',
-            'gamma','gamma','varpi','phi','delta','kappa','rho','varphi',
-            'epsilon','lambda','varrho','chi','varepsilon','mu','sigma',
-            'psi','zeta','nu','varsigma','omega','eta','xi','Gamma',
-            'Lambda','Sigma','Psi','Delta','Xi','Upsilon','Omega',
-            'Theta','Pi','Phi')
-      x <- rnorm(length(syms))
-      y <- rnorm(length(syms))
-      plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='')
-      points(x, y, pch=21,  bg='black', cex=.5)
-      text(x,y,paste('\\Large$\\',syms,'$',sep=''))
-    })
-  ),
+  #list(
+    #short_name = 'string_placement',
+    #description = 'Test string placement and TeX symbol generation',
+    #graph_code = quote({
+      #syms <-c('alpha','theta','tau','beta','vartheta','pi','upsilon',
+            #'gamma','gamma','varpi','phi','delta','kappa','rho','varphi',
+            #'epsilon','lambda','varrho','chi','varepsilon','mu','sigma',
+            #'psi','zeta','nu','varsigma','omega','eta','xi','Gamma',
+            #'Lambda','Sigma','Psi','Delta','Xi','Upsilon','Omega',
+            #'Theta','Pi','Phi')
+      #x <- rnorm(length(syms))
+      #y <- rnorm(length(syms))
+      #plot(-2:2, -2:2, type = "n", axes=F, xlab='', ylab='')
+      #points(x, y, pch=21,  bg='black', cex=.5)
+      #text(x,y,paste('\\Large$\\',syms,'$',sep=''))
+    #})
+  #),
 
   list(
     short_name = 'text_alignment',
@@ -268,81 +268,81 @@ test_graphs <- list(
     })
   ),
 
-  list(
-    short_name = 'polypath',
-    description = 'Test polypath support',
-    graph_code = quote({
-      # From example(polypath)
-       plotPath <- function(x, y, col="grey", rule="winding") {
-           plot.new()
-           plot.window(range(x, na.rm=TRUE), range(y, na.rm=TRUE))
-           polypath(x, y, col=col, rule=rule)
-           if (!is.na(col))
-               mtext(paste("Rule:", rule), side=1, line=0)
-       }
+  #list(
+    #short_name = 'polypath',
+    #description = 'Test polypath support',
+    #graph_code = quote({
+      ## From example(polypath)
+       #plotPath <- function(x, y, col="grey", rule="winding") {
+           #plot.new()
+           #plot.window(range(x, na.rm=TRUE), range(y, na.rm=TRUE))
+           #polypath(x, y, col=col, rule=rule)
+           #if (!is.na(col))
+               #mtext(paste("Rule:", rule), side=1, line=0)
+       #}
 
-       plotRules <- function(x, y, title) {
-           plotPath(x, y)
-           plotPath(x, y, rule="evenodd")
-           mtext(title, side=3, line=0)
-           plotPath(x, y, col=NA)
-       }
+       #plotRules <- function(x, y, title) {
+           #plotPath(x, y)
+           #plotPath(x, y, rule="evenodd")
+           #mtext(title, side=3, line=0)
+           #plotPath(x, y, col=NA)
+       #}
 
-       op <- par(mfrow=c(5, 3), mar=c(2, 1, 1, 1))
+       #op <- par(mfrow=c(5, 3), mar=c(2, 1, 1, 1))
 
-       plotRules(c(.1, .1, .9, .9, NA, .2, .2, .8, .8),
-                 c(.1, .9, .9, .1, NA, .2, .8, .8, .2),
-                 title="Nested rectangles, both clockwise")
-       plotRules(x=c(.1, .1, .9, .9, NA, .2, .8, .8, .2),
-                 y=c(.1, .9, .9, .1, NA, .2, .2, .8, .8),
-                 title="Nested rectangles, outer clockwise, inner anti-clockwise")
-       plotRules(x=c(.1, .1, .4, .4, NA, .6, .9, .9, .6),
-                 y=c(.1, .4, .4, .1, NA, .6, .6, .9, .9),
-                 title="Disjoint rectangles")
-       plotRules(x=c(.1, .1, .6, .6, NA, .4, .4, .9, .9),
-                 y=c(.1, .6, .6, .1, NA, .4, .9, .9, .4),
-                 title="Overlapping rectangles, both clockwise")
-       plotRules(x=c(.1, .1, .6, .6, NA, .4, .9, .9, .4),
-                 y=c(.1, .6, .6, .1, NA, .4, .4, .9, .9),
-                 title="Overlapping rectangles, one clockwise, other anti-clockwise")
+       #plotRules(c(.1, .1, .9, .9, NA, .2, .2, .8, .8),
+                 #c(.1, .9, .9, .1, NA, .2, .8, .8, .2),
+                 #title="Nested rectangles, both clockwise")
+       #plotRules(x=c(.1, .1, .9, .9, NA, .2, .8, .8, .2),
+                 #y=c(.1, .9, .9, .1, NA, .2, .2, .8, .8),
+                 #title="Nested rectangles, outer clockwise, inner anti-clockwise")
+       #plotRules(x=c(.1, .1, .4, .4, NA, .6, .9, .9, .6),
+                 #y=c(.1, .4, .4, .1, NA, .6, .6, .9, .9),
+                 #title="Disjoint rectangles")
+       #plotRules(x=c(.1, .1, .6, .6, NA, .4, .4, .9, .9),
+                 #y=c(.1, .6, .6, .1, NA, .4, .9, .9, .4),
+                 #title="Overlapping rectangles, both clockwise")
+       #plotRules(x=c(.1, .1, .6, .6, NA, .4, .9, .9, .4),
+                 #y=c(.1, .6, .6, .1, NA, .4, .4, .9, .9),
+                 #title="Overlapping rectangles, one clockwise, other anti-clockwise")
 
-       par(op)
+       #par(op)
 
-    })
-  ),
+    #})
+  #),
 
-  list(
-   short_name = 'base_raster',
-   description = 'Test raster support in base graphics',
-   graph_code = quote({
+  #list(
+   #short_name = 'base_raster',
+   #description = 'Test raster support in base graphics',
+   #graph_code = quote({
 
-     plot(c(100, 250), c(300, 450), type = "n", xlab="", ylab="")
-     image <- as.raster(matrix(rep(0:1,5*3), ncol=5, nrow=3))
-     rasterImage(image, 100, 300, 150, 350, interpolate=FALSE)
-     rasterImage(image, 100, 400, 150, 450)
-     rasterImage(image, 200, 300, 200 + xinch(.5), 300 + yinch(.3),
-              interpolate=FALSE)
-            rasterImage(image, 200, 400, 250, 450, angle=15,
-              interpolate=FALSE)
+     #plot(c(100, 250), c(300, 450), type = "n", xlab="", ylab="")
+     #image <- as.raster(matrix(rep(0:1,5*3), ncol=5, nrow=3))
+     #rasterImage(image, 100, 300, 150, 350, interpolate=FALSE)
+     #rasterImage(image, 100, 400, 150, 450)
+     #rasterImage(image, 200, 300, 200 + xinch(.5), 300 + yinch(.3),
+              #interpolate=FALSE)
+            #rasterImage(image, 200, 400, 250, 450, angle=15,
+              #interpolate=FALSE)
 
-   })
-  ),
+   #})
+  #),
 
-  list(
-   short_name = 'grid_raster',
-   description = 'Test raster support in grid graphics',
-   graph_code = quote({
+  #list(
+   #short_name = 'grid_raster',
+   #description = 'Test raster support in grid graphics',
+   #graph_code = quote({
 
-     suppressPackageStartupMessages(require(grid))
-     suppressPackageStartupMessages(require(lattice))
+     #suppressPackageStartupMessages(require(grid))
+     #suppressPackageStartupMessages(require(lattice))
 
-     plt <- levelplot(volcano, panel = panel.levelplot.raster,
-          col.regions = topo.colors, cuts = 30, interpolate = TRUE)
+     #plt <- levelplot(volcano, panel = panel.levelplot.raster,
+          #col.regions = topo.colors, cuts = 30, interpolate = TRUE)
 
-     print(plt)
+     #print(plt)
 
-   })
-  ),
+   #})
+  #),
 
   # New pdfLaTeX tests go here
   #list(
@@ -368,71 +368,71 @@ test_graphs <- list(
           for(j in 1:n)
             text(i,j,chars[i,j])
     })
-  ),
-
-
-  list(
-    short_name = 'xetex_variants',
-    description = 'Test of XeLaTeX font variants',
-    uses_xetex = TRUE,
-    # Only OS X is likely to have the required fonts installed
-    skip_if = function(){Sys.info()['sysname'] != 'Darwin'},
-    graph_options = list(
-      tikzXelatexPackages = c(
-        "\\usepackage{fontspec}",
-        "\\usepackage[colorlinks, breaklinks, pdftitle={The Beauty of LaTeX},pdfauthor={Taraborelli, Dario}]{hyperref}",
-        "\\usepackage{tikz}",
-        "\\usepackage{color}",
-        "\\definecolor{Gray}{rgb}{.7,.7,.7}",
-        "\\definecolor{lightblue}{rgb}{.2,.5,1}",
-        "\\definecolor{myred}{rgb}{1,0,0}",
-        "\\newcommand{\\red}[1]{\\color{myred} #1}",
-        "\\newcommand{\\reda}[1]{\\color{myred}\\fontspec[Variant=2]{Zapfino}#1}",
-        "\\newcommand{\\redb}[1]{\\color{myred}\\fontspec[Variant=3]{Zapfino}#1}",
-        "\\newcommand{\\redc}[1]{\\color{myred}\\fontspec[Variant=4]{Zapfino}#1}",
-        "\\newcommand{\\redd}[1]{\\color{myred}\\fontspec[Variant=5]{Zapfino}#1}",
-        "\\newcommand{\\rede}[1]{\\color{myred}\\fontspec[Variant=6]{Zapfino}#1}",
-        "\\newcommand{\\redf}[1]{\\color{myred}\\fontspec[Variant=7]{Zapfino}#1}",
-        "\\newcommand{\\redg}[1]{\\color{myred}\\fontspec[Variant=8]{Zapfino}#1}",
-        "\\newcommand{\\lbl}[1]{\\color{lightblue} #1}",
-        "\\newcommand{\\lbla}[1]{\\color{lightblue}\\fontspec[Variant=2]{Zapfino}#1}",
-        "\\newcommand{\\lblb}[1]{\\color{lightblue}\\fontspec[Variant=3]{Zapfino}#1}",
-        "\\newcommand{\\lblc}[1]{\\color{lightblue}\\fontspec[Variant=4]{Zapfino}#1}",
-        "\\newcommand{\\lbld}[1]{\\color{lightblue}\\fontspec[Variant=5]{Zapfino}#1}",
-        "\\newcommand{\\lble}[1]{\\color{lightblue}\\fontspec[Variant=6]{Zapfino}#1}",
-        "\\newcommand{\\lblf}[1]{\\color{lightblue}\\fontspec[Variant=7]{Zapfino}#1}",
-        "\\newcommand{\\lblg}[1]{\\color{lightblue}\\fontspec[Variant=8]{Zapfino}#1}",
-        "\\newcommand{\\old}[1]{",
-        "\\fontspec[Ligatures={Common, Rare},Variant=1,Swashes={LineInitial, LineFinal}]{Zapfino}",
-        "\\fontsize{25pt}{30pt}\\selectfont #1}%",
-        "\\newcommand{\\smallprint}[1]{\\fontspec{Hoefler Text}\\fontsize{10pt}{13pt}\\color{Gray}\\selectfont #1}%\n",
-        "\\usepackage[active,tightpage,xetex]{preview}",
-        "\\PreviewEnvironment{pgfpicture}",
-        "\\setlength\\PreviewBorder{0pt}"
-    )),
-    graph_code =  quote({
-
-      label <- c(
-        "\\noindent{\\red d}roo{\\lbl g}",
-        "\\noindent{\\reda d}roo{\\lbla g}",
-        "\\noindent{\\redb d}roo{\\lblb g}",
-        "\\noindent{\\redf d}roo{\\lblf g}\\\\[.3cm]",
-        "\\noindent{\\redc d}roo{\\lblc g}",
-        "\\noindent{\\redd d}roo{\\lbld g}",
-        "\\noindent{\\rede d}roo{\\lble g}",
-        "\\noindent{\\redg d}roo{\\lblg g}\\\\[.2cm]"
-      )
-      title <- c(
-        "\\smallprint{D. Taraborelli (2008), \\href{http://nitens.org/taraborelli/latex}{The Beauty of \\LaTeX}}",
-        "\\smallprint{\\\\\\emph{Some rights reserved}. \\href{http://creativecommons.org/licenses/by-sa/3.0/}{\\textsc{cc-by-sa}}}"
-      )
-
-      lim <- 0:(length(label)+1)
-      plot(lim,lim,cex=0,pch='.',xlab = title[2],ylab='', main = title[1])
-      for(i in 1:length(label))
-        text(i,i,label[i])
-    })
   )
+
+
+  #list(
+    #short_name = 'xetex_variants',
+    #description = 'Test of XeLaTeX font variants',
+    #uses_xetex = TRUE,
+    ## Only OS X is likely to have the required fonts installed
+    #skip_if = function(){Sys.info()['sysname'] != 'Darwin'},
+    #graph_options = list(
+      #tikzXelatexPackages = c(
+        #"\\usepackage{fontspec}",
+        #"\\usepackage[colorlinks, breaklinks, pdftitle={The Beauty of LaTeX},pdfauthor={Taraborelli, Dario}]{hyperref}",
+        #"\\usepackage{tikz}",
+        #"\\usepackage{color}",
+        #"\\definecolor{Gray}{rgb}{.7,.7,.7}",
+        #"\\definecolor{lightblue}{rgb}{.2,.5,1}",
+        #"\\definecolor{myred}{rgb}{1,0,0}",
+        #"\\newcommand{\\red}[1]{\\color{myred} #1}",
+        #"\\newcommand{\\reda}[1]{\\color{myred}\\fontspec[Variant=2]{Zapfino}#1}",
+        #"\\newcommand{\\redb}[1]{\\color{myred}\\fontspec[Variant=3]{Zapfino}#1}",
+        #"\\newcommand{\\redc}[1]{\\color{myred}\\fontspec[Variant=4]{Zapfino}#1}",
+        #"\\newcommand{\\redd}[1]{\\color{myred}\\fontspec[Variant=5]{Zapfino}#1}",
+        #"\\newcommand{\\rede}[1]{\\color{myred}\\fontspec[Variant=6]{Zapfino}#1}",
+        #"\\newcommand{\\redf}[1]{\\color{myred}\\fontspec[Variant=7]{Zapfino}#1}",
+        #"\\newcommand{\\redg}[1]{\\color{myred}\\fontspec[Variant=8]{Zapfino}#1}",
+        #"\\newcommand{\\lbl}[1]{\\color{lightblue} #1}",
+        #"\\newcommand{\\lbla}[1]{\\color{lightblue}\\fontspec[Variant=2]{Zapfino}#1}",
+        #"\\newcommand{\\lblb}[1]{\\color{lightblue}\\fontspec[Variant=3]{Zapfino}#1}",
+        #"\\newcommand{\\lblc}[1]{\\color{lightblue}\\fontspec[Variant=4]{Zapfino}#1}",
+        #"\\newcommand{\\lbld}[1]{\\color{lightblue}\\fontspec[Variant=5]{Zapfino}#1}",
+        #"\\newcommand{\\lble}[1]{\\color{lightblue}\\fontspec[Variant=6]{Zapfino}#1}",
+        #"\\newcommand{\\lblf}[1]{\\color{lightblue}\\fontspec[Variant=7]{Zapfino}#1}",
+        #"\\newcommand{\\lblg}[1]{\\color{lightblue}\\fontspec[Variant=8]{Zapfino}#1}",
+        #"\\newcommand{\\old}[1]{",
+        #"\\fontspec[Ligatures={Common, Rare},Variant=1,Swashes={LineInitial, LineFinal}]{Zapfino}",
+        #"\\fontsize{25pt}{30pt}\\selectfont #1}%",
+        #"\\newcommand{\\smallprint}[1]{\\fontspec{Hoefler Text}\\fontsize{10pt}{13pt}\\color{Gray}\\selectfont #1}%\n",
+        #"\\usepackage[active,tightpage,xetex]{preview}",
+        #"\\PreviewEnvironment{pgfpicture}",
+        #"\\setlength\\PreviewBorder{0pt}"
+    #)),
+    #graph_code =  quote({
+
+      #label <- c(
+        #"\\noindent{\\red d}roo{\\lbl g}",
+        #"\\noindent{\\reda d}roo{\\lbla g}",
+        #"\\noindent{\\redb d}roo{\\lblb g}",
+        #"\\noindent{\\redf d}roo{\\lblf g}\\\\[.3cm]",
+        #"\\noindent{\\redc d}roo{\\lblc g}",
+        #"\\noindent{\\redd d}roo{\\lbld g}",
+        #"\\noindent{\\rede d}roo{\\lble g}",
+        #"\\noindent{\\redg d}roo{\\lblg g}\\\\[.2cm]"
+      #)
+      #title <- c(
+        #"\\smallprint{D. Taraborelli (2008), \\href{http://nitens.org/taraborelli/latex}{The Beauty of \\LaTeX}}",
+        #"\\smallprint{\\\\\\emph{Some rights reserved}. \\href{http://creativecommons.org/licenses/by-sa/3.0/}{\\textsc{cc-by-sa}}}"
+      #)
+
+      #lim <- 0:(length(label)+1)
+      #plot(lim,lim,cex=0,pch='.',xlab = title[2],ylab='', main = title[1])
+      #for(i in 1:length(label))
+        #text(i,i,label[i])
+    #})
+  #)
 
 
   # New UTF8/XeLaTeX tests go here
