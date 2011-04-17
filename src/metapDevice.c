@@ -595,9 +595,32 @@ static void MetaP_Close( pDevDesc deviceInfo){
       "%% Calculated string width %d times\n",
       tikzInfo->stringWidthCalls);
 
-  /* Close the file and destroy the tikzInfo structure. */
   if(tikzInfo->console == FALSE)
     fclose(tikzInfo->outputFile);
+
+  SEXP TikZ_namespace;
+  PROTECT(
+    TikZ_namespace = eval(lang2( install("getNamespace"),
+      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
+  );
+
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP,3) );
+
+
+  SEXP mangle_fun;
+  PROTECT(mangle_fun = findFun(install("evil_color_mangler"), TikZ_namespace));
+  SETCAR(RCallBack, mangle_fun);
+
+  SETCADR(RCallBack, mkString(tikzInfo->outFileName));
+  SET_TAG(CDR(RCallBack), install("output_file"));
+
+  SETCADDR(RCallBack, tikzInfo->colors);
+  SET_TAG(CDDR(RCallBack), install("device_colors"));
+
+  eval(RCallBack, TikZ_namespace);
+
+  UNPROTECT(3);
 
   /* Deallocate pointers */
   free(tikzInfo->outFileName);

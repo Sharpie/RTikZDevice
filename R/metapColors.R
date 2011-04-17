@@ -29,7 +29,7 @@ format.metap_color <- function(color, ...) {
 
   color_def <- c("\n\\definecolor\n\t",
     paste("[", color$color_name, "]\n\t", sep = ''),
-    sprintf("[r=%i,g=%i,b=%i]\n", red, green, blue)
+    sprintf("[r=%5.3f,g=%5.3f,b=%5.3f]\n", red/255, green/255, blue/255)
   )
 
 
@@ -115,7 +115,10 @@ get_or_set_color <- function(rgb_value) {
     # Color names have to contain only letters. Will convert the integer
     # `n_def` to a suitable combination of letters A-Z.
     color_name <- c(rep(26, (n - (n %% 26)) / 26), n %% 26)
-    color_name <- paste('MetaPostColor', LETTERS[color_name], sep = '')
+    color_name <- paste('MetaPostColor',
+      paste(LETTERS[color_name], sep = '', collapse=''),
+      sep = ''
+    )
 
     color <- metap_color(color_name, rgb_value)
 
@@ -163,6 +166,80 @@ define_metap_color <- function(color_name, rgb_value, spot_name = NULL, dev_num 
   }
 
   invisible(color_list)
+
+}
+
+
+evil_color_mangler <- function(output_file, device_colors) {
+  # This function is called at the end of a MetaPost plot to do post-processing
+  # of color names. The tasks that need to be done are:
+  #
+  #   * Combine global color list with the device's color list.
+  #
+  #   * Scan the device output and remove any colors from the list that were
+  #     not actuall used.
+  #
+  #   * If a color was renamed by a call to `define_metap_color`, then replace
+  #     occurances of the old name with the final name. Substitue spot color
+  #     names if they are present.
+  #
+  #   * Print out the ConTeXt color definitons and prepend them to the device
+  #     output.
+  #
+  # This routine is "evil" because it performs these tasks very, very
+  # inefficiently---mostly by greping through the output multiple times.
+  color_list <- getOption('metapColors')
+  for (color in device_colors) { color_list <- add_metap_color(color_list, color) }
+
+  # This function forms a regular expression that matches color definitions for
+  # a given MetaPost color.
+  form_regex <- function(color) {
+    aliases <- unique(c(color$color_name, color$aliases))
+    regex <- paste(
+      'MPcolor',
+      paste('(\\{', aliases, '\\})', collapse = '|', sep = ''),
+      sep = ''
+    )
+
+    return( regex )
+  }
+
+  device_output <- readLines(output_file)
+
+  color_list <- Filter(
+    function(color) {any(grepl(form_regex(color), device_output)) },
+    color_list
+  )
+
+
+  colors_to_sub <- Filter(
+    function(color) { !is.null(color$aliases) || !is.null(color$spot_name) },
+    color_list
+  )
+
+  for (color in colors_to_sub) {
+
+    if (!is.null(color$spot_name)) {
+      name <- paste(color$color_name, 'Spot', sep = '')
+    } else {
+      name <- color$color_name
+    }
+
+    device_output <- gsub(form_regex(color), paste('{', name, '}', sep = ''),
+      device_output)
+
+  }
+
+  color_defs <- unlist(sapply(color_list, format))
+  color_defs <- c(color_defs,
+    '\n\n\\setupcolors[state=start,spot=yes,overprint=yes]\n')
+
+  output <- file(output_file, 'w')
+  writeLines(color_defs, output, sep = '')
+  writeLines(device_output, output)
+  close(output)
+
+  invisible()
 
 }
 
