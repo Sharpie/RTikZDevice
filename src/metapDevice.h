@@ -166,6 +166,7 @@ static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo);
 static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
 static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo);
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
+static void MetaP_DrawStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo, Rboolean fill);
 
 /* Auxilury routines*/
 SEXP MetaP_GetEngine(SEXP device_num);

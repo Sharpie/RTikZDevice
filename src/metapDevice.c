@@ -567,6 +567,8 @@ static Rboolean MetaP_Open( pDevDesc deviceInfo ){
     printOutput(tikzInfo,"%% Beginning MetaPost graphic\n");
 
   printOutput(tikzInfo, "\\startMPpage\n");
+  /* Define reusable path variable */
+  printOutput(tikzInfo, "\tpath p;\n\n");
 
   return TRUE;
 
@@ -582,9 +584,9 @@ static void MetaP_Close( pDevDesc deviceInfo){
   cx1 = deviceInfo->clipRight;
   cy0 = deviceInfo->clipBottom;
   cy1 = deviceInfo->clipTop;
-  printOutput(tikzInfo, "clip currentpicture to unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
+  printOutput(tikzInfo, "\tclip currentpicture to unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
       cx1 - cx0, cy1 - cy0, cx0, cy0);
-  printOutput(tikzInfo, "popcurrentpicture;\n");
+  printOutput(tikzInfo, "\tpopcurrentpicture;\n");
 
   printOutput(tikzInfo, "\\stopMPpage\n");
   
@@ -644,9 +646,9 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
     cx1 = deviceInfo->clipRight;
     cy0 = deviceInfo->clipBottom;
     cy1 = deviceInfo->clipTop;
-    printOutput(tikzInfo, "clip currentpicture to unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
+    printOutput(tikzInfo, "\tclip currentpicture to unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
         cx1 - cx0, cy1 - cy0, cx0, cy0);
-    printOutput(tikzInfo, "popcurrentpicture;\n");
+    printOutput(tikzInfo, "\tpopcurrentpicture;\n");
     printOutput(tikzInfo, "\\stopMPpage\n");
     
     /*Next clipping region will be the first on the page*/
@@ -661,18 +663,16 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
     printOutput(tikzInfo, 
       "\n\\startMPpage\n");
 
+    /* Define reusable path variable */
+    printOutput(tikzInfo, "\tpath p;\n\n");
+
   } /* End if first page */
 
 
-  /* Define default colors */
-  SetColor(plotParams->col, TRUE, tikzInfo);
-  SetFill(plotParams->fill, TRUE, tikzInfo);
-
   /* Fill canvas background */
-  printOutput(tikzInfo, "fill unitsquare xscaled %6.2f yscaled %6.2f",
+  printOutput(tikzInfo, "\tp := unitsquare xscaled %6.2f yscaled %6.2f;\n",
     deviceInfo->right,deviceInfo->top);
-  SetFill(plotParams->fill, FALSE, tikzInfo);
-  printOutput(tikzInfo, ";\n");
+  MetaP_DrawStyle(plotParams, tikzInfo, TRUE);
 
 }
 
@@ -693,9 +693,9 @@ static void MetaP_Clip( double x0, double x1,
   cy1 = deviceInfo->clipTop;
 
   if(tikzInfo->firstClip == FALSE){
-    printOutput(tikzInfo, "clip currentpicture to unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
+    printOutput(tikzInfo, "\tclip currentpicture to unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
         cx1 - cx0, cy1 - cy0, cx0, cy0);
-    printOutput(tikzInfo, "popcurrentpicture;\n");
+    printOutput(tikzInfo, "\tpopcurrentpicture;\n");
   }else{
     tikzInfo->firstClip = FALSE;
   }
@@ -706,7 +706,7 @@ static void MetaP_Clip( double x0, double x1,
   deviceInfo->clipRight = x1;
   
 
-  printOutput(tikzInfo, "pushcurrentpicture;\n");
+  printOutput(tikzInfo, "\tpushcurrentpicture;\n");
   /*
   printOutput(tikzInfo,
     "\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
@@ -1191,6 +1191,8 @@ static void MetaP_Line( double x1, double y1,
       x1,y1,x2,y2);
 
   MetaP_DrawLines(2, x, y, plotParams, deviceInfo, FALSE);
+  /* Draw the path */
+  MetaP_DrawStyle(plotParams, tikzInfo, FALSE);
 
 }
 
@@ -1222,8 +1224,13 @@ static void MetaP_Circle( double x, double y, double r,
    * MetaPost also has a unitcircle, but I believe this is anchored at the
    * lower left corner rather than the center.
    */
-  printOutput(tikzInfo, "draw fullcircle scaled %6.2f shifted (%6.2f,%6.2f);\n",
+  printOutput(tikzInfo, "\tp := fullcircle scaled %6.2f shifted (%6.2f,%6.2f);\n",
     r * 2.0,x,y);
+  /* Fill the path */
+  MetaP_DrawStyle(plotParams, tikzInfo, TRUE);
+  /* Draw the path */
+  MetaP_DrawStyle(plotParams, tikzInfo, FALSE);
+
 }
 
 static void MetaP_Rectangle( double x0, double y0,
@@ -1239,8 +1246,12 @@ static void MetaP_Rectangle( double x0, double y0,
       x0,y0,x1,y1);
 
   printOutput(tikzInfo,
-    "draw unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
+    "\tp := unitsquare xscaled %6.2f yscaled %6.2f shifted (%6.2f,%6.2f);\n",
     x1 - x0, y1 - y0, x0, y0);
+  /* Fill the path */
+  MetaP_DrawStyle(plotParams, tikzInfo, TRUE);
+  /* Draw the path */
+  MetaP_DrawStyle(plotParams, tikzInfo, FALSE);
 
 }
 
@@ -1256,6 +1267,8 @@ static void MetaP_Polyline( int n, double *x, double *y,
       "%% Starting Polyline\n");
 
   MetaP_DrawLines(n, x, y, plotParams, deviceInfo, FALSE);
+  /* Draw the path */
+  MetaP_DrawStyle(plotParams, tikzInfo, FALSE);
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE)
@@ -1276,6 +1289,10 @@ static void MetaP_Polygon( int n, double *x, double *y,
       "%% Starting Polygon\n");
 
   MetaP_DrawLines(n, x, y, plotParams, deviceInfo, TRUE);
+  /* Fill the path */
+  MetaP_DrawStyle(plotParams, tikzInfo, TRUE);
+  /* Draw the path */
+  MetaP_DrawStyle(plotParams, tikzInfo, FALSE);
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE)
@@ -1291,7 +1308,7 @@ static void MetaP_DrawLines(int n, double *x, double *y,
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   /* Start drawing*/
-  printOutput(tikzInfo,"draw ((%6.2f,%6.2f)",
+  printOutput(tikzInfo,"\tp := ((%6.2f,%6.2f)",
       x[0], y[0]);
 
   /* Print coordinates for the middle segments of the line. */
@@ -1312,8 +1329,6 @@ static void MetaP_DrawLines(int n, double *x, double *y,
     printOutput(tikzInfo, ");\n");
 
   }
-
-
 
 }
 
@@ -1393,10 +1408,10 @@ static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo){
         R_RED(color)/255.0,
         R_GREEN(color)/255.0,
         R_BLUE(color)/255.0);
-    }
 
-    if ( tikzInfo->fill_color ) free(tikzInfo->fill_color);
-    tikzInfo->fill_color = MetaP_GetColorName(color);
+      if ( tikzInfo->fill_color ) free(tikzInfo->fill_color);
+      tikzInfo->fill_color = MetaP_GetColorName(color);
+    }
 
   }else{
     //Quick hack to not show fill colors with polylines
@@ -1542,6 +1557,66 @@ static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo){
     case GE_SQUARE_CAP:
       printOutput(tikzInfo, "line cap=rect,");
   }
+}
+
+
+/*
+ * This routine assumes that the main graphics routines have stored a path
+ * definition in a MetaPost variable `p`. The routine then fills or draws `p`
+ * based on the value of the `fill` parameter.
+ */
+static void MetaP_DrawStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo, Rboolean fill){
+  int color;
+  char *color_name = NULL;
+
+  /*
+   * Calculate "style code". This examines the fill colors and draw colors and
+   * decides if a fill or draw operation needs to happen. Taking this code into
+   * account prevents "white lines" from showing up in the output.
+   *
+   * code is set as follows:
+   *   code == 0, nothing to draw
+   *   code == 1, outline only
+   *   code == 2, fill only
+   *   code == 3, outline and fill
+   */
+  int code = 3 - 2 * (R_TRANSPARENT(plotParams->fill)) - (R_TRANSPARENT(plotParams->col));
+
+  if (fill && (code & 2)) {
+    /* Filling is pretty easy, no need to define line styles, joins, etc. */
+    printOutput(tikzInfo, "\tfill p ");
+
+    color = plotParams->fill;
+    if(color != tikzInfo->oldFillColor){
+      tikzInfo->oldFillColor = color;
+      if ( tikzInfo->fill_color ) free(tikzInfo->fill_color);
+      tikzInfo->fill_color = MetaP_GetColorName(color);
+    }
+
+    color_name = tikzInfo->fill_color;
+
+  } else if (code & 1) {
+
+    printOutput(tikzInfo, "\tdraw p ");
+
+    color = plotParams->col;
+    if(color != tikzInfo->oldDrawColor){
+      tikzInfo->oldDrawColor = color;
+      if ( tikzInfo->draw_color ) free(tikzInfo->draw_color);
+      tikzInfo->draw_color = MetaP_GetColorName(color);
+    }
+
+    color_name = tikzInfo->draw_color;
+
+  } else {
+    /* Assuming code was 0 */
+    return;
+  }
+
+  printOutput(tikzInfo, "withcolor \\MPcolor{%s}", color_name);
+
+  printOutput(tikzInfo, ";\n");
+
 }
 
 
