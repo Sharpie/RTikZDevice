@@ -1657,7 +1657,18 @@ static void MetaP_DrawStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo, Rboole
     return;
   }
 
-  printOutput(tikzInfo, " withcolor \\MPcolor{%s};\n", color_name);
+  if ( R_OPAQUE(color) ) {
+    printOutput(tikzInfo, " withcolor \\MPcolor{%s};\n", color_name);
+  } else {
+    unsigned int alpha = R_ALPHA(color);
+    /*
+     * Apparantly PDF has 12 (!!) different transparency styles which are
+     * supported by MetaPost. We use the garden variety here, but there are tons
+     * of options like "screen" and "burn" that could be investigated.
+     */
+    printOutput(tikzInfo, " withcolor transparent(\"normal\", %4.2f, \\MPcolor{%s});\n",
+      alpha / 255.0, color_name);
+  }
 
   /* Finish graphics group for altered linejoins, etc */
   if ( !fill && (code & 1) ) printOutput(tikzInfo, "\tendgroup;\n");
