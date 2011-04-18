@@ -491,7 +491,7 @@ static Rboolean MetaP_Setup(
  * theoretically be supported.
 */
 static double dim2dev( double length ){
-  return length*72.27;
+  return length * 72.0;
 }
 
 
