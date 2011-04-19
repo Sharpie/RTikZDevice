@@ -66,8 +66,8 @@ function (file = "./Rplots.tex", width = 7, height = 7,
   footer <- paste( paste( footer,collapse='\n'), collapse='\n')
 
   .External('metapDevice', file, width, height, bg, fg, baseSize,
-    standAlone, bareBones, documentDeclaration, packages, footer, console,
-    sanitize, engine,
+    standAlone = FALSE, bareBones = FALSE, documentDeclaration, packages,
+    footer, console = FALSE, sanitize, engine,
     PACKAGE='tikzDevice')
 
   invisible()
