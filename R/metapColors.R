@@ -128,13 +128,7 @@ get_or_set_color <- function(rgb_value) {
 
   }
 
-  if ( is.null(color$spot_name) ) {
-    return(color$color_name)
-  } else {
-    return(
-      paste(color$color_name, 'Spot', sep = '')
-    )
-  }
+  return(color$color_name)
 
 }
 
@@ -195,11 +189,7 @@ evil_color_mangler <- function(output_file, device_colors) {
   # a given MetaPost color.
   form_regex <- function(color) {
     aliases <- unique(c(color$color_name, color$aliases))
-    regex <- paste(
-      'MPcolor',
-      paste('(\\{', aliases, '\\})', collapse = '|', sep = ''),
-      sep = ''
-    )
+    regex <- paste('\\{', aliases, '\\}', collapse = '|', sep = '')
 
     return( regex )
   }
