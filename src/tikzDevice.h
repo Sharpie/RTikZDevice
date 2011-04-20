@@ -166,13 +166,13 @@ static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo);
 static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
 static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo);
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
+static double ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
 
 /* Utility Routines*/
 void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
 static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 static char *Sanitize(const char *str);
 Rboolean contains_multibyte_chars(const char *str);
-double TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
 double dim2dev( double length );
 
 #endif // End of Once Only header
