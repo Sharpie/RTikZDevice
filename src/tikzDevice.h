@@ -26,7 +26,7 @@
 #endif
 
 /* Macro definitions */
-#define TIKZ_NAMESPACE eval(lang2(install("getNamespace"), mkString("tikzDevice")), R_GlobalEnv)
+#define TIKZ_NAMESPACE R_FindNamespace(mkString("tikzDevice"))
 
 
 /*
