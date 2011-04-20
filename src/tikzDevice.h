@@ -169,10 +169,10 @@ static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 static double ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
 
 /* Utility Routines*/
-void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
+static void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
 static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 static char *Sanitize(const char *str);
-Rboolean contains_multibyte_chars(const char *str);
-double dim2dev( double length );
+static Rboolean contains_multibyte_chars(const char *str);
+static double dim2dev( double length );
 
 #endif // End of Once Only header
