@@ -25,6 +25,9 @@
 #error "This version of the tikzDevice must be compiled against R 2.11.0 or newer!"
 #endif
 
+/* Macro definitions */
+#define TIKZ_NAMESPACE eval(lang2(install("getNamespace"), mkString("tikzDevice")), R_GlobalEnv)
+
 
 /*
  * tikz_engine can take on possible values from a list of all the TeX engines
@@ -69,6 +72,12 @@ typedef struct {
 
 /* Function Prototypes */
 
+/* Public Functions */
+SEXP TikZ_StartDevice(SEXP args);
+void TikZ_Annotate(const char **annotation, int *size);
+SEXP TikZ_DeviceInfo(SEXP device_num);
+
+
 static Rboolean TikZ_Setup(
 		pDevDesc deviceInfo,
 		const char *fileName,
@@ -79,45 +88,42 @@ static Rboolean TikZ_Setup(
 		const char *packages, const char *footer,
 		Rboolean console, Rboolean sanitize, int engine );
 
-static Rboolean TikZ_Open( pDevDesc deviceInfo );
 
 /* Graphics Engine function hooks. Defined in GraphicsDevice.h . */
 
-/* Utility routines. */
+/* Device State */
+static Rboolean TikZ_Open( pDevDesc deviceInfo );
 static void TikZ_Close( pDevDesc deviceInfo );
 static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Clip( double x0, double x1,
 		double y0, double y1, pDevDesc deviceInfo );
 static void TikZ_Size( double *left, double *right,
 		double *bottom, double *top, pDevDesc deviceInfo);
-double TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
 
-/* Text routines. */
+/* Font Metrics*/
 static void TikZ_MetricInfo( int c, const pGEcontext plotParams,
 		double *ascent, double *descent, double *width, pDevDesc deviceInfo );
 static double TikZ_StrWidth( const char *str,
 		const pGEcontext plotParams, pDevDesc deviceInfo );
-static void TikZ_Text( double x, double y, const char *str,
-		double rot, double hadj, const pGEcontext plotParams, pDevDesc deviceInfo);
-
 
 /* Drawing routines. */
-static void TikZ_Line( double x1, double y1,
-		double x2, double y2, const pGEcontext plotParams, pDevDesc deviceInfo );
+static void TikZ_Text( double x, double y, const char *str,
+		double rot, double hadj, const pGEcontext plotParams, pDevDesc deviceInfo);
 static void TikZ_Circle( double x, double y, double r,
 		const pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Rectangle( double x0, double y0, 
 		double x1, double y1, const pGEcontext plotParams, pDevDesc deviceInfo );
+static void TikZ_Line( double x1, double y1,
+		double x2, double y2, const pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Polyline( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
-
 /*
  * Path routine, a polygon with "holes", was added in R 2.12.0,
  * Graphics Engine version 8.  No idea what happened to version 7,
  * guess it was internal
-*/ 
+*/
 #if R_GE_version >= 8
 static void
 TikZ_Path( double *x, double *y,
@@ -127,7 +133,7 @@ TikZ_Path( double *x, double *y,
 );
 #endif
 
-static void TikZ_Raster( 
+static void TikZ_Raster(
   unsigned int *raster,
   int w, int h,
   double x, double y,
@@ -137,15 +143,14 @@ static void TikZ_Raster(
   const pGEcontext plotParams, pDevDesc deviceInfo
 );
 
+/* Dummy/Unimplemented routines. */
 static SEXP TikZ_Cap( pDevDesc deviceInfo );
-
-/* Dummy routines. */
 static void TikZ_Activate( pDevDesc deviceInfo );
 static void TikZ_Deactivate( pDevDesc deviceInfo );
 static Rboolean TikZ_Locator( double *x, double *y, pDevDesc deviceInfo );
 static void TikZ_Mode( int mode, pDevDesc deviceInfo );
 
-/* End R Graphics engin function hooks. */
+/* End R Graphics engine function hooks. */
 
 
 
@@ -161,15 +166,13 @@ static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo);
 static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
 static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo);
 static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
+static double ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
 
-/* Auxilury routines*/
-void tikzAnnotate(const char **annotation, int *size);
-SEXP TikZ_GetEngine(SEXP device_num);
-SEXP TikZ_DeviceInfo(SEXP device_num);
-double dim2dev( double length );
+/* Utility Routines*/
+static void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
 static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
-void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
 static char *Sanitize(const char *str);
-Rboolean contains_multibyte_chars(const char *str);
+static Rboolean contains_multibyte_chars(const char *str);
+static double dim2dev( double length );
 
 #endif // End of Once Only header
