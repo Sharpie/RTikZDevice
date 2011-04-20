@@ -1883,7 +1883,7 @@ SEXP TikZ_DeviceInfo(SEXP device_num){
 
 ==============================================================================*/
 
-void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
+static void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
   
   va_list(ap);
   va_start(ap, format);
@@ -1995,7 +1995,7 @@ static char *Sanitize(const char *str){
   return cleanStringCP;
 }
 
-Rboolean contains_multibyte_chars(const char *str){
+static Rboolean contains_multibyte_chars(const char *str){
   /*
    * Recover package namespace as the multibyte check function
    * is not exported
@@ -2035,7 +2035,7 @@ Rboolean contains_multibyte_chars(const char *str){
  * and TikZ, any combination of device and user dimensions could
  * theoretically be supported.
 */
-double dim2dev( double length ){
+static double dim2dev( double length ){
   return length*72.27;
 }
 
