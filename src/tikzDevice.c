@@ -711,7 +711,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   }
 
   // Calculate font scaling factor.
-  double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+  double fontScale = ScaleFont( plotParams, deviceInfo );
 
   // Prepare to call back to R in order to retrieve character metrics.
   SEXP namespace;
@@ -805,7 +805,7 @@ static double TikZ_StrWidth( const char *str,
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   // Calculate font scaling factor.
-  double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+  double fontScale = ScaleFont( plotParams, deviceInfo );
 
   /*
    * New string width calculation method: call back to R
@@ -1019,7 +1019,7 @@ static void TikZ_Text( double x, double y, const char *str,
   strcat( tikzString, str );
 
   // Calculate font scaling factor.
-  double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+  double fontScale = ScaleFont( plotParams, deviceInfo );
   
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
@@ -1796,6 +1796,27 @@ static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo){
 }
 
 
+/*
+ * This function calculates an appropriate scaling factor for text by
+ * first calculating the ratio of the requested font size to the LaTeX
+ * base font size. The ratio is then further scaled by the value of
+ * the character expansion factor cex.
+*/
+static double
+ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
+
+  // These parameters all affect the font size.
+  double baseSize = deviceInfo->startps;
+  double fontSize = plotParams->ps;
+  double cex = plotParams->cex;
+
+  double fontScale = ( fontSize / baseSize ) * cex;
+
+  return( fontScale );
+
+}
+
+
 /*==============================================================================
 
                          Other User Callable Routines
@@ -2004,27 +2025,6 @@ Rboolean contains_multibyte_chars(const char *str){
   UNPROTECT(3);
 
   return(asLogical(result));
-}
-
-
-/*
- * This function calculates an appropriate scaling factor for text by
- * first calculating the ratio of the requested font size to the LaTeX
- * base font size. The ratio is then further scaled by the value of
- * the character expansion factor cex.
-*/
-double
-TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
-
-  // These parameters all affect the font size.
-  double baseSize = deviceInfo->startps;
-  double fontSize = plotParams->ps;
-  double cex = plotParams->cex;
-
-  double fontScale = ( fontSize / baseSize ) * cex;
-
-  return( fontScale );
-
 }
 
 
