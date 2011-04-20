@@ -73,8 +73,8 @@ typedef struct {
 /* Function Prototypes */
 
 /* Public Functions */
-SEXP tikzDevice(SEXP args);
-void tikzAnnotate(const char **annotation, int *size);
+SEXP TikZ_StartDevice(SEXP args);
+void TikZ_Annotate(const char **annotation, int *size);
 SEXP TikZ_GetEngine(SEXP device_num);
 SEXP TikZ_DeviceInfo(SEXP device_num);
 

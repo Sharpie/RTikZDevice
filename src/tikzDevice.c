@@ -65,7 +65,7 @@
  * Main entry point from the R environment, called by the R function
  * tikz() to open a new TikZ graphics device.
 */
-SEXP tikzDevice ( SEXP args ){
+SEXP TikZ_StartDevice ( SEXP args ){
 
   /*
    * Make sure the version number of the R running this
@@ -1802,7 +1802,7 @@ static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo){
 
 ==============================================================================*/
 
-void tikzAnnotate(const char **annotation, int *size){
+void TikZ_Annotate(const char **annotation, int *size){
   
   //1. Get values of tikzInfo and deviceInfo
   //2. Print out annotation 
@@ -2004,8 +2004,6 @@ Rboolean contains_multibyte_chars(const char *str){
 
   return(asLogical(result));
 }
-
-
 
 
 /*
