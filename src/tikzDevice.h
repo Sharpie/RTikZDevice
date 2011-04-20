@@ -35,7 +35,8 @@
  */
 typedef enum {
   pdftex = 1,
-  xetex = 2
+  xetex = 2,
+  luatex = 3
 } tikz_engine;
 
 typedef enum {
