@@ -1820,19 +1820,9 @@ void TikZ_Annotate(const char **annotation, int *size){
     printOutput(tikzInfo, "%s\n", annotation[i] );
 }
 
-/*
- * Returns the engine used by a given tikzDevice
- */
-SEXP TikZ_GetEngine(SEXP device_num){
-  int dev_index = asInteger(device_num);
-  pDevDesc deviceInfo = GEgetDevice(dev_index - 1)->dev;
-  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-
-  return(ScalarInteger(tikzInfo->engine));
-}
 
 /*
- * Returns information stored in the tikzDevDesc structure for a given device.
+ * Returns information stored in the tikzDevDesc structure of a given device.
  */
 SEXP TikZ_DeviceInfo(SEXP device_num){
 
@@ -1841,11 +1831,22 @@ SEXP TikZ_DeviceInfo(SEXP device_num){
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   SEXP info, names;
-  PROTECT( info = allocVector(VECSXP, 1) );
-  PROTECT( names = allocVector(STRSXP, 1) );
+  PROTECT( info = allocVector(VECSXP, 2) );
+  PROTECT( names = allocVector(STRSXP, 2) );
 
   SET_VECTOR_ELT(info, 0, mkString(tikzInfo->outFileName));
   SET_STRING_ELT(names, 0, mkChar("output_file"));
+
+  switch( tikzInfo->engine ){
+    case pdftex:
+      SET_VECTOR_ELT(info, 1, mkString("pdftex"));
+      break;
+    case xetex:
+      SET_VECTOR_ELT(info, 1, mkString("xetex"));
+      break;
+  }
+  SET_STRING_ELT(names, 1, mkChar("engine"));
+
 
   setAttrib(info, R_NamesSymbol, names);
 

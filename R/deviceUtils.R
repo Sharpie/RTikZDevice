@@ -149,20 +149,6 @@ isTikzDevice <- function(which = dev.cur()){
   return(dev_name == 'tikz output')
 }
 
-getTikzDeviceEngine <- function(dev_num = dev.cur()){
-  if (!isTikzDevice(dev_num)){
-    stop("The specified device is not a tikz device, please start a tikz device to use this function. See ?tikz.")
-  }
-
-  engine <- switch(
-    EXPR = as.character(.Call('TikZ_GetEngine', dev_num, PACKAGE = 'tikzDevice')),
-    '1' = 'pdftex',
-    '2' = 'xetex'
-  )
-
-  return( engine )
-}
-
 
 getDeviceInfo <- function(dev_num = dev.cur()) {
   # This function recovers some information about a tikz() graphics device that
