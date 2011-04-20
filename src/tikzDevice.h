@@ -25,6 +25,9 @@
 #error "This version of the tikzDevice must be compiled against R 2.11.0 or newer!"
 #endif
 
+/* Macro definitions */
+#define TIKZ_NAMESPACE eval(lang2(install("getNamespace"), mkString("tikzDevice")), R_GlobalEnv)
+
 
 /*
  * tikz_engine can take on possible values from a list of all the TeX engines

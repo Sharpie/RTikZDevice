@@ -714,17 +714,14 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
 
   // Prepare to call back to R in order to retrieve character metrics.
-  SEXP TikZ_namespace;
-  PROTECT(
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
-  
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
+
   // Call out to R to retrieve the latexParseCharForMetrics function.
   // Note: this code will eventually call a different function that provides
   // caching of the results. Right now we're directly calling the function
   // that activates LaTeX.
-  SEXP metricFun = findFun( install("getLatexCharMetrics"), TikZ_namespace );
+  SEXP metricFun = findFun(install("getLatexCharMetrics"), namespace);
 
   SEXP RCallBack;
   PROTECT( RCallBack = allocVector(LANGSXP,5) );
@@ -756,7 +753,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   SET_TAG(CDDR(CDDR(RCallBack)), install("engine"));
 
   SEXP RMetrics;
-  PROTECT( RMetrics = eval( RCallBack, TikZ_namespace ) );
+  PROTECT( RMetrics = eval(RCallBack, namespace) );
 
   // Recover the metrics.
   *ascent = REAL(RMetrics)[0];
@@ -849,14 +846,11 @@ static double TikZ_StrWidth( const char *str,
   /*
    * Find the namespace of the TikZ package.
    */
-  SEXP TikZ_namespace;
-  PROTECT(
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
 
   // Call out to R to retrieve the getLatexStrWidth function.
-  SEXP widthFun = findFun(install("getLatexStrWidth"), TikZ_namespace);
+  SEXP widthFun = findFun(install("getLatexStrWidth"), namespace);
 
   /*
    * Create a SEXP that will be the R function call. The SEXP will have five
@@ -917,7 +911,7 @@ static double TikZ_StrWidth( const char *str,
    * decides to nuke.
   */
   SEXP RStrWidth;
-  PROTECT( RStrWidth = eval( RCallBack, TikZ_namespace ) );
+  PROTECT( RStrWidth = eval(RCallBack, namespace) );
 
   /*
    * Why REAL()[0] instead of asReal(CAR())? I have no fucking
@@ -1389,11 +1383,8 @@ static void TikZ_Raster(
    * Recover package namespace as the raster output function is not exported
    * into the global environment.
   */
-  SEXP TikZ_namespace;
-  PROTECT(
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
 
   /*
    * Prepare callback to R for creation of a PNG from raster data.  Seven
@@ -1514,7 +1505,7 @@ static void TikZ_Raster(
 
 
   SEXP rasterFile;
-  PROTECT( rasterFile = eval( RCallBack, TikZ_namespace ) );
+  PROTECT( rasterFile = eval(RCallBack, namespace) );
 
   /* Position the image using a node */
   printOutput(tikzInfo, "\\node[inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f, %6.2f) {\n",
@@ -1901,23 +1892,20 @@ static void Print_TikZ_Header( tikzDevDesc *tikzInfo ){
    * Recover package namespace as the date formatting function
    * is not exported
   */
-  SEXP TikZ_namespace;
-  PROTECT( 
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
 
 
   SEXP currentDate;
-  PROTECT( 
-    currentDate = eval(lang1( install("getDateStampForTikz") ), 
-      TikZ_namespace )
+  PROTECT(
+    currentDate = eval(lang1( install("getDateStampForTikz") ),
+      namespace )
   );
 
   SEXP currentVersion;
-  PROTECT( 
-    currentVersion = eval(lang1( install("getTikzDeviceVersion") ), 
-      TikZ_namespace )
+  PROTECT(
+    currentVersion = eval(lang1( install("getTikzDeviceVersion") ),
+      namespace )
   );
 
   printOutput( tikzInfo, "%% Created by tikzDevice version %s on %s\n",
@@ -1990,14 +1978,11 @@ Rboolean contains_multibyte_chars(const char *str){
    * Recover package namespace as the multibyte check function
    * is not exported
   */
-  SEXP TikZ_namespace;
-  PROTECT(
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
 
   SEXP multibyte_check_fun = findFun(
-      install("anyMultibyteUTF8Characters"), TikZ_namespace );
+      install("anyMultibyteUTF8Characters"), namespace);
 
   SEXP RCallBack;
   PROTECT( RCallBack = allocVector(LANGSXP,2) );
@@ -2013,7 +1998,7 @@ Rboolean contains_multibyte_chars(const char *str){
    * Call the R function, capture the result.
   */
   SEXP result;
-  PROTECT( result = eval( RCallBack, TikZ_namespace ) );
+  PROTECT( result = eval(RCallBack, namespace) );
 
   UNPROTECT(3);
 
