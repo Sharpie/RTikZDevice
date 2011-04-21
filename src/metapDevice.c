@@ -665,19 +665,24 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
 
   /* Define reusable path variable */
-  printOutput(tikzInfo, "\tpath p;\n\n");
+  printOutput(tikzInfo, "\tpath p;\n");
   /*
    * Define default pen and other graphics parameters. 0.4pt matches the
    * default used by TikZ
    */
   printOutput(tikzInfo, "\tpickup pencircle scaled 0.4pt;");
   printOutput(tikzInfo, "\tlinecap := butt;");
-  printOutput(tikzInfo, "\tlinejoin := mitered;");
+  printOutput(tikzInfo, "\tlinejoin := mitered;\n\n");
 
   /* Fill canvas background */
   printOutput(tikzInfo, "\tp := unitsquare xscaled %6.2f yscaled %6.2f;\n",
     deviceInfo->right,deviceInfo->top);
   MetaP_DrawStyle(plotParams, tikzInfo, TRUE);
+  /*
+   * This is needed in case the fill is transparent and the command above does
+   * not do anything.
+   */
+  printOutput(tikzInfo, "\tsetbounds currentpicture to p;\n");
 
 }
 
@@ -1373,7 +1378,7 @@ static void MetaP_DrawStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo, Rboole
 
     color_name = tikzInfo->fill_color;
 
-  } else if (code & 1) {
+  } else if (!fill && (code & 1)) {
 
     /*
      * Start a graphics group so that variables like linecap, and mitre limit
