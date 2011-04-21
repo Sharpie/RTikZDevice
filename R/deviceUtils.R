@@ -97,7 +97,9 @@ setTikzDefaults <- function( overwrite = TRUE ){
     tikzDefaultEngine = 'pdftex',
 
     tikzLatex = getOption( 'tikzLatexDefault' ),
- 
+
+    tikzContext = Sys.which('context'),
+
     tikzDocumentDeclaration = "\\documentclass[10pt]{article}\n",
  
     tikzLatexPackages = c(

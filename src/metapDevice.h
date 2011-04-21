@@ -32,7 +32,8 @@
  */
 typedef enum {
   pdftex = 1,
-  xetex = 2
+  xetex = 2,
+  metapost = 99 // This is a hack. No better place to put it at the moment.
 } tikz_engine;
 
 

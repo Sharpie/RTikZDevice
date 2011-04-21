@@ -267,7 +267,7 @@ static Rboolean MetaP_Setup(
   /* Copy MetaP-specific information to the tikzInfo variable. */
   tikzInfo->outFileName = (char*) calloc(strlen(fileName) + 1, sizeof(char));
   strcpy(tikzInfo->outFileName, fileName);
-  tikzInfo->engine = engine;
+  tikzInfo->engine = metapost; // Also a hack.
   tikzInfo->rasterFileCount = 1;
   tikzInfo->firstPage = TRUE;
   tikzInfo->debug = DEBUG;
@@ -376,6 +376,7 @@ static Rboolean MetaP_Setup(
       deviceInfo->wantSymbolUTF8 = FALSE;
       break;
     case xetex:
+    case metapost:
       deviceInfo->wantSymbolUTF8 = TRUE;
       break;
   }
@@ -852,6 +853,9 @@ static void MetaP_MetricInfo(int c, const pGEcontext plotParams,
     case xetex:
       SETCAD4R(RCallBack, mkString("xetex"));
       break;
+    case metapost:
+    SETCAD4R(RCallBack, mkString("metapost"));
+    break;
   }
   SET_TAG(CDDR(CDDR(RCallBack)), install("engine"));
 
@@ -1005,6 +1009,9 @@ static double MetaP_StrWidth( const char *str,
       break;
     case xetex:
       SETCAD4R(RCallBack, mkString("xetex"));
+      break;
+    case metapost:
+      SETCAD4R(RCallBack, mkString("metapost"));
       break;
   }
   SET_TAG(CDDR(CDDR(RCallBack)), install("engine"));

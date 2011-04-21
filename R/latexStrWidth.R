@@ -45,6 +45,8 @@
 getLatexStrWidth <-
 function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
 
+  using_metapost <- FALSE
+
   switch(engine,
     pdftex = {
       if ( anyMultibyteUTF8Characters(texString) && getOption('tikzPdftexWarnUTF') ) {
@@ -62,6 +64,10 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
             options(tikzXelatex)"))
       }
       packages <- getOption("tikzXelatexPackages")
+    },
+    metapost = {
+      using_metapost <- TRUE
+      packages <- ''
     },
     {#ELSE
       stop('Unsupported TeX engine: ', engine,
@@ -92,7 +98,11 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
 
 		# Bummer. No width on record for this string.
 		# Call LaTeX and get one.
-		width <- getMetricsFromLatex( TeXMetrics )
+    if (using_metapost) {
+      width <- getMetricsForMetaPost( TeXMetrics )
+    } else {
+      width <- getMetricsFromLatex( TeXMetrics )
+    }
 
     if (is.null(width)) {
       # Something went wrong. Return 0
@@ -156,6 +166,8 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
 getLatexCharMetrics <-
 function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
 
+  using_metapost <- FALSE
+
   # This function is pretty much an exact duplicate of getLatexStrWidth, these
   # two functions should be generalized and combined.
   switch(engine,
@@ -171,6 +183,12 @@ function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
       }
       packages <- getOption('tikzXelatexPackages')
     },
+
+    metapost = {
+      using_metapost <- TRUE
+      packages = ''
+    },
+
     {#ELSE
       stop('Unsupported TeX engine: ', engine,
         '\nAvailable choices are:\n',
@@ -221,7 +239,11 @@ function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
 
 		# Bummer. No metrics on record for this character.
 		# Call LaTeX to obtain them.
-		metrics <- getMetricsFromLatex( TeXMetrics )
+    if (using_metapost) {
+      metrics <- getMetricsForMetaPost( TeXMetrics )
+    } else {
+      metrics <- getMetricsFromLatex( TeXMetrics )
+    }
 
     if (is.null(metrics)) {
       # Couldn't get metrics for some reason, return 0
@@ -472,3 +494,158 @@ function( TeXMetrics ){
 	}
 
 }
+
+
+getMetricsForMetaPost <-
+function( TeXMetrics ){
+  # A quick copy of getMetricsFromLatex that calls ConTeXt and calculates
+  # metrics for MetaPost.
+
+	texDir <- getwd()
+	metricsFile <- file.path( texDir,'metapMetrics.out' )
+	texFile <- file.path( texDir,'metapMetrics.tex' )
+
+	# Open the TeX file for writing.
+	texIn <- file( texFile, 'w')
+
+  # Start document
+	writeLines("\\starttext\n\\startMPpage\n", texIn)
+  # Set up some metapost variables:
+  writeLines("picture texString;\nstring metric;\npath bb;\nbboxmargin :=4pt;\n", texIn)
+
+	# Create the string contents depending on the type of metrics
+	# we are after.
+
+	# First, which font face are we using?
+	#
+	# From ?par:
+	#
+	# font
+	#
+	#		An integer which specifies which font to use for text. If possible,
+	#		device drivers arrange so that 1 corresponds to plain text (the default),
+	#		2 to bold face, 3 to italic and 4 to bold italic. Also, font 5 is expected
+	#		to be the symbol font, in Adobe symbol encoding. On some devices font families
+	#		can be selected by family to choose different sets of 5 fonts.
+
+	nodeContent <- ''
+	switch( TeXMetrics$face,
+
+		normal = {
+			# We do nothing for font face 1, normal font.
+		},
+
+		bold = {
+			# Using bold, we set in bold *series*
+			nodeContent <- '\\bf'
+		},
+
+		italic = {
+			# Using italic, we set in the italic *shape*
+			nodeContent <- '\\it'
+		},
+
+		bolditalic = {
+			# With bold italic we set in bold slanted
+			nodeContent <- '\\bs'
+		},
+
+		symbol = {
+			# We are currently ignoring R's symbol fonts.
+		}
+
+	) # End output font face switch.
+
+
+	# Now for the content. For string width we set the whole string in
+	# the node. For character metrics we have an integer corresponding
+	# to a posistion in the ASCII character table- so we use the LaTeX
+	# \char command to translate it to an actual character.
+	switch( TeXMetrics$type,
+
+		string = {
+
+			nodeContent <- paste( nodeContent,TeXMetrics$value )
+
+		},
+
+		char = {
+
+			nodeContent <- paste( nodeContent,'\\char',TeXMetrics$value, sep='' )
+
+		}
+
+	)# End switch for  metric type.
+
+	writeLines(paste(
+    'texString := thelabel(btex ',
+    nodeContent,
+    " etex, (0,0));\ndraw texString;\n",
+    'bb := bbox texString;',
+    sep=''),
+  texIn)
+
+	# We only want ascent and descent for characters.
+  writeLines(c(
+    "metric := decimal ((xpart lrcorner bb)-(xpart llcorner bb));\n",
+    'write metric to "metapMetrics.out";\n'
+  ), texIn)
+
+	if (TeXMetrics$type == 	'char' ) {
+    # Also calculate height--we'll call it "ascent"
+    writeLines(c(
+      "metric := decimal ((ypart ulcorner bb)-(ypart llcorner bb));\n",
+      'write metric to "metapMetrics.out";\n'
+    ), texIn)
+  }
+
+  # Finish up the file.
+  writeLines(c(
+    'write EOF to "metapMetrics.out";\n',
+    "\\stopMPpage\n",
+    "\\stoptext\n"
+  ), texIn)
+
+	# Close the LaTeX file, ready to compile
+	close( texIn )
+
+	# Recover the latex command. Use XeLaTeX if the character is not ASCII
+	contextCmd <- getOption('tikzContext')
+
+	# Append the batchmode flag to increase LaTeX
+	# efficiency.
+	contexCmd <- paste( contextCmd, '--batchmode', texFile)
+
+  # avoid warnings about non-zero exit status, we know tex exited abnormally
+  # it was designed that way for speed
+  oldwd <- getwd()
+  setwd(texDir)
+	suppressWarnings(silence <- system( contexCmd, intern=T, ignore.stderr=T))
+  setwd(oldwd)
+
+	# Open the log file.
+	texOut <- file( metricsFile, 'r' )
+
+	# Read the contents of the log file.
+	metrics <- readLines( texOut )
+	close( texOut )
+
+  if ( length(metrics) < 0 ) stop("Something went wrong with calculating metrics for MetaPost!")
+
+	# If we're dealing with a string, we're done.
+	if( TeXMetrics$type == 'string' ){
+
+		return( as.double( metrics[1] ) )
+
+	}else{
+
+		width <- as.double(metrics[1])
+		ascent <- as.double(metrics[2])
+		descent <- 0
+
+		return( c(ascent,descent,width) )
+
+	}
+
+}
+
