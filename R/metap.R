@@ -54,10 +54,6 @@ function (file = "./Rplots.tex", width = 7, height = 7,
   # Extract the document pointsize from the documentDeclaration
   baseSize <- getDocumentPointsize( documentDeclaration )
 
-  # If a pointsize was not found, we use the value of the pointsize
-  # argument.
-  if( is.na( baseSize ) ){ baseSize <- pointsize }
-
   # Collapse the character vectors into a single string
   # which is easier to work with in C
   documentDeclaration <-
@@ -65,7 +61,7 @@ function (file = "./Rplots.tex", width = 7, height = 7,
   packages <- paste( paste( packages, collapse='\n'), collapse='\n')
   footer <- paste( paste( footer,collapse='\n'), collapse='\n')
 
-  .External('metapDevice', file, width, height, bg, fg, baseSize,
+  .External('metapDevice', file, width, height, bg, fg, baseSize = pointsize,
     standAlone = FALSE, bareBones = FALSE, documentDeclaration, packages,
     footer, console = FALSE, sanitize, engine,
     PACKAGE='tikzDevice')

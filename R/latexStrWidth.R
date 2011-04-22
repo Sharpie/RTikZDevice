@@ -509,9 +509,9 @@ function( TeXMetrics ){
 	texIn <- file( texFile, 'w')
 
   # Start document
-	writeLines("\\starttext\n\\startMPpage\n", texIn)
+	writeLines("\\starttext\n\\switchtobodyfont[10pt]\n\\startMPpage\n", texIn)
   # Set up some metapost variables:
-  writeLines("picture texString;\nstring metric;\npath bb;\nbboxmargin :=4pt;\n", texIn)
+  writeLines("picture texString;\nstring metric;\npath bb;\nbboxmargin :=2pt;\n", texIn)
 
 	# Create the string contents depending on the type of metrics
 	# we are after.

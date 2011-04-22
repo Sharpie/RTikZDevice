@@ -562,6 +562,7 @@ static Rboolean MetaP_Open( pDevDesc deviceInfo ){
   Print_MetaP_Header( tikzInfo );
 
   printOutput(tikzInfo, "\\starttext\n\n");
+  printOutput(tikzInfo, "\\switchtobodyfont[10pt]\n\n");
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE)
