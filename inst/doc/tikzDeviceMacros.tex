@@ -77,6 +77,29 @@
 	}
 }
 
+% Temporary re-definition of Sweave's Schunk environment. Basically a
+% stripped-down version of the tikzCodeBlock code. The code here overwrites
+% \begin{Schunk} and \end{Schunk}
+\makeatletter
+\def\Schunk{%
+  \begingroup%
+    \@bsphack%
+    \immediate\openout\tikzCode@tempFile=\jobname.lst%
+    \def\verbatim@processline{%
+      \immediate\write\tikzCode@tempFile{\the\verbatim@line}%
+    }%
+    \let\do\@makeother\dospecials\catcode`\^^M\active%
+    \verbatim@start
+}
+
+\def\endSchunk{%
+    \immediate\closeout\tikzCode@tempFile%
+    \@esphack%
+  \endgroup%
+  \lstinputlisting[style=sweavechunk]{\jobname.lst}%
+}
+\makeatother
+
 
 % TikZ Macros.
 

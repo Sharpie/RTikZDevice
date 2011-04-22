@@ -36,16 +36,12 @@
 \usepackage{natbib}
 \bibliographystyle{agufull04}
 
+\usepackage[nogin]{Sweave}
 % Extra pretty pretty printing.
 \usepackage{tikzCodeBlock}
-
-
-% Macros created for this document
+% Macros created for this document. Make sure tikzCodeBlock is loaded first.
+% For now.
 \input{tikzDeviceMacros}
-
-% Make sure you input tikzDeviceMacros first- or
-% LaTeX will smite you!
-\usepackage[nogin]{Sweave}
 
 
 <<setup,echo=F,results=hide>>=
