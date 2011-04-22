@@ -49,6 +49,8 @@
 	if( !file.exists( 'figs' ) ) dir.create( 'figs' )
 	require(tikzDevice)
 
+  options(prompt = ' ', continue = ' ')
+
 @
 
 
