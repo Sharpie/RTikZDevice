@@ -12,3 +12,6 @@
   \csname newcount\endcsname\pdfoutput\fi%
   \ifcase\pdfoutput\special{#1}%
   \else\immediate\pdfobj{#1}\fi}
+
+\let\Schunk\tikzCodeBlock
+\let\endSchunk\endtikzCodeBlock

@@ -48,32 +48,13 @@
 \usepackage{Sweave}
 
 
-
 <<setup,echo=F,results=hide>>=
 
 	if( !file.exists( 'figs' ) ) dir.create( 'figs' )
 	require(tikzDevice)
-	
-	# *** Begin Mother of All R Hacks ****
 
-  source( 'patchSweave.R' )
-	
-	# *** End Mother of All R Hacks ***
-	
-	# Now we have some extra code chunk options to play
-	# with:
-	#
-	#   wrapoutput: a vector of two character strings that will be used
-	#                       to surround R output chunks. Were formally hardwired
-	#                       to '\n\begin{Soutput}\n' and '\n\end{Soutput}\n'.
-	#
-	#   wrapinput:  Same idea as wrapoutput- both of these options must be
-	#                      set using options() as they are difficult to pass directly to
-	#                      Sweave
-	
-	options( wrapoutput = c('\nswe@veSt@rtOutput','swe@veEndOutput\n') )
-	
 @
+
 
 \title{The \pkg{tikzDevice} Package\\
 	{\large\url{http://r-forge.r-project.org/projects/tikzdevice}}
