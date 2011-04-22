@@ -1149,12 +1149,12 @@ static void MetaP_Text( double x, double y, const char *str,
     cleanString = Sanitize( tikzString );
   	if(tikzInfo->debug == TRUE)
     	printOutput(tikzInfo,"\n%% Sanatized %s to %s\n",tikzString,cleanString);
-    printOutput(tikzInfo, "%s etex, ", cleanString);
+    printOutput(tikzInfo, "%s etex", cleanString);
   }else{
-    printOutput(tikzInfo, "%s etex, ", tikzString);
+    printOutput(tikzInfo, "%s etex", tikzString);
   }
 
-  printOutput(tikzInfo, "(%6.2f,%6.2f))", x, y);
+  printOutput(tikzInfo, " scaled %6.2f, (%6.2f,%6.2f))", fontScale, x, y);
 
   /* Rotate the text if desired. */
   if ( rot != 0 ) {

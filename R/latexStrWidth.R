@@ -580,8 +580,10 @@ function( TeXMetrics ){
 	writeLines(paste(
     'texString := thelabel(btex ',
     nodeContent,
-    " etex, (0,0));\ndraw texString;\n",
-    'bb := bbox texString;',
+    ' etex scaled ',
+    TeXMetrics$scale,
+    ", (0,0));\ndraw texString;\n",
+    "bb := bbox texString;\n",
     sep=''),
   texIn)
 
