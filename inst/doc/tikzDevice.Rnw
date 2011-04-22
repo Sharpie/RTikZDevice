@@ -45,7 +45,7 @@
 
 % Make sure you input tikzDeviceMacros first- or
 % LaTeX will smite you!
-\usepackage{Sweave}
+\usepackage[nogin]{Sweave}
 
 
 <<setup,echo=F,results=hide>>=
