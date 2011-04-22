@@ -25,8 +25,11 @@
 	% around each output portion- we can grab them and apply formatting
 	% to everything inside.
 	moredelim=[is][\color{gray}]
-		{swe@veSt@rtOutput}
-		{swe@veEndOutput},
+		{\\begin\{Soutput\}}
+		{\\end\{Soutput\}},
+	moredelim=[is][]
+		{\\begin\{Sinput\}}
+		{\\end\{Sinput\}},
 	% Normal TeX tildes are kind of ugly- let's substitute a math symbol instead.
 	% Shit, why not replace <- as well? *Mad typographic scientist cackle*
 	literate={~}{{$\sim$}}1,
