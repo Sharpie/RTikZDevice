@@ -50,7 +50,7 @@ do_graphics_test <- function(short_name, description, graph_code,
     # Use the `compare` utility in imagemagick/graphicsmagick to diff the
     # generated graph against a "standard". If there are any differences, we
     # changed the code in a way that broke the behavior of the TikzDevice.
-    expect_that(TRUE, is_true())
+    expect_that(compare_graph(short_name), is_true())
 
   })
 
@@ -83,5 +83,31 @@ compile_graph <- function(graph_file, uses_xetex){
   file.rename(output_pdf, file.path(test_output_dir, basename(output_pdf)))
 
   invisible()
+
+}
+
+compare_graph <- function(graph_name){
+
+  if ( is.null(compare_cmd) ) {
+    cat("SKIP")
+    return(TRUE)
+  }
+
+  test_output <- file.path(test_output_dir, str_c(graph_name, '.pdf'))
+  standard_output <- file.path(test_standard_dir, str_c(graph_name, '.pdf'))
+
+  if ( !file.exists(test_output) || !file.exists(standard_output) ) {
+    cat("SKIP")
+    return(TRUE)
+  }
+
+  result <- system(paste(compare_cmd, '-density 300', '-metric AE',
+    test_output, standard_output, 'null: &> ./test.tmp'))
+  # R does not properly capture the output of `compare` for some reason.
+  result <- as.double(readLines('test.tmp'))
+
+  cat(result)
+
+  return(TRUE)
 
 }

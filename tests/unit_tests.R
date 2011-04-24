@@ -30,6 +30,10 @@ if (nchar(Sys.getenv('R_TESTS')) == 0){
   test_work_dir <- normalizePath(file.path(getwd(), 'test_work'))
   if( !file.exists(test_work_dir) ){ dir.create(test_work_dir) }
 
+  compare_cmd <- Sys.which("compare")
+  if ( nchar(compare_cmd) == 0 ) compare_cmd <- NULL
+  test_standard_dir <- normalizePath(file.path(getwd(), '..', 'inst', 'tests', 'standard_graphs'))
+
   test_package('tikzDevice')
 }
 
