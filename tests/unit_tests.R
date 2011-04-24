@@ -8,6 +8,10 @@ if (nchar(Sys.getenv('R_TESTS')) == 0){
   require(tools)
   require(evaluate)
 
+  # Set random number generator to a known state so results will be
+  # reproducible
+  set.seed(42)
+
   test_args <- commandArgs(TRUE)
   torture_mem <- any(str_detect(test_args, '^--use-gctorture'))
 
