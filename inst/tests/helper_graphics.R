@@ -98,17 +98,18 @@ compare_graph <- function(graph_name){
   }
 
   test_output <- file.path(test_output_dir, str_c(graph_name, '.pdf'))
-  standard_output <- file.path(test_standard_dir, str_c(graph_name, '.pdf'))
+  standard_graph <- file.path(test_standard_dir, str_c(graph_name, '.pdf'))
 
-  if ( !file.exists(test_output) || !file.exists(standard_output) ) {
+  if ( !file.exists(test_output) || !file.exists(standard_graph) ) {
     cat("SKIP")
     return(TRUE)
   }
 
-  result <- system(paste(compare_cmd, '-density 300', '-metric AE',
-    test_output, standard_output, 'null: &> ./test.tmp'))
+  tmp_file <- file.path(test_work_dir, 'compare.tmp')
+  result <- capture.output(system(paste(compare_cmd, '-density 300', '-metric AE',
+    test_output, standard_graph, 'null: >', tmp_file, '2>&1')))
   # R does not properly capture the output of `compare` for some reason.
-  result <- as.double(readLines('test.tmp'))
+  result <- as.double(readLines(tmp_file))
 
   cat(result)
 
