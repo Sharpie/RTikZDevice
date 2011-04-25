@@ -481,7 +481,9 @@ if ( length(tags_to_run) ) {
     test_graphs )
 }
 
-lapply(test_graphs, do.call, what = do_graphics_test)
+
+run_test <- function(graph){ do.call(do_graphics_test, graph) }
+graphs_produced <- Filter(run_test, test_graphs)
 
 context('Graph test cleanup')
 
@@ -491,7 +493,40 @@ test_that('All graphics devices closed',{
 
 })
 
+
 message('\n\nFinished generating TikZ test graphs.')
 message('PDF files are in:\n\t', test_output_dir)
 message('\nTeX sources and log files are in:\n\t', test_work_dir)
+
+if ( !is.null(gs_cmd) ) {
+  # Combine all test PDFs into one big file for easy viewing
+  graph_files <- Map(function(graph) {
+    file.path(test_output_dir, str_c(graph$short_name, '.pdf'))
+    }, graphs_produced)
+  test_output <- file.path(test_output_dir, 'test_results.pdf')
+
+  silence <- system(paste(shQuote(gs_cmd), '-dNOPAUSE', '-sDEVICE=pdfwrite',
+    str_c('-sOUTPUTFILE=', test_output),
+    '-dBATCH', paste(shQuote(graph_files), collapse = ' ')),
+    intern = TRUE, ignore.stderr = TRUE)
+
+  message('\nAll test outputs combined into:\n\t', test_output)
+}
+
+
+if ( !is.null(compare_cmd) && !is.null(convert_cmd) ) {
+  # Combine all visual diffs into one big PDF file for easy viewing
+  graph_files <- Map(function(graph) {
+    file.path(test_work_dir, str_c(graph$short_name, '_diff.png'))
+    }, graphs_produced)
+  diff_output <- file.path(test_output_dir, 'test_diffs.pdf')
+
+  silence <- system(paste(shQuote(convert_cmd),
+    paste(shQuote(graph_files), collapse = ' '),
+    diff_output),
+    intern = TRUE, ignore.stderr = TRUE)
+
+  message('\nResults of all visual diffs combined into:\n\t', diff_output)
+
+}
 
