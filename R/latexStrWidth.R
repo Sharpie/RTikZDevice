@@ -501,7 +501,7 @@ function( TeXMetrics ){
   # A quick copy of getMetricsFromLatex that calls ConTeXt and calculates
   # metrics for MetaPost.
 
-	texDir <- getwd()
+	texDir <- tempdir()
 	metricsFile <- file.path( texDir,'metapMetrics.out' )
 	texFile <- file.path( texDir,'metapMetrics.tex' )
 
