@@ -509,12 +509,7 @@ function( TeXMetrics ){
 	texIn <- file( texFile, 'w')
 
   # Start document
-	writeLines("\\starttext\n\\switchtobodyfont[10pt]\n\\startMPpage\n", texIn)
-  # Set up some metapost variables:
-  writeLines("picture texString;\nstring metric;\npath bb;\nbboxmargin :=2pt;\n", texIn)
-
-	# Create the string contents depending on the type of metrics
-	# we are after.
+	writeLines("\\starttext\n\\switchtobodyfont[10pt]\n", texIn)
 
 	# First, which font face are we using?
 	#
@@ -537,17 +532,17 @@ function( TeXMetrics ){
 
 		bold = {
 			# Using bold, we set in bold *series*
-			nodeContent <- '\\bf'
+      writeLines("\\bf", texIn)
 		},
 
 		italic = {
 			# Using italic, we set in the italic *shape*
-			nodeContent <- '\\it'
+      writeLines("\\it", texIn)
 		},
 
 		bolditalic = {
 			# With bold italic we set in bold slanted
-			nodeContent <- '\\bs'
+      writeLines("\\bs", texIn)
 		},
 
 		symbol = {
@@ -557,46 +552,48 @@ function( TeXMetrics ){
 	) # End output font face switch.
 
 
-	# Now for the content. For string width we set the whole string in
-	# the node. For character metrics we have an integer corresponding
-	# to a posistion in the ASCII character table- so we use the LaTeX
-	# \char command to translate it to an actual character.
-	switch( TeXMetrics$type,
+  # Now for the metrics. These are calculated using the eTeX primitives
+  # \fontcharht (ascent) and \fontchardp (descent). Since ConTeXt uses LuaTeX,
+  # we are guaranteed that eTeX is enabled. Width is still calculated by
+  # setting the text in a box and measuring it since we may want to take the
+  # width of a whole string.
+	if ( TeXMetrics$type == 'char' ) {
 
-		string = {
+    writeLines(paste("\\def\\charascent{\\the\\fontcharht\\font",
+      TeXMetrics$value, '}', sep = ''), texIn)
 
-			nodeContent <- paste( nodeContent,TeXMetrics$value )
+    writeLines(paste("\\def\\chardescent{\\the\\fontchardp\\font",
+      TeXMetrics$value, '}', sep = ''), texIn)
 
-		},
+    TeXMetrics$value <- paste("\\char", TeXMetrics$value, sep = '')
 
-		char = {
+  }
 
-			nodeContent <- paste( nodeContent,'\\char',TeXMetrics$value, sep='' )
 
-		}
-
-	)# End switch for  metric type.
+  # Set up MetaPost graphic.
+  writeLines("\\startMPpage\nstring metric;picture texString;\n", texIn)
 
 	writeLines(paste(
     'texString := thelabel(btex ',
-    nodeContent,
+    TeXMetrics$value,
     ' etex scaled ',
     TeXMetrics$scale,
     ", (0,0));\ndraw texString;\n",
-    "bb := bbox texString;\n",
     sep=''),
   texIn)
 
 	# We only want ascent and descent for characters.
   writeLines(c(
-    "metric := decimal ((xpart lrcorner bb)-(xpart llcorner bb));\n",
+    "metric := decimal ((xpart lrcorner texString)-(xpart llcorner texString));\n",
     'write metric to "metapMetrics.out";\n'
   ), texIn)
 
 	if (TeXMetrics$type == 	'char' ) {
     # Also calculate height--we'll call it "ascent"
     writeLines(c(
-      "metric := decimal ((ypart ulcorner bb)-(ypart llcorner bb));\n",
+      "metric := decimal \\charascent;\n",
+      'write metric to "metapMetrics.out";\n',
+      "metric := decimal \\chardescent;\n",
       'write metric to "metapMetrics.out";\n'
     ), texIn)
   }
@@ -642,8 +639,8 @@ function( TeXMetrics ){
 	}else{
 
 		width <- as.double(metrics[1])
-		ascent <- as.double(metrics[2])
-		descent <- 0
+		ascent <- as.double(metrics[2]) * TeXMetrics$scale
+		descent <- as.double(metrics[3]) * TeXMetrics$scale
 
 		return( c(ascent,descent,width) )
 
