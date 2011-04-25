@@ -673,8 +673,9 @@ static void MetaP_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
    * default used by TikZ
    */
   printOutput(tikzInfo, "\tpickup pencircle scaled 0.4pt;");
-  printOutput(tikzInfo, "\tlinecap := butt;");
-  printOutput(tikzInfo, "\tlinejoin := mitered;\n\n");
+  printOutput(tikzInfo, "linecap := butt;");
+  printOutput(tikzInfo, "linejoin := mitered;");
+  printOutput(tikzInfo, "labeloffset := 0pt;\n\n");
 
   /* Fill canvas background */
   printOutput(tikzInfo, "\tp := unitsquare xscaled %6.2f yscaled %6.2f;\n",
