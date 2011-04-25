@@ -81,7 +81,7 @@ compile_graph <- function(graph_file, uses_xetex){
   setwd(test_work_dir); on.exit(setwd(oldwd))
 
   tex_cmd <- ifelse(uses_xetex, getOption('tikzXelatex'), getOption('tikzLatex'))
-  silence <- system(paste(tex_cmd, '-interaction=batchmode',
+  silence <- system(paste(shQuote(tex_cmd), '-interaction=batchmode',
     '-output-directory', test_work_dir,
     graph_file ), intern = TRUE)
 

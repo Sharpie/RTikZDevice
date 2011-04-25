@@ -505,7 +505,7 @@ if ( !is.null(gs_cmd) ) {
     }, graphs_produced)
   test_output <- file.path(test_output_dir, 'test_results.pdf')
 
-  silence <- system(paste(gs_cmd, '-dNOPAUSE', '-sDEVICE=pdfwrite',
+  silence <- system(paste(shQuote(gs_cmd), '-dNOPAUSE', '-sDEVICE=pdfwrite',
     str_c('-sOUTPUTFILE=', test_output),
     '-dBATCH', paste(shQuote(graph_files), collapse = ' ')),
     intern = TRUE, ignore.stderr = TRUE)
@@ -521,7 +521,7 @@ if ( !is.null(compare_cmd) && !is.null(convert_cmd) ) {
     }, graphs_produced)
   diff_output <- file.path(test_output_dir, 'test_diffs.pdf')
 
-  silence <- system(paste(convert_cmd,
+  silence <- system(paste(shQuote(convert_cmd),
     paste(shQuote(graph_files), collapse = ' '),
     diff_output),
     intern = TRUE, ignore.stderr = TRUE)
