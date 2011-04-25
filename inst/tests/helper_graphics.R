@@ -110,7 +110,7 @@ compare_graph <- function(graph_name){
   # Normalize and quote some paths in case we are running on Windows
   test_output <- str_c('"', test_output, '"')
   standard_graph <- str_c('"', standard_graph, '"')
-  compare_cmd <- str_c('"', normalizePath(compare_cmd), '"')
+  compare_cmd <- str_c('"', compare_cmd, '"')
 
 
   result <- capture.output(system(paste(

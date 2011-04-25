@@ -12,6 +12,7 @@ if (nchar(Sys.getenv('R_TESTS')) == 0){
   # reproducible
   set.seed(42)
 
+  # Process command arguments
   test_args <- commandArgs(TRUE)
   torture_mem <- any(str_detect(test_args, '^--use-gctorture'))
 
@@ -28,16 +29,23 @@ if (nchar(Sys.getenv('R_TESTS')) == 0){
   options(tikzMetricsDictionary = NULL)
 
 
+  # Set up directories for test output.
   test_output_dir <- normalizePath(file.path(getwd(), 'test_output'))
   if( !file.exists(test_output_dir) ){ dir.create(test_output_dir) }
 
   test_work_dir <- normalizePath(file.path(getwd(), 'test_work'))
   if( !file.exists(test_work_dir) ){ dir.create(test_work_dir) }
-
-  compare_cmd <- Sys.which("compare")
-  if ( nchar(compare_cmd) == 0 ) compare_cmd <- NULL
   test_standard_dir <- normalizePath(file.path(getwd(), '..', 'inst', 'tests', 'standard_graphs'))
 
+  # Locate required external programs
+  gs_cmd <- normalizePath(Sys.which(ifelse(Sys.info()['sysname'] == 'Windows',
+    'gswin32c', 'gs')))
+  if ( nchar(gs_cmd) == 0 ) gs_cmd <- NULL
+  compare_cmd <- normalizePath(Sys.which("compare"))
+  if ( nchar(compare_cmd) == 0 || is.null(gs_cmd) ) compare_cmd <- NULL
+
+
   test_package('tikzDevice')
+
 }
 
