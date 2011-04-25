@@ -7,15 +7,17 @@ do_graphics_test <- function(short_name, description, graph_code,
     # `R CMD check` is running. Skip test and return so our graphics testsuite
     # does not slow down the CRAN daily checks.
     cat("SKIP")
-    return(invisible())
+    return(FALSE)
   }
 
   if (!is.null(skip_if)) {
     if (skip_if()) {
       cat("SKIP")
-      return(invisible())
+      return(FALSE)
     }
   }
+
+  graph_created <- FALSE
 
   if (!is.null(graph_options)) {
     # If this test uses custom options, make sure the current options are
@@ -38,7 +40,7 @@ do_graphics_test <- function(short_name, description, graph_code,
 
   test_that('Graph compiles cleanly',{
 
-    expect_that(compile_graph(graph_file, uses_xetex), runs_cleanly())
+    expect_that(graph_created <<- compile_graph(graph_file, uses_xetex), runs_cleanly())
 
   })
 
@@ -54,8 +56,8 @@ do_graphics_test <- function(short_name, description, graph_code,
 
   })
 
-  # Don't return anything
-  invisible()
+
+  return( graph_created )
 
 }
 
@@ -84,9 +86,14 @@ compile_graph <- function(graph_file, uses_xetex){
     graph_file ), intern = TRUE)
 
   output_pdf = sub('tex$', 'pdf', graph_file)
-  file.rename(output_pdf, file.path(test_output_dir, basename(output_pdf)))
+  if ( file.exists(output_pdf) ) {
+    file.rename(output_pdf, file.path(test_output_dir, basename(output_pdf)))
+    graph_created <- TRUE
+  } else {
+    graph_created <- FALSE
+  }
 
-  invisible()
+  return( graph_created )
 
 }
 
