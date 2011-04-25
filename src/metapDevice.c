@@ -1121,11 +1121,6 @@ static void MetaP_Text( double x, double y, const char *str,
   // Calculate font scaling factor.
   double fontScale = MetaP_ScaleFont( plotParams, deviceInfo );
 
-  /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE)
-    printOutput(tikzInfo,
-      "%% Drawing node at x = %f, y = %f\n",
-      x,y);
 
   /* Start a node for the text, open an options bracket. */
   printOutput(tikzInfo,"label.");
@@ -1175,11 +1170,11 @@ static void MetaP_Text( double x, double y, const char *str,
   /*
    * Add a small red marker to indicate the
    * point the text string is being aligned to.
+   */
   if( DEBUG == TRUE )
     printOutput(tikzInfo,
-      "\n\\draw[color=red, fill=red] (%6.2f,%6.2f) circle (0.5pt);\n",
+      "\ndraw fullcircle scaled 0.5pt shifted (%6.2f,%6.2f) withcolor red;\n",
       x, y);
-  */
 
 }
 
