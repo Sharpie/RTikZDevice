@@ -17,6 +17,6 @@ Description: The TikZ device enables LaTeX-ready output from R graphics
         custom TikZ commands.
 License: GPL (>= 3)
 Depends: R (>= 2.11.0), filehash
-Suggests: testthat (>= 0.4), evaluate, stringr, ggplot2
+Suggests: testthat (>= 0.4), evaluate, stringr, ggplot2, maps
 SystemRequirements: pgf (>= 2.00)
 LazyLoad: yes
