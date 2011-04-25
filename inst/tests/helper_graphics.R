@@ -106,9 +106,21 @@ compare_graph <- function(graph_name){
   }
 
   tmp_file <- file.path(test_work_dir, 'compare.tmp')
-  result <- capture.output(system(paste(compare_cmd, '-density 300', '-metric AE',
-    test_output, standard_graph, 'null: >', tmp_file, '2>&1')))
-  # R does not properly capture the output of `compare` for some reason.
+
+  # Normalize and quote some paths in case we are running on Windows
+  test_output <- str_c('"', test_output, '"')
+  standard_graph <- str_c('"', standard_graph, '"')
+  compare_cmd <- str_c('"', normalizePath(compare_cmd), '"')
+
+
+  result <- capture.output(system(paste(
+    # Force the command to be executed through bash
+    'bash -c \'', compare_cmd, '-density 300', '-metric AE',
+    test_output, standard_graph,
+    'null: >', str_c('"', tmp_file, '"'), '2>&1\'')))
+
+  # R does not properly capture the output of `compare` for some reason so we
+  # use bash redirection to collect it in a temp file.
   result <- as.double(readLines(tmp_file))
 
   cat(result)
