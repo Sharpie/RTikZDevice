@@ -41,8 +41,12 @@ if (nchar(Sys.getenv('R_TESTS')) == 0){
   gs_cmd <- normalizePath(Sys.which(ifelse(Sys.info()['sysname'] == 'Windows',
     'gswin32c', 'gs')))
   if ( nchar(gs_cmd) == 0 ) gs_cmd <- NULL
+
   compare_cmd <- normalizePath(Sys.which("compare"))
   if ( nchar(compare_cmd) == 0 || is.null(gs_cmd) ) compare_cmd <- NULL
+
+  convert_cmd <- normalizePath(Sys.which("convert"))
+  if ( nchar(convert_cmd) == 0 || is.null(gs_cmd) ) convert_cmd <- NULL
 
 
   test_package('tikzDevice')

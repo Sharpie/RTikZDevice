@@ -512,3 +512,21 @@ if ( !is.null(gs_cmd) ) {
 
   message('\nAll test outputs combined into:\n\t', test_output)
 }
+
+
+if ( !is.null(compare_cmd) && !is.null(convert_cmd) ) {
+  # Combine all visual diffs into one big PDF file for easy viewing
+  graph_files <- Map(function(graph) {
+    file.path(test_work_dir, str_c(graph$short_name, '_diff.png'))
+    }, graphs_produced)
+  diff_output <- file.path(test_output_dir, 'test_diffs.pdf')
+
+  silence <- system(paste(convert_cmd,
+    paste(shQuote(graph_files), collapse = ' '),
+    diff_output),
+    intern = TRUE, ignore.stderr = TRUE)
+
+  message('\nResults of all visual diffs combined into:\n\t', diff_output)
+
+}
+
