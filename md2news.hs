@@ -10,6 +10,7 @@ import System.Environment -- For accessing program arguments
 import Data.Maybe         -- For handling values that may or may not be values
 
 import Text.Pandoc
+import Text.Pandoc.Shared
 import Text.Pandoc.Readers.Markdown
 
 
@@ -66,10 +67,28 @@ This function is responsible for possibly formatting inline elements into a
 string
 -}
 inlineToRd :: Inline -> Maybe String
-inlineToRd (Str string) = Just string
+inlineToRd (Str string) = Just $ sanitizeString string
 inlineToRd (Code attr string) = Just $ "\\code{" ++ string ++ "}"
 inlineToRd Space = Just " "
 inlineToRd other = Just $ show other
+
+sanitizeString :: String -> String
+sanitizeString = escapeStringUsing latexEscapes
+  where latexEscapes = backslashEscapes "{}$%&_#" ++
+                       [ ('^', "\\^{}")
+                       , ('\\', "\\textbackslash{}")
+                       , ('~', "\\ensuremath{\\sim}")
+                       , ('|', "\\textbar{}")
+                       , ('<', "\\textless{}")
+                       , ('>', "\\textgreater{}")
+                       , ('[', "{[}")  -- to avoid interpretation as
+                       , (']', "{]}")  -- optional arguments
+                       , ('\160', "~")
+                       , ('\x2018', "`")
+                       , ('\x2019', "'")
+                       , ('\x201C', "``")
+                       , ('\x201D', "''")
+                       ]
 
 
 {- Main Script -}
