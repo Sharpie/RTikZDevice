@@ -113,6 +113,9 @@ Latest Changes
 
 #### New Features
 
+  - The `tikz` function now has a `onefile` argument that behaves similar to
+    the `onefile` argument of the `pdf` device.
+
 #### Bug Fixes
 
   - Colorized text now obeys transparency settings.

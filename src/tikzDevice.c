@@ -81,7 +81,7 @@ SEXP TikZ_StartDevice ( SEXP args ){
   Rboolean standAlone, bareBones;
   const char *documentDeclaration, *packages, *footer;
   double baseSize;
-  Rboolean console, sanitize;
+  Rboolean console, sanitize, onefile;
 
   /* 
    * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -112,6 +112,8 @@ SEXP TikZ_StartDevice ( SEXP args ){
   /* For now these are assumed to be in inches. */
   width = asReal(CAR(args)); args = CDR(args);
   height = asReal(CAR(args)); args = CDR(args);
+
+  onefile = asLogical(CAR(args)); args = CDR(args);
   
   /* Recover initial background and foreground colors. */
   bg = CHAR(asChar(CAR(args))); args = CDR(args);
@@ -138,9 +140,15 @@ SEXP TikZ_StartDevice ( SEXP args ){
   documentDeclaration = CHAR(asChar(CAR(args))); args = CDR(args);
   packages = CHAR(asChar(CAR(args))); args = CDR(args);
   footer = CHAR(asChar(CAR(args))); args = CDR(args);
-  
-  // Should the output be sent to the R console?
+
+  /*
+   * Should the output be sent to the R console? An null file name also
+   * indicates console output.
+   */
   console = asLogical(CAR(args)); args = CDR(args);
+  if ( fileName[0] == '\0' )
+    console = TRUE;
+
   /*
    * Should text strings passed to the plotting device be sent
    * to a sanitization function- i.e. to provide automatic
@@ -180,7 +188,7 @@ SEXP TikZ_StartDevice ( SEXP args ){
      * R graphics function hooks with the appropriate C routines
      * in this file.
     */
-    if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, baseSize,
+    if( !TikZ_Setup( deviceInfo, fileName, width, height, onefile, bg, fg, baseSize,
         standAlone, bareBones, documentDeclaration, packages,
         footer, console, sanitize, engine ) ){
       /* 
@@ -221,7 +229,7 @@ SEXP TikZ_StartDevice ( SEXP args ){
 static Rboolean TikZ_Setup(
   pDevDesc deviceInfo,
   const char *fileName,
-  double width, double height,
+  double width, double height, Rboolean onefile,
   const char *bg, const char *fg, double baseSize,
   Rboolean standAlone, Rboolean bareBones,
   const char *documentDeclaration,
@@ -252,8 +260,19 @@ static Rboolean TikZ_Setup(
   }
 
   /* Copy TikZ-specific information to the tikzInfo variable. */
-  tikzInfo->outFileName = (char*) calloc(strlen(fileName) + 1, sizeof(char));
-  strcpy(tikzInfo->outFileName, fileName);
+  if ( onefile == FALSE ) {
+    /*
+     * Hopefully 10 extra digits will be enough for storing incrementing file
+     * numbers.
+     */
+    tikzInfo->outFileName = (char*) calloc(strlen(fileName) + 11, sizeof(char));
+    tikzInfo->originalFileName = (char*) calloc(strlen(fileName) + 1, sizeof(char));
+
+    strcpy(tikzInfo->originalFileName, fileName);
+  } else {
+    tikzInfo->outFileName = (char*) calloc(strlen(fileName) + 1, sizeof(char));
+    strcpy(tikzInfo->outFileName, fileName);
+  }
   tikzInfo->engine = engine;
   tikzInfo->rasterFileCount = 1;
   tikzInfo->debug = DEBUG;
@@ -274,6 +293,8 @@ static Rboolean TikZ_Setup(
   tikzInfo->sanitize = sanitize;
   tikzInfo->clipState = TIKZ_NO_CLIP;
   tikzInfo->pageState = TIKZ_NO_PAGE;
+  tikzInfo->onefile = onefile;
+  tikzInfo->pageNum = 1;
 
   /* Incorporate tikzInfo into deviceInfo. */
   deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -467,13 +488,16 @@ static Rboolean TikZ_Setup(
   deviceInfo->locator = TikZ_Locator;
   deviceInfo->mode = TikZ_Mode;
 
-  /* Call TikZ_Open to create and initialize the output file. */
-  if( !TikZ_Open( deviceInfo ) ){
-    return FALSE;
-  }
+  /*
+   * If outputting to a single file, call TikZ_Open to create and initialize
+   * the output. For multiple files, each call to TikZ_NewPage will set up a
+   * new file.
+   */
+  if( tikzInfo->onefile )
+    if( !TikZ_Open(deviceInfo) )
+      return FALSE;
 
   return TRUE;
-
 }
 
 
@@ -492,22 +516,21 @@ static Rboolean TikZ_Setup(
  * - Clip
  * - Size
  */
-static Rboolean TikZ_Open( pDevDesc deviceInfo ){
-
-  /* 
-   * Shortcut pointers to variables of interest. 
-   * It seems like there HAS to be a more elegent way of accesing
-   * these...
+static Rboolean TikZ_Open( pDevDesc deviceInfo )
+{
+  /*
+   * Shortcut pointers to variables of interest.  It seems like there HAS to be
+   * a more elegent way of accesing these...
   */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-  
-  if(tikzInfo->outFileName[0] == '\0'){
-    //If empty file name output to console
-    tikzInfo->console = TRUE; 
-  }else{  
-    if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
+
+  /* If creating multiple files, add the page number to the filename. */
+  if ( !tikzInfo->onefile )
+    sprintf(tikzInfo->outFileName, tikzInfo->originalFileName, tikzInfo->pageNum);
+
+  if ( !tikzInfo->console )
+    if ( !(tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w")) )
       return FALSE;
-  }
 
   /* Print header comment */
   Print_TikZ_Header( tikzInfo );
@@ -553,11 +576,14 @@ static void TikZ_Close( pDevDesc deviceInfo){
 
   /* Deallocate pointers */
   free(tikzInfo->outFileName);
+  if ( !tikzInfo->onefile )
+    free(tikzInfo->originalFileName);
+
   free(tikzInfo->documentDeclaration);
   free(tikzInfo->packages);
   free(tikzInfo->footer);
-  free(tikzInfo);
 
+  free(tikzInfo);
 }
 
 static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo )
@@ -570,8 +596,18 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo )
     tikzInfo->clipState = TIKZ_NO_CLIP;
   }
 
-  if ( tikzInfo->bareBones != TRUE && tikzInfo->pageState == TIKZ_FINISH_PAGE )
-    printOutput(tikzInfo, "\\end{tikzpicture}\n");
+  if ( tikzInfo->pageState == TIKZ_FINISH_PAGE ) {
+    if ( !tikzInfo->bareBones )
+      printOutput(tikzInfo, "\\end{tikzpicture}\n");
+
+    if ( !tikzInfo->onefile ) {
+      if( tikzInfo->standAlone )
+        printOutput(tikzInfo,"\n\\end{document}\n");
+
+      if( !tikzInfo->console )
+        fclose(tikzInfo->outputFile);
+    }
+  }
 
   /*
    * Color definitions do not persist accross tikzpicture environments. Set the
@@ -1961,6 +1997,18 @@ static void TikZ_CheckState(pDevDesc deviceInfo)
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   if( tikzInfo->pageState == TIKZ_START_PAGE ) {
+    /*
+     * Start a new file if we are outputting to multiple files.
+     *
+     * FIXME:
+     * Need better error handling. If we can't open a file, we are basically
+     * fucked and the whole device should implode. Instead, calling `error` will
+     * jump control to R without allowing for any sort of teardown and the
+     * program will be left in an indeterminate state.
+     */
+    if( !tikzInfo->onefile )
+      if( !TikZ_Open(deviceInfo) )
+        error("Unable to open output file: %s", tikzInfo->outputFile);
 
     if ( tikzInfo->debug == TRUE )
       printOutput(tikzInfo,
@@ -1994,6 +2042,7 @@ static void TikZ_CheckState(pDevDesc deviceInfo)
       deviceInfo->right,deviceInfo->top);
 
     tikzInfo->pageState = TIKZ_FINISH_PAGE;
+    tikzInfo->pageNum++;
   } /* End if pageState == TIKZ_START_PAGE */
 
 
