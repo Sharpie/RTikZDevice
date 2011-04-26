@@ -1,7 +1,6 @@
 ---
 
-# Version: 0.6.2
-Released: 11-13-2011
+# Changes in version 0.6.2 (2011-11-13)
 
 ---
 
@@ -47,8 +46,7 @@ Released: 11-13-2011
 
 ---
 
-# Version: 0.6.1
-Released: 4-14-2011
+# Changes in version 0.6.1 (2011-4-14)
 
 ---
 
@@ -63,8 +61,7 @@ Released: 4-14-2011
 
 ---
 
-# Version: 0.6.0
-Released: 4-13-2011
+# Changes in version 0.6.0 (2011-4-13)
 
 ---
 
@@ -124,7 +121,7 @@ Released: 4-13-2011
 
 ---
 
-# Version: 0.5.3
+# Changes in version 0.5.3
 
 ---
 
@@ -147,7 +144,7 @@ Released: 4-13-2011
 
 ---
 
-# Version: 0.5.2
+# Changes in version 0.5.2
 
 ---
 
@@ -170,7 +167,7 @@ The following people contributed to this release of the tikzDevice:
 
 ---
 
-# Version: 0.5.1
+# Changes in version 0.5.1
 
 ---
 
@@ -200,7 +197,7 @@ The following people contributed to this release of the tikzDevice:
 
 ---
 
-# Version 0.5.0 Beta
+# Changes in version 0.5.0
 
 ---
 
@@ -255,7 +252,7 @@ The following people contributed to this release of the tikzDevice:
 
 ---
 
-# Version 0.4.0 Beta
+# Changes in version 0.4.0
 
 ---
 
@@ -269,10 +266,3 @@ The following people contributed to this release of the tikzDevice:
   price to compute the width of a string, we 
   hopefully only pay it once.
 
----
-
-# Version <= 0.3.0 Alpha/Pre-Alpha
-
----
-
-- Internal Alpha/Pre-Alpha
