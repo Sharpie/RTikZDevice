@@ -68,6 +68,7 @@ string
 -}
 inlineToRd :: Inline -> Maybe String
 inlineToRd (Str string) = Just $ sanitizeString string
+inlineToRd (RawInline format string) = Just $ sanitizeString string
 inlineToRd (Code attr string) = Just $ "\\code{" ++ string ++ "}"
 inlineToRd Space = Just " "
 inlineToRd other = Just $ show other
