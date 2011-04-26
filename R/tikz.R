@@ -45,6 +45,11 @@
 #'   file.
 #' @param width The width of the output figure, in \bold{inches}.
 #' @param height The height of the output figure, in \bold{inches}.
+#' @param onefile Should output be directed to separate environments in a 
+#'   single file (default \code{TRUE}). If \code{FALSE} this option works 
+#'   exactly like the argument of the same name to \code{\link{pdf}} 
+#'   (see there for more details). This option is superseded by the 
+#'   \code{console} option. 
 #' @param bg The starting background color for the plot.
 #' @param fg The starting foreground color for the plot.
 #' @param pointsize Base pointsize used in the LaTeX document.  This option is
@@ -60,7 +65,7 @@
 #'   embedding one TikZ picture within another. When \code{TRUE} multipage
 #'   output will be drawn on a single page.
 #' @param console Should the output of tikzDevice be directed to the R console
-#'   (default FALSE). This is useful for dumping tikz output directly into a
+#'   (default \code{FALSE}). This is useful for dumping tikz output directly into a
 #'   LaTeX document via \code{\link{sink}}.  If TRUE, the \code{file} argument
 #'   is ignored. Setting \code{file=''} is equivalent to setting
 #'   \code{console=TRUE}.
@@ -176,8 +181,13 @@
 #' }
 #'
 #' @export
+
+# this is lame, pretty sure this is a bug in roxygen. Rd cant handle % in 
+# unless properly escaped but roxygen wont properly escape it, so have to 
+# use this nasty workaround for now...  intToUtf8(37) == %
 tikz <-
-function (file = "./Rplots.tex", width = 7, height = 7,
+function (file = ifelse(onefile, "./Rplots.tex", paste("./Rplot",intToUtf8(37),"03d.tex",sep='')), 
+  width = 7, height = 7, onefile = TRUE,
   bg="transparent", fg="black", pointsize = 10, standAlone = FALSE,
   bareBones = FALSE, console = FALSE, sanitize = FALSE,
   engine = getOption("tikzDefaultEngine"),
@@ -194,7 +204,7 @@ function (file = "./Rplots.tex", width = 7, height = 7,
     # file_path_as_absolute can give us the absolute path to the output
     # file---but it has to exist first. So, we use file() to "touch" the
     # path.
-    touch_file <- suppressWarnings(file(file, 'w'))
+    touch_file <- suppressWarnings(file(file, 'w')) 
     close(touch_file)
 
     file <- tools::file_path_as_absolute(file)
@@ -205,6 +215,10 @@ function (file = "./Rplots.tex", width = 7, height = 7,
       "\nBecause the directory does not exist or is not writable."
     )))
   })
+  
+  # remove the file if we are outputting to multiple files since the file
+  # name will get changed in the C code
+  if( !onefile ) file.remove(file)
 
   # Determine which TeX engine is being used.
   switch(engine,
@@ -242,7 +256,7 @@ function (file = "./Rplots.tex", width = 7, height = 7,
   packages <- paste( paste( packages, collapse='\n'), collapse='\n')
   footer <- paste( paste( footer,collapse='\n'), collapse='\n')
 
-  .External('TikZ_StartDevice', file, width, height, bg, fg, baseSize,
+  .External('TikZ_StartDevice', file, width, height, onefile, bg, fg, baseSize,
     standAlone, bareBones, documentDeclaration, packages, footer, console,
     sanitize, engine,
     PACKAGE='tikzDevice')
