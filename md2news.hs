@@ -43,7 +43,10 @@ blockToRd :: Block -> Maybe String
 -- Individual block types
 blockToRd (Plain elements) = Just $ concat $ inlineListToRd elements
 blockToRd (Para elements) = Just $ concat $ inlineListToRd elements
-blockToRd (Header level elements) = Just $ show $ ["Header" ++ show level, concat $ inlineListToRd elements]
+blockToRd (Header level elements) = case level of
+  1 -> Just $ "\\section{" ++ (concat $ inlineListToRd elements) ++ "}"
+  2 -> Just $ "\\subsection{" ++ (concat $ inlineListToRd elements) ++ "}"
+  _ -> Nothing -- Rdoc only has 2 header levels. Silently ignoring anything else
 blockToRd (BulletList blocks) = do
   let makeListItem list = "\n\t\\item{\n\t\t" : list ++ ["\n\t}"]
   Just $ "\\itemize{" ++ (concat $ map (concat . makeListItem . blockListToRd) blocks) ++ "\n}"
