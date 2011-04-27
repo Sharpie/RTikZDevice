@@ -42,19 +42,19 @@ string. Some block types are ignored and so the value Nothing is returned.
 -}
 blockToRd :: Block -> Maybe String
 -- Individual block types
-blockToRd (Plain elements) = Just $ concat $ inlineListToRd elements
-blockToRd (Para elements) = Just $ concat $ inlineListToRd elements
+blockToRd (Plain elements) = return $ concat $ inlineListToRd elements
+blockToRd (Para elements) = return $ concat $ inlineListToRd elements
 blockToRd (Header level elements) = case level of
-  1 -> Just $ "\\section{" ++ (concat $ inlineListToRd elements) ++ "}"
-  2 -> Just $ "\\subsection{" ++ (concat $ inlineListToRd elements) ++ "}"
+  1 -> return $ "\\section{" ++ (concat $ inlineListToRd elements) ++ "}"
+  2 -> return $ "\\subsection{" ++ (concat $ inlineListToRd elements) ++ "}"
   _ -> Nothing -- Rdoc only has 2 header levels. Silently ignoring anything else
 blockToRd (BulletList blocks) = do
   let makeListItem list = "\n\t\\item{\n\t\t" : list ++ ["\n\t}"]
-  Just $ "\\itemize{" ++ (concat $ map (concat . makeListItem . blockListToRd) blocks) ++ "\n}"
+  return $ "\\itemize{" ++ (concat $ map (concat . makeListItem . blockListToRd) blocks) ++ "\n}"
 blockToRd HorizontalRule = Nothing
 blockToRd Null = Nothing
 -- Passed through uninterpreted for now
-blockToRd other = Just $ show other
+blockToRd other = return $ show other
 
 blockListToRd :: [Block] -> [String]
 blockListToRd blocks = mapMaybe blockToRd blocks
@@ -67,11 +67,11 @@ This function is responsible for possibly formatting inline elements into a
 string
 -}
 inlineToRd :: Inline -> Maybe String
-inlineToRd (Str string) = Just $ sanitizeString string
-inlineToRd (RawInline format string) = Just $ sanitizeString string
-inlineToRd (Code attr string) = Just $ "\\code{" ++ string ++ "}"
-inlineToRd Space = Just " "
-inlineToRd other = Just $ show other
+inlineToRd (Str string) = return $ sanitizeString string
+inlineToRd (RawInline format string) = return $ sanitizeString string
+inlineToRd (Code attr string) = return $ "\\code{" ++ string ++ "}"
+inlineToRd Space = return " "
+inlineToRd other = return $ show other
 
 sanitizeString :: String -> String
 sanitizeString = escapeStringUsing latexEscapes
