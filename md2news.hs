@@ -21,7 +21,7 @@ formats them into Rd strings and returns a list of the results.
 pandocToRd :: Pandoc -> [String]
 -- mapMaybe is like a regular functional mapping except it throws out Nothing
 -- values and unpacks Just values.
-pandocToRd parsed = mapMaybe blockToRd (getBlocks parsed)
+pandocToRd parsed = map show $ mapMaybe blockToRd (getBlocks parsed)
 
 
 {-
@@ -40,24 +40,24 @@ getBlocks (Pandoc meta blocks) = blocks
 This function is responsible for possibly formatting each block element into a
 string. Some block types are ignored and so the value Nothing is returned.
 -}
-blockToRd :: Block -> Maybe String
+blockToRd :: Block -> Maybe [String]
 -- Individual block types
-blockToRd (Plain elements) = return $ concat $ inlineListToRd elements
-blockToRd (Para elements) = return $ concat $ inlineListToRd elements
+blockToRd (Plain elements) = return $ [concat $ inlineListToRd elements]
+blockToRd (Para elements) = return $ [concat $ inlineListToRd elements]
 blockToRd (Header level elements) = case level of
-  1 -> return $ "\\section{" ++ (concat $ inlineListToRd elements) ++ "}"
-  2 -> return $ "\\subsection{" ++ (concat $ inlineListToRd elements) ++ "}"
+  1 -> return $ ["\\section{" ++ (concat $ inlineListToRd elements) ++ "}"]
+  2 -> return $ ["\\subsection{" ++ (concat $ inlineListToRd elements) ++ "}"]
   _ -> Nothing -- Rdoc only has 2 header levels. Silently ignoring anything else
 blockToRd (BulletList blocks) = do
-  let makeListItem list = "\n\t\\item{\n\t\t" : list ++ ["\n\t}"]
-  return $ "\\itemize{" ++ (concat $ map (concat . makeListItem . blockListToRd) blocks) ++ "\n}"
+  let makeListItem list = "\\item{" : list ++ ["}"]
+  return $ "\\itemize{" : map (concat . makeListItem . blockListToRd) blocks ++ ["}"]
 blockToRd HorizontalRule = Nothing
 blockToRd Null = Nothing
 -- Passed through uninterpreted for now
-blockToRd other = return $ show other
+blockToRd other = return $ [show other]
 
 blockListToRd :: [Block] -> [String]
-blockListToRd blocks = mapMaybe blockToRd blocks
+blockListToRd blocks = concat $ mapMaybe blockToRd blocks
 
 inlineListToRd :: [Inline] -> [String]
 inlineListToRd elements = mapMaybe inlineToRd elements
