@@ -1129,16 +1129,18 @@ static void MetaP_Text( double x, double y, const char *str,
   //Justify the text
   if(fabs(hadj - 0.0) < tol){
     //Left Justified
-    printOutput(tikzInfo, "urt(btex ");
+    printOutput(tikzInfo, "urt");
   }
   if(fabs(hadj - 0.5) < tol){
     //Center Justified
-    printOutput(tikzInfo, "top(btex ");
+    printOutput(tikzInfo, "top");
   }
   if(fabs(hadj - 1) < tol){
     //Right Justified
-    printOutput(tikzInfo, "ulft(btex ");
+    printOutput(tikzInfo, "ulft");
   }
+
+  printOutput(tikzInfo, "(textext(\"");
 
   char *cleanString = NULL;
   if(tikzInfo->sanitize == TRUE){
@@ -1146,9 +1148,9 @@ static void MetaP_Text( double x, double y, const char *str,
     cleanString = Sanitize( tikzString );
   	if(tikzInfo->debug == TRUE)
     	printOutput(tikzInfo,"\n%% Sanatized %s to %s\n",tikzString,cleanString);
-    printOutput(tikzInfo, "%s etex", cleanString);
+    printOutput(tikzInfo, "%s\")", cleanString);
   }else{
-    printOutput(tikzInfo, "%s etex", tikzString);
+    printOutput(tikzInfo, "%s\")", tikzString);
   }
 
   printOutput(tikzInfo, " scaled %6.2f, (%6.2f,%6.2f))", fontScale, x, y);
