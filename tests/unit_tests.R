@@ -23,6 +23,7 @@ if (nchar(Sys.getenv('R_TESTS')) == 0){
   }
 
   if (torture_mem) { gctorture(TRUE) }
+  using_windows <- Sys.info()['sysname'] == 'Windows'
 
   # Ensure tikzDevice options have been set to their default values.
   setTikzDefaults(overwrite = TRUE)
@@ -38,14 +39,16 @@ if (nchar(Sys.getenv('R_TESTS')) == 0){
   test_standard_dir <- normalizePath(file.path(getwd(), '..', 'inst', 'tests', 'standard_graphs'))
 
   # Locate required external programs
-  gs_cmd <- normalizePath(Sys.which(ifelse(Sys.info()['sysname'] == 'Windows',
-    'gswin32c', 'gs')))
+  gs_cmd <- normalizePath(Sys.which(ifelse(using_windows, 'gswin32c', 'gs')))
   if ( nchar(gs_cmd) == 0 ) gs_cmd <- NULL
 
   compare_cmd <- normalizePath(Sys.which("compare"))
   if ( nchar(compare_cmd) == 0 || is.null(gs_cmd) ) compare_cmd <- NULL
 
-  convert_cmd <- normalizePath(Sys.which("convert"))
+  convert_cmd <- normalizePath(ifelse(using_windows,
+    system("bash -c 'which convert'", intern = TRUE, ignore.stderr = TRUE),
+    Sys.which('convert')
+  ))
   if ( nchar(convert_cmd) == 0 || is.null(gs_cmd) ) convert_cmd <- NULL
 
 
