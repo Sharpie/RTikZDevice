@@ -261,7 +261,7 @@
 \def\endSchunk{%
   \sweave@stopcapture%
   \sweave@replaceenvs{\jobname.lsttmp}%
-  \lstinputlisting[style=sweavechunk]{\jobname.lstin}%
+  \tikzCodeInput[listing style=sweavechunk]{\jobname.lstin}%
 }
 
 \makeatother
