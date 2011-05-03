@@ -36,44 +36,23 @@
 \usepackage{natbib}
 \bibliographystyle{agufull04}
 
+\usepackage[nogin]{Sweave}
 % Extra pretty pretty printing.
 \usepackage{tikzCodeBlock}
-
-
-% Macros created for this document
+% Macros created for this document. Make sure tikzCodeBlock is loaded first.
+% For now.
 \input{tikzDeviceMacros}
-
-% Make sure you input tikzDeviceMacros first- or
-% LaTeX will smite you!
-\usepackage{Sweave}
-
 
 
 <<setup,echo=F,results=hide>>=
 
 	if( !file.exists( 'figs' ) ) dir.create( 'figs' )
 	require(tikzDevice)
-	
-	# *** Begin Mother of All R Hacks ****
 
-  source( 'patchSweave.R' )
-	
-	# *** End Mother of All R Hacks ***
-	
-	# Now we have some extra code chunk options to play
-	# with:
-	#
-	#   wrapoutput: a vector of two character strings that will be used
-	#                       to surround R output chunks. Were formally hardwired
-	#                       to '\n\begin{Soutput}\n' and '\n\end{Soutput}\n'.
-	#
-	#   wrapinput:  Same idea as wrapoutput- both of these options must be
-	#                      set using options() as they are difficult to pass directly to
-	#                      Sweave
-	
-	options( wrapoutput = c('\nswe@veSt@rtOutput','swe@veEndOutput\n') )
-	
+  options(prompt = ' ', continue = ' ')
+
 @
+
 
 \title{The \pkg{tikzDevice} Package\\
 	{\large\url{http://r-forge.r-project.org/projects/tikzdevice}}
