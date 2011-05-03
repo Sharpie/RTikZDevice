@@ -97,5 +97,18 @@ to the development of the package!
 
 ---
 
-#### Bug Fixes
+#### Behind the Scenes
+
+- The tikzDevice is now checked with "visual regression testing" which compares
+  the results of graphics tests against a set of standard images using a visual
+  diff. If a change occurs that significantly affects font metrics or graphics
+  primitives the effects will show up in the diff. Currently, ImageMagick's
+  `compare` utility is used to calculate differences. This process was inspired
+  by the work of Paul Murrell and Stephen Gardiner on the graphicsQC package.
+  Future versions of the tikzDevice may use graphicsQC to perform this task.
+
+- The tikzDevice Vignette used to employ a rather ugly hack that re-wrote the
+  internals of the Sweave driver during processing in order to gain more
+  control over syntax highlighting. This hack has been replaced by TeX macros
+  that achieve the same result without messing with R.
 
