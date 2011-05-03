@@ -8,6 +8,25 @@ PKGSRC  := $(shell basename $(PWD))
 # containing the first instance of R on the PATH.
 RBIN ?= $(shell dirname "`which R`")
 
+# Check for environment variables that contain arguments to pass to testing
+# scripts.
+ifneq ($(R_GCT),)
+gc_torture:=--use-gctorture
+else
+gc_torture:=
+endif
+
+# Controls which tests to run. Use thusly:
+#
+#     make test TESTS=list,of,comma,seperated,tags
+#
+# Tags must be single words
+ifneq ($(TESTS),)
+test_tags:=--run-tests=$(TESTS)
+else
+test_tags:=
+endif
+
 
 .PHONY: help
 
@@ -75,11 +94,11 @@ check: build
 
 test: install
 	cd tests;\
-		"$(RBIN)/Rscript" unit_tests.R
+		"$(RBIN)/Rscript" unit_tests.R $(gc_torture) $(test_tags)
 
 valgrind: install
 	cd tests;\
-		"$(RBIN)/R" -d "valgrind --tool=memcheck --leak-check=full --dsymutil=yes" --vanilla < unit_tests.R
+		"$(RBIN)/R" -d "valgrind --tool=memcheck --leak-check=full --dsymutil=yes" --vanilla < unit_tests.R --args $(gc_torture) $(test_tags)
 
 #------------------------------------------------------------------------------
 # Packaging Tasks

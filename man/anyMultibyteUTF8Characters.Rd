@@ -1,6 +1,6 @@
 \name{anyMultibyteUTF8Characters}
 \alias{anyMultibyteUTF8Characters}
-\encoding{UTF-8}
+\encoding{UTF8}
 \title{Check If a String Contains Multibyte UTF-8 characters...}
 \usage{anyMultibyteUTF8Characters(string, encoding="UTF-8")
 }

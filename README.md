@@ -92,15 +92,23 @@ to the development of the package!
 
 ---
 
-### Version: 0.6.1
+### Version: 0.6.2
+*Under development*
 
 ---
 
-#### Bug Fixes
+#### Behind the Scenes
 
-- Fixed a bug where `tikz` was not applying background color to the plot
-  canvas.
+- The tikzDevice is now checked with "visual regression testing" which compares
+  the results of graphics tests against a set of standard images using a visual
+  diff. If a change occurs that significantly affects font metrics or graphics
+  primitives the effects will show up in the diff. Currently, ImageMagick's
+  `compare` utility is used to calculate differences. This process was inspired
+  by the work of Paul Murrell and Stephen Gardiner on the graphicsQC package.
+  Future versions of the tikzDevice may use graphicsQC to perform this task.
 
-- Fixed a Vignette bug caused by an incorrect merge that was breaking the CRAN
-  build.
+- The tikzDevice Vignette used to employ a rather ugly hack that re-wrote the
+  internals of the Sweave driver during processing in order to gain more
+  control over syntax highlighting. This hack has been replaced by TeX macros
+  that achieve the same result without messing with R.
 

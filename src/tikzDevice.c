@@ -65,7 +65,7 @@
  * Main entry point from the R environment, called by the R function
  * tikz() to open a new TikZ graphics device.
 */
-SEXP tikzDevice ( SEXP args ){
+SEXP TikZ_StartDevice ( SEXP args ){
 
   /*
    * Make sure the version number of the R running this
@@ -477,63 +477,22 @@ static Rboolean TikZ_Setup(
 
 }
 
-/*
- * This function is responsible for converting lengths given in page
- * dimensions (ie. inches, cm, etc.) to device dimensions (currenty
- * points- 1/72.27 of an inch). However, due to the flexability of TeX
- * and TikZ, any combination of device and user dimensions could
- * theoretically be supported.
-*/
-double dim2dev( double length ){
-  return length*72.27;
-}
 
+/*==============================================================================
+                            Core Graphics Routines
+             Implementaion of an R Graphics Device as Defined by:
+                               GraphicsDevice.h
+==============================================================================*/
 
 /*
- * This function is responsible for writing header information
- * to the output file. Currently this header information includes:
+ * Routines for handling device state:
  *
- *   - The current version number of TikZ device.
- *   - The date on which the graphic was created.
- *
-*/
-static void Print_TikZ_Header( tikzDevDesc *tikzInfo ){
-
-  /* Call back to R to retrieve current date and version num*/
-
-  /*
-   * Recover package namespace as the date formatting function
-   * is not exported
-  */
-  SEXP TikZ_namespace;
-  PROTECT( 
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
-
-
-  SEXP currentDate;
-  PROTECT( 
-    currentDate = eval(lang1( install("getDateStampForTikz") ), 
-      TikZ_namespace )
-  );
-
-  SEXP currentVersion;
-  PROTECT( 
-    currentVersion = eval(lang1( install("getTikzDeviceVersion") ), 
-      TikZ_namespace )
-  );
-
-  printOutput( tikzInfo, "%% Created by tikzDevice version %s on %s\n",
-    CHAR(STRING_ELT(currentVersion,0)), CHAR(STRING_ELT(currentDate,0)) );
-
-	//Specifically for TeXShop, force it to open the file with UTF-8 encoding
-	printOutput(tikzInfo, "%% !TEX encoding = UTF-8 Unicode\n");
-
-  UNPROTECT(3);
-
-}
-
+ * - Open
+ * - Close
+ * - Newpage
+ * - Clip
+ * - Size
+ */
 static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
   /* 
@@ -710,25 +669,13 @@ static void TikZ_Size( double *left, double *right,
 
 }
 
+
 /*
- * This function calculates an appropriate scaling factor for text by
- * first calculating the ratio of the requested font size to the LaTeX
- * base font size. The ratio is then further scaled by the value of
- * the character expansion factor cex.
-*/
-double
-TikZ_ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
-
-  // These parameters all affect the font size.
-  double baseSize = deviceInfo->startps;
-  double fontSize = plotParams->ps;
-  double cex = plotParams->cex;
-
-  double fontScale = ( fontSize / baseSize ) * cex;
-
-  return( fontScale );
-
-}
+ * Routines for calculating text metrics:
+ *
+ * - MetricInfo
+ * - StrWidth
+ */
 
 /*
  * This function is supposed to calculate character metrics (such as raised 
@@ -764,20 +711,17 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   }
 
   // Calculate font scaling factor.
-  double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+  double fontScale = ScaleFont( plotParams, deviceInfo );
 
   // Prepare to call back to R in order to retrieve character metrics.
-  SEXP TikZ_namespace;
-  PROTECT(
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
-  
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
+
   // Call out to R to retrieve the latexParseCharForMetrics function.
   // Note: this code will eventually call a different function that provides
   // caching of the results. Right now we're directly calling the function
   // that activates LaTeX.
-  SEXP metricFun = findFun( install("getLatexCharMetrics"), TikZ_namespace );
+  SEXP metricFun = findFun(install("getLatexCharMetrics"), namespace);
 
   SEXP RCallBack;
   PROTECT( RCallBack = allocVector(LANGSXP,5) );
@@ -809,7 +753,7 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
   SET_TAG(CDDR(CDDR(RCallBack)), install("engine"));
 
   SEXP RMetrics;
-  PROTECT( RMetrics = eval( RCallBack, TikZ_namespace ) );
+  PROTECT( RMetrics = eval(RCallBack, namespace) );
 
   // Recover the metrics.
   *ascent = REAL(RMetrics)[0];
@@ -861,7 +805,7 @@ static double TikZ_StrWidth( const char *str,
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   // Calculate font scaling factor.
-  double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+  double fontScale = ScaleFont( plotParams, deviceInfo );
 
   /*
    * New string width calculation method: call back to R
@@ -902,14 +846,11 @@ static double TikZ_StrWidth( const char *str,
   /*
    * Find the namespace of the TikZ package.
    */
-  SEXP TikZ_namespace;
-  PROTECT(
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
 
   // Call out to R to retrieve the getLatexStrWidth function.
-  SEXP widthFun = findFun(install("getLatexStrWidth"), TikZ_namespace);
+  SEXP widthFun = findFun(install("getLatexStrWidth"), namespace);
 
   /*
    * Create a SEXP that will be the R function call. The SEXP will have five
@@ -970,7 +911,7 @@ static double TikZ_StrWidth( const char *str,
    * decides to nuke.
   */
   SEXP RStrWidth;
-  PROTECT( RStrWidth = eval( RCallBack, TikZ_namespace ) );
+  PROTECT( RStrWidth = eval(RCallBack, namespace) );
 
   /*
    * Why REAL()[0] instead of asReal(CAR())? I have no fucking
@@ -1021,6 +962,20 @@ static double TikZ_StrWidth( const char *str,
     
 }
 
+
+/*
+ * Output routines
+ *
+ * - Text
+ * - Circle
+ * - Rectangle
+ * - Line
+ * - Polyline
+ * - Polygon
+ * - Path
+ * - Raster
+ */
+
 /*
  * This function should plot a string of text at coordinates x and y with
  * a rotation value specified by rot and horizontal alignment specified by
@@ -1064,7 +1019,7 @@ static void TikZ_Text( double x, double y, const char *str,
   strcat( tikzString, str );
 
   // Calculate font scaling factor.
-  double fontScale = TikZ_ScaleFont( plotParams, deviceInfo );
+  double fontScale = ScaleFont( plotParams, deviceInfo );
   
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
@@ -1137,35 +1092,6 @@ static void TikZ_Text( double x, double y, const char *str,
 }
 
 
-static void TikZ_Line( double x1, double y1,
-    double x2, double y2, const pGEcontext plotParams, pDevDesc deviceInfo){
-
-  /* Shortcut pointers to variables of interest. */
-  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-
-  /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
-    printOutput(tikzInfo,
-      "%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
-      x1,y1,x2,y2);
-
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
-
-  /* Start drawing a line, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-  
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
-
-  /* More options would go here such as line thickness, style, color etc. */
-  
-  /* End options, print coordinates. */
-  printOutput(tikzInfo, "] (%6.2f,%6.2f) -- (%6.2f,%6.2f);\n",
-    x1,y1,x2,y2);
-
-}
-
 static void TikZ_Circle( double x, double y, double r,
     const pGEcontext plotParams, pDevDesc deviceInfo){
 
@@ -1230,6 +1156,37 @@ static void TikZ_Rectangle( double x0, double y0,
     x0,y0,x1,y1);
 
 }
+
+
+static void TikZ_Line( double x1, double y1,
+    double x2, double y2, const pGEcontext plotParams, pDevDesc deviceInfo){
+
+  /* Shortcut pointers to variables of interest. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
+      x1,y1,x2,y2);
+
+  /*Define the colors for fill and border*/
+  StyleDef(TRUE, plotParams, deviceInfo);
+
+  /* Start drawing a line, open an options bracket. */
+  printOutput(tikzInfo,"\n\\draw[");
+  
+  /*Define the draw styles*/
+  StyleDef(FALSE, plotParams, deviceInfo);
+
+  /* More options would go here such as line thickness, style, color etc. */
+  
+  /* End options, print coordinates. */
+  printOutput(tikzInfo, "] (%6.2f,%6.2f) -- (%6.2f,%6.2f);\n",
+    x1,y1,x2,y2);
+
+}
+
 
 static void TikZ_Polyline( int n, double *x, double *y,
     pGEcontext plotParams, pDevDesc deviceInfo ){
@@ -1329,7 +1286,7 @@ static void TikZ_Polygon( int n, double *x, double *y,
 
 
 #if R_GE_version >= 8
-/* Currently a non-functional stub. */
+/* Added in R 2.12.0 */
 static void
 TikZ_Path( double *x, double *y,
   int npoly, int *nper,
@@ -1396,6 +1353,244 @@ TikZ_Path( double *x, double *y,
 }
 #endif
 
+
+/*
+ * Creates a raster image whose lower left corner is centered at the
+ * coordinates given by x and y.
+ *
+ * This is currently a stub function which displayes a message stating
+ * that raster creation is not yet implemented.  Without this function,
+ * R would crash if the user attempts to print a raster.
+ *
+ * This could probably be implemented by writing the raster to an image file,
+ * say PNG, and then dropping a node in the TikZ output that contains
+ * an \includegraphics directive.
+*/
+static void TikZ_Raster(
+  unsigned int *raster,
+  int w, int h,
+  double x, double y,
+  double width, double height,
+  double rot,
+  Rboolean interpolate,
+  const pGEcontext plotParams, pDevDesc deviceInfo
+){
+
+  /* Shortcut pointer to device information. */
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  /*
+   * Recover package namespace as the raster output function is not exported
+   * into the global environment.
+  */
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
+
+  /*
+   * Prepare callback to R for creation of a PNG from raster data.  Seven
+   * parameters will be passed:
+   *
+   * - The name of the current output file.
+   *
+   * - The number of rasters that have been output so far.
+   *
+   * - The raster data.
+   *
+   * - The number of rows and columns in the raster data.
+   *
+   * - The desired dimensions of the final image, in inches.
+   *
+   * - The value of the interpolate variable.
+  */
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP, 8) );
+  SETCAR( RCallBack, install("tikz_writeRaster") );
+
+  SETCADR( RCallBack, mkString( tikzInfo->outFileName ) );
+  SET_TAG( CDR(RCallBack), install("fileName") );
+
+  SETCADDR( RCallBack, ScalarInteger( tikzInfo->rasterFileCount ) );
+  SET_TAG( CDDR(RCallBack), install("rasterCount") );
+
+  /*
+   * The raster values are stored as a 32 bit unsigned integer.  Every 8 bits
+   * contains an red, green, blue or alpha value (actual order is ABGR).  This
+   * is the tricky bit of dealing with the raster-- there is no easy way to send
+   * unsigned integers back into the R environment.  So... I gues we'll split
+   * things back to RBGA values, send back a list of four vectors and regenrate
+   * the whole shbang on the R side... there should be an easier way to deal
+   * with this.
+  */
+  SEXP red_vec, blue_vec, green_vec, alpha_vec;
+  PROTECT( red_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( blue_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( green_vec = allocVector( INTSXP, w * h ) );
+  PROTECT( alpha_vec = allocVector( INTSXP, w * h ) );
+
+  /*
+   * Use the R_<color component> macros defined in GraphicsDevice.h to generate
+   * RGBA components from the raster data.  These macros are basically shorthand
+   * notation for C bitwise operators that extract 8 bit chunks from the 32 bit
+   * unsigned integers contained in the raster vector.
+   *
+   * NOTE:
+   *
+   * There is some funny business that happens below. In the definition of
+   * device_Raster from GraphicsDevice.h, the byte order of the colors entering
+   * this routine in the `raster` argument are specified to be ABGR. The color
+   * extraction macros assume the order is RGBA.
+   *
+   * In practice, it appears the byte order in `raster` is RBGA--hence the use
+   * of R_GREEN and R_BLUE are swapped below.
+  */
+  int i;
+  for( i = 0; i < h * w; i ++ ){
+    INTEGER(red_vec)[i] = R_RED(raster[i]);
+    INTEGER(green_vec)[i] = R_BLUE(raster[i]);
+    INTEGER(blue_vec)[i] = R_GREEN(raster[i]);
+    INTEGER(alpha_vec)[i] = R_ALPHA(raster[i]);
+  }
+
+  /*
+   * We will store all the vectors generated above in an R list named colors,
+   * this will make it easier to pass back into the R environment as an argument
+   * to an R function
+  */
+  SEXP colors;
+  PROTECT( colors =  allocVector( VECSXP, 4 ) );
+  SET_VECTOR_ELT( colors, 0, red_vec  );
+  SET_VECTOR_ELT( colors, 1, blue_vec );
+  SET_VECTOR_ELT( colors, 2, green_vec );
+  SET_VECTOR_ELT( colors, 3, alpha_vec );
+
+  /* We will also make this a named list. */
+  SEXP color_names;
+  PROTECT( color_names = allocVector( STRSXP, 4 ) );
+  SET_STRING_ELT( color_names, 0, mkChar("red") );
+  SET_STRING_ELT( color_names, 1, mkChar("green") );
+  SET_STRING_ELT( color_names, 2, mkChar("blue") );
+  SET_STRING_ELT( color_names, 3, mkChar("alpha") );
+
+  /* Apply the names to the list. */
+  setAttrib( colors, R_NamesSymbol, color_names );
+
+
+  SETCADDDR( RCallBack, colors );
+  SET_TAG( CDR(CDDR(RCallBack)), install("rasterData") );
+
+  SETCAD4R( RCallBack, ScalarInteger(h) );
+  SET_TAG( CDDR(CDDR(RCallBack)), install("nrows") );
+
+  SETCAD4R( CDR(RCallBack), ScalarInteger(w) );
+  SET_TAG( CDR(CDDR(CDDR(RCallBack))), install("ncols") );
+
+  /* Create a list containing the final width and height of the image */
+  SEXP final_dims, dim_names;
+
+  PROTECT( final_dims = allocVector(VECSXP, 2) );
+  SET_VECTOR_ELT(final_dims, 0, ScalarReal(width/dim2dev(1.0)));
+  SET_VECTOR_ELT(final_dims, 1, ScalarReal(height/dim2dev(1.0)));
+
+  PROTECT( dim_names = allocVector(STRSXP, 2) );
+  SET_STRING_ELT(dim_names, 0, mkChar("width"));
+  SET_STRING_ELT(dim_names, 1, mkChar("height"));
+
+  setAttrib(final_dims, R_NamesSymbol, dim_names);
+
+  SETCAD4R(CDDR(RCallBack), final_dims);
+  SET_TAG(CDDR(CDDR(CDDR(RCallBack))), install("finalDims"));
+
+  SETCAD4R(CDR(CDDR(RCallBack)), ScalarLogical(interpolate));
+  SET_TAG(CDR(CDDR(CDDR(CDDR(RCallBack)))), install("interpolate"));
+
+
+  SEXP rasterFile;
+  PROTECT( rasterFile = eval(RCallBack, namespace) );
+
+  /* Position the image using a node */
+  printOutput(tikzInfo, "\\node[inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f, %6.2f) {\n",
+    rot, x, y);
+  /* Include the image using PGF's native image handling */
+  printOutput(tikzInfo, "\t\\pgfimage[width=%6.2fpt,height=%6.2fpt,",
+      width, height);
+  /* Set PDF interpolation (not all viewers respect this, but they should) */
+  if (interpolate) {
+    printOutput(tikzInfo, "interpolate=true]");
+  } else {
+    printOutput(tikzInfo, "interpolate=false]");
+  }
+  /* Slap in the file name */
+  printOutput(tikzInfo, "{%s}", translateChar(asChar(rasterFile)));
+  printOutput(tikzInfo, "};\n");
+
+  if (tikzInfo->debug) { printOutput(tikzInfo, "\\draw[fill=red] (%6.2f, %6.2f) circle (1pt);", x, y); }
+
+  /*
+   * Increment the number of raster files we have created with this device.
+   * This is used to provide unique file names for each raster.
+  */
+  tikzInfo->rasterFileCount++;
+
+  UNPROTECT(11);
+  return;
+
+}
+
+
+/*
+ * From what little documentation exists in GraphicsDevice.h, it is
+ * assumed that this function is intended to support capturing a
+ * "screen shot" of the current device output and returning it
+ * as a raster image.
+ *
+ * Implementing this functionality would require some careful thought
+ * and probably won't happen unless a serious need arises.
+ *
+ * Argument for implementation: could be useful for "previewing" the 
+ * current* state of the tikzDevice output.
+*/
+static SEXP TikZ_Cap( pDevDesc deviceInfo ){
+
+  warning( "The tikzDevice does not currently support capturing device output to a raster image." );
+  return R_NilValue;
+
+}
+
+
+/* 
+ * Activate and deactivate execute commands when the active R device is 
+ * changed. For devices using plotting windows, these routines usually change 
+ * the window title to something like "Active" or "Inactive". Locator is a 
+ * routine that is determines coordinates on the plotting canvas corresponding 
+ * to a mouse click. For devices plotting to files these functions can be left 
+ * as dummy routines.
+*/
+static void TikZ_Activate( pDevDesc deviceInfo ){}
+static void TikZ_Deactivate( pDevDesc deviceInfo ){}
+static Rboolean TikZ_Locator( double *x, double *y, pDevDesc deviceInfo ){
+  return FALSE;
+}
+
+/*
+ * The mode function is called when R begins drawing and ends drawing using
+ * a device. Currently there are no actions necessary under these conditions
+ * so this function is a dummy routine. Conciveably this function could be
+ * used to wrap TikZ graphics in \begin{scope} and \end{scope} directives.
+*/
+static void TikZ_Mode( int mode, pDevDesc deviceInfo ){}
+
+/*==============================================================================
+
+                          End Core Graphics Routines
+
+==============================================================================*/
+
+
+/*==============================================================================
+
+                           Style Definition Routines
+
+==============================================================================*/
 
 /* This function either prints out the color definitions for outline and fill 
  * colors or the style tags in the \draw[] command, the defineColor parameter 
@@ -1600,7 +1795,35 @@ static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo){
   }
 }
 
-void tikzAnnotate(const char **annotation, int *size){
+
+/*
+ * This function calculates an appropriate scaling factor for text by
+ * first calculating the ratio of the requested font size to the LaTeX
+ * base font size. The ratio is then further scaled by the value of
+ * the character expansion factor cex.
+*/
+static double
+ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo ){
+
+  // These parameters all affect the font size.
+  double baseSize = deviceInfo->startps;
+  double fontSize = plotParams->ps;
+  double cex = plotParams->cex;
+
+  double fontScale = ( fontSize / baseSize ) * cex;
+
+  return( fontScale );
+
+}
+
+
+/*==============================================================================
+
+                         Other User Callable Routines
+
+==============================================================================*/
+
+void TikZ_Annotate(const char **annotation, int *size){
   
   //1. Get values of tikzInfo and deviceInfo
   //2. Print out annotation 
@@ -1618,19 +1841,9 @@ void tikzAnnotate(const char **annotation, int *size){
     printOutput(tikzInfo, "%s\n", annotation[i] );
 }
 
-/*
- * Returns the engine used by a given tikzDevice
- */
-SEXP TikZ_GetEngine(SEXP device_num){
-  int dev_index = asInteger(device_num);
-  pDevDesc deviceInfo = GEgetDevice(dev_index - 1)->dev;
-  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-
-  return(ScalarInteger(tikzInfo->engine));
-}
 
 /*
- * Returns information stored in the tikzDevDesc structure for a given device.
+ * Returns information stored in the tikzDevDesc structure of a given device.
  */
 SEXP TikZ_DeviceInfo(SEXP device_num){
 
@@ -1639,11 +1852,22 @@ SEXP TikZ_DeviceInfo(SEXP device_num){
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   SEXP info, names;
-  PROTECT( info = allocVector(VECSXP, 1) );
-  PROTECT( names = allocVector(STRSXP, 1) );
+  PROTECT( info = allocVector(VECSXP, 2) );
+  PROTECT( names = allocVector(STRSXP, 2) );
 
   SET_VECTOR_ELT(info, 0, mkString(tikzInfo->outFileName));
   SET_STRING_ELT(names, 0, mkChar("output_file"));
+
+  switch( tikzInfo->engine ){
+    case pdftex:
+      SET_VECTOR_ELT(info, 1, mkString("pdftex"));
+      break;
+    case xetex:
+      SET_VECTOR_ELT(info, 1, mkString("xetex"));
+      break;
+  }
+  SET_STRING_ELT(names, 1, mkChar("engine"));
+
 
   setAttrib(info, R_NamesSymbol, names);
 
@@ -1652,7 +1876,14 @@ SEXP TikZ_DeviceInfo(SEXP device_num){
 
 }
 
-void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
+
+/*==============================================================================
+
+                               Utility Routines
+
+==============================================================================*/
+
+static void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
   
   va_list(ap);
   va_start(ap, format);
@@ -1664,6 +1895,49 @@ void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
   
   va_end(ap);
   
+}
+
+
+/*
+ * This function is responsible for writing header information
+ * to the output file. Currently this header information includes:
+ *
+ *   - The current version number of TikZ device.
+ *   - The date on which the graphic was created.
+ *
+*/
+static void Print_TikZ_Header( tikzDevDesc *tikzInfo ){
+
+  /* Call back to R to retrieve current date and version num*/
+
+  /*
+   * Recover package namespace as the date formatting function
+   * is not exported
+  */
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
+
+
+  SEXP currentDate;
+  PROTECT(
+    currentDate = eval(lang1( install("getDateStampForTikz") ),
+      namespace )
+  );
+
+  SEXP currentVersion;
+  PROTECT(
+    currentVersion = eval(lang1( install("getTikzDeviceVersion") ),
+      namespace )
+  );
+
+  printOutput( tikzInfo, "%% Created by tikzDevice version %s on %s\n",
+    CHAR(STRING_ELT(currentVersion,0)), CHAR(STRING_ELT(currentDate,0)) );
+
+	//Specifically for TeXShop, force it to open the file with UTF-8 encoding
+	printOutput(tikzInfo, "%% !TEX encoding = UTF-8 Unicode\n");
+
+  UNPROTECT(3);
+
 }
 
 static char *Sanitize(const char *str){
@@ -1721,19 +1995,16 @@ static char *Sanitize(const char *str){
   return cleanStringCP;
 }
 
-Rboolean contains_multibyte_chars(const char *str){
+static Rboolean contains_multibyte_chars(const char *str){
   /*
    * Recover package namespace as the multibyte check function
    * is not exported
   */
-  SEXP TikZ_namespace;
-  PROTECT(
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
 
   SEXP multibyte_check_fun = findFun(
-      install("anyMultibyteUTF8Characters"), TikZ_namespace );
+      install("anyMultibyteUTF8Characters"), namespace);
 
   SEXP RCallBack;
   PROTECT( RCallBack = allocVector(LANGSXP,2) );
@@ -1749,7 +2020,7 @@ Rboolean contains_multibyte_chars(const char *str){
    * Call the R function, capture the result.
   */
   SEXP result;
-  PROTECT( result = eval( RCallBack, TikZ_namespace ) );
+  PROTECT( result = eval(RCallBack, namespace) );
 
   UNPROTECT(3);
 
@@ -1758,228 +2029,13 @@ Rboolean contains_multibyte_chars(const char *str){
 
 
 /*
- * Creates a raster image whose lower left corner is centered at the
- * coordinates given by x and y.
- *
- * This is currently a stub function which displayes a message stating
- * that raster creation is not yet implemented.  Without this function,
- * R would crash if the user attempts to print a raster.
- *
- * This could probably be implemented by writing the raster to an image file,
- * say PNG, and then dropping a node in the TikZ output that contains
- * an \includegraphics directive.
+ * This function is responsible for converting lengths given in page
+ * dimensions (ie. inches, cm, etc.) to device dimensions (currenty
+ * points- 1/72.27 of an inch). However, due to the flexability of TeX
+ * and TikZ, any combination of device and user dimensions could
+ * theoretically be supported.
 */
-static void TikZ_Raster(
-  unsigned int *raster,
-  int w, int h,
-  double x, double y,
-  double width, double height,
-  double rot,
-  Rboolean interpolate,
-  const pGEcontext plotParams, pDevDesc deviceInfo
-){
-
-  /* Shortcut pointer to device information. */
-  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-
-  /*
-   * Recover package namespace as the raster output function is not exported
-   * into the global environment.
-  */
-  SEXP TikZ_namespace;
-  PROTECT(
-    TikZ_namespace = eval(lang2( install("getNamespace"),
-      ScalarString(mkChar("tikzDevice")) ), R_GlobalEnv )
-  );
-
-  /*
-   * Prepare callback to R for creation of a PNG from raster data.  Seven
-   * parameters will be passed:
-   *
-   * - The name of the current output file.
-   *
-   * - The number of rasters that have been output so far.
-   *
-   * - The raster data.
-   *
-   * - The number of rows and columns in the raster data.
-   *
-   * - The desired dimensions of the final image, in inches.
-   *
-   * - The value of the interpolate variable.
-  */
-  SEXP RCallBack;
-  PROTECT( RCallBack = allocVector(LANGSXP, 8) );
-  SETCAR( RCallBack, install("tikz_writeRaster") );
-
-  SETCADR( RCallBack, mkString( tikzInfo->outFileName ) );
-  SET_TAG( CDR(RCallBack), install("fileName") );
-
-  SETCADDR( RCallBack, ScalarInteger( tikzInfo->rasterFileCount ) );
-  SET_TAG( CDDR(RCallBack), install("rasterCount") );
-
-  /*
-   * The raster values are stored as a 32 bit unsigned integer.  Every 8 bits
-   * contains an red, green, blue or alpha value (actual order is ABGR).  This
-   * is the tricky bit of dealing with the raster-- there is no easy way to send
-   * unsigned integers back into the R environment.  So... I gues we'll split
-   * things back to RBGA values, send back a list of four vectors and regenrate
-   * the whole shbang on the R side... there should be an easier way to deal
-   * with this.
-  */
-  SEXP red_vec, blue_vec, green_vec, alpha_vec;
-  PROTECT( red_vec = allocVector( INTSXP, w * h ) );
-  PROTECT( blue_vec = allocVector( INTSXP, w * h ) );
-  PROTECT( green_vec = allocVector( INTSXP, w * h ) );
-  PROTECT( alpha_vec = allocVector( INTSXP, w * h ) );
-
-  /*
-   * Use the R_<color component> macros defined in GraphicsDevice.h to generate
-   * RGBA components from the raster data.  These macros are basically shorthand
-   * notation for C bitwise operators that extract 8 bit chunks from the 32 bit
-   * unsigned integers contained in the raster vector.
-   *
-   * NOTE:
-   *
-   * There is some funny business that happens below. In the definition of
-   * device_Raster from GraphicsDevice.h, the byte order of the colors entering
-   * this routine in the `raster` argument are specified to be ABGR. The color
-   * extraction macros assume the order is RGBA.
-   *
-   * In practice, it appears the byte order in `raster` is RBGA--hence the use
-   * of R_GREEN and R_BLUE are swapped below.
-  */
-  int i;
-  for( i = 0; i < h * w; i ++ ){
-    INTEGER(red_vec)[i] = R_RED(raster[i]);
-    INTEGER(green_vec)[i] = R_BLUE(raster[i]);
-    INTEGER(blue_vec)[i] = R_GREEN(raster[i]);
-    INTEGER(alpha_vec)[i] = R_ALPHA(raster[i]);
-  }
-
-  /*
-   * We will store all the vectors generated above in an R list named colors,
-   * this will make it easier to pass back into the R environment as an argument
-   * to an R function
-  */
-  SEXP colors;
-  PROTECT( colors =  allocVector( VECSXP, 4 ) );
-  SET_VECTOR_ELT( colors, 0, red_vec  );
-  SET_VECTOR_ELT( colors, 1, blue_vec );
-  SET_VECTOR_ELT( colors, 2, green_vec );
-  SET_VECTOR_ELT( colors, 3, alpha_vec );
-
-  /* We will also make this a named list. */
-  SEXP color_names;
-  PROTECT( color_names = allocVector( STRSXP, 4 ) );
-  SET_STRING_ELT( color_names, 0, mkChar("red") );
-  SET_STRING_ELT( color_names, 1, mkChar("green") );
-  SET_STRING_ELT( color_names, 2, mkChar("blue") );
-  SET_STRING_ELT( color_names, 3, mkChar("alpha") );
-
-  /* Apply the names to the list. */
-  setAttrib( colors, R_NamesSymbol, color_names );
-
-
-  SETCADDDR( RCallBack, colors );
-  SET_TAG( CDR(CDDR(RCallBack)), install("rasterData") );
-
-  SETCAD4R( RCallBack, ScalarInteger(h) );
-  SET_TAG( CDDR(CDDR(RCallBack)), install("nrows") );
-
-  SETCAD4R( CDR(RCallBack), ScalarInteger(w) );
-  SET_TAG( CDR(CDDR(CDDR(RCallBack))), install("ncols") );
-
-  /* Create a list containing the final width and height of the image */
-  SEXP final_dims, dim_names;
-
-  PROTECT( final_dims = allocVector(VECSXP, 2) );
-  SET_VECTOR_ELT(final_dims, 0, ScalarReal(width/dim2dev(1.0)));
-  SET_VECTOR_ELT(final_dims, 1, ScalarReal(height/dim2dev(1.0)));
-
-  PROTECT( dim_names = allocVector(STRSXP, 2) );
-  SET_STRING_ELT(dim_names, 0, mkChar("width"));
-  SET_STRING_ELT(dim_names, 1, mkChar("height"));
-
-  setAttrib(final_dims, R_NamesSymbol, dim_names);
-
-  SETCAD4R(CDDR(RCallBack), final_dims);
-  SET_TAG(CDDR(CDDR(CDDR(RCallBack))), install("finalDims"));
-
-  SETCAD4R(CDR(CDDR(RCallBack)), ScalarLogical(interpolate));
-  SET_TAG(CDR(CDDR(CDDR(CDDR(RCallBack)))), install("interpolate"));
-
-
-  SEXP rasterFile;
-  PROTECT( rasterFile = eval( RCallBack, TikZ_namespace ) );
-
-  /* Position the image using a node */
-  printOutput(tikzInfo, "\\node[inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f, %6.2f) {\n",
-    rot, x, y);
-  /* Include the image using PGF's native image handling */
-  printOutput(tikzInfo, "\t\\pgfimage[width=%6.2fpt,height=%6.2fpt,",
-      width, height);
-  /* Set PDF interpolation (not all viewers respect this, but they should) */
-  if (interpolate) {
-    printOutput(tikzInfo, "interpolate=true]");
-  } else {
-    printOutput(tikzInfo, "interpolate=false]");
-  }
-  /* Slap in the file name */
-  printOutput(tikzInfo, "{%s}", translateChar(asChar(rasterFile)));
-  printOutput(tikzInfo, "};\n");
-
-  if (tikzInfo->debug) { printOutput(tikzInfo, "\\draw[fill=red] (%6.2f, %6.2f) circle (1pt);", x, y); }
-
-  /*
-   * Increment the number of raster files we have created with this device.
-   * This is used to provide unique file names for each raster.
-  */
-  tikzInfo->rasterFileCount++;
-
-  UNPROTECT(11);
-  return;
-
+static double dim2dev( double length ){
+  return length*72.27;
 }
 
-/*
- * From what little documentation exists in GraphicsDevice.h, it is
- * assumed that this function is intended to support capturing a
- * "screen shot" of the current device output and returning it
- * as a raster image.
- *
- * Implementing this functionality would require some careful thought
- * and probably won't happen unless a serious need arises.
- *
- * Argument for implementation: could be useful for "previewing" the 
- * current* state of the tikzDevice output.
-*/
-static SEXP TikZ_Cap( pDevDesc deviceInfo ){
-
-  warning( "The tikzDevice does not currently support capturing device output to a raster image." );
-  return R_NilValue;
-
-}
-
-
-/* 
- * Activate and deactivate execute commands when the active R device is 
- * changed. For devices using plotting windows, these routines usually change 
- * the window title to something like "Active" or "Inactive". Locator is a 
- * routine that is determines coordinates on the plotting canvas corresponding 
- * to a mouse click. For devices plotting to files these functions can be left 
- * as dummy routines.
-*/
-static void TikZ_Activate( pDevDesc deviceInfo ){}
-static void TikZ_Deactivate( pDevDesc deviceInfo ){}
-static Rboolean TikZ_Locator( double *x, double *y, pDevDesc deviceInfo ){
-  return FALSE;
-}
-
-/*
- * The mode function is called when R begins drawing and ends drawing using
- * a device. Currently there are no actions necessary under these conditions
- * so this function is a dummy routine. Conciveably this function could be
- * used to wrap TikZ graphics in \begin{scope} and \end{scope} directives.
-*/
-static void TikZ_Mode( int mode, pDevDesc deviceInfo ){}

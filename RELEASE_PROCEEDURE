@@ -10,7 +10,7 @@ r-forge because the r-forge branch contains pre-built NAMESPACE and .Rd files.
 That way users can download a tag tarball and feed it right to R CMD INSTALL.
 
 Unfortunately this messed up some of the steps below, so this document is no
-longer entirely accurate.
+longer entirely accurate. The most broken part is make release.
 
 Steps:
 
@@ -18,13 +18,14 @@ Steps:
 
       git checkout r-forge
 
-  * Bring in master branch as a squashed merge, but do not commit:
+  * Merge in master branch, but do not commit:
 
       git merge -srecursive -Xtheirs --no-commit master
 
   * Run `make release` to update the vignette PDFs and the R man pages along
     with the version number in inst/GIT_VERSION.
 
+      # This is currently broken. Don't do it.
       make release
 
   * May be some merge conflicts due to files that are present in the RForge

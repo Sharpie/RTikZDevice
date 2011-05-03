@@ -48,18 +48,18 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
   switch(engine,
     pdftex = {
       if ( anyMultibyteUTF8Characters(texString) && getOption('tikzPdftexWarnUTF') ) {
-        warning(strwrap("Attempting to calculate the width of a Unicode string
-            using the pdftex engine. This may fail! See the Unicode section of
-            ?tikzDevice for more information."))
+        warning("Attempting to calculate the width of a Unicode string",
+            "using the pdftex engine. This may fail! See the Unicode",
+            "section of ?tikzDevice for more information.")
       }
       packages <- getOption("tikzLatexPackages")
     },
 
     xetex = {
       if (is.null(getOption('tikzXelatex'))) {
-        stop(strwrap("Cannot find XeLaTeX! Please check your system
-            configuration or manually provide a value for
-            options(tikzXelatex)"))
+        stop("Cannot find XeLaTeX! Please check your system",
+            "configuration or manually provide a value for",
+            "options(tikzXelatex)")
       }
       packages <- getOption("tikzXelatexPackages")
     },
@@ -165,9 +165,9 @@ function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
 
     xetex = {
       if (is.null(getOption('tikzXelatex'))) {
-        stop(strwrap("Cannot find XeLaTeX! Please check your system
-            configuration or manually provide a value for
-            options(tikzXelatex)"))
+        stop("Cannot find XeLaTeX! Please check your system",
+            "configuration or manually provide a value for",
+            "options(tikzXelatex)")
       }
       packages <- getOption('tikzXelatexPackages')
     },
@@ -187,9 +187,9 @@ function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
 
 	if ( engine == 'pdftex' && !(charCode > 31 && charCode < 127 ) ) {
     if (getOption('tikzPdftexWarnUTF')) {
-      warning(strwrap("pdftex can only generate metrics for character codes
-          between 32 and 126! See the Unicode section of ?tikzDevice for more
-          information."))
+      warning("pdftex can only generate metrics for character codes ",
+          "between 32 and 126! See the Unicode section of ?tikzDevice ",
+          "for more information.")
     }
 		return(NULL)
 	}
