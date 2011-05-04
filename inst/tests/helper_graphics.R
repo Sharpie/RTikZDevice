@@ -1,5 +1,6 @@
 # This file contains functions that help set up and run the tikzDevice through
 # test graphs.
+
 do_graphics_test <- function(short_name, description, graph_code,
   uses_xetex = FALSE, graph_options = NULL, skip_if = NULL, ...) {
 
@@ -46,14 +47,14 @@ do_graphics_test <- function(short_name, description, graph_code,
 
   })
 
-  test_that('Output passes regression check',{
+  test_that('Output regression check',{
 
-    # TODO:
-    # For future implementation.
-    #
-    # Use the `compare` utility in imagemagick/graphicsmagick to diff the
+    # Uses the `compare` utility in imagemagick/graphicsmagick to diff the
     # generated graph against a "standard". If there are any differences, we
     # changed the code in a way that broke the behavior of the TikzDevice.
+    # This test always "passes" as the real result is the number of pixels that
+    # were found to be different between the test graph and the standard graph.
+    # Such a result must be interpreted by a human.
     expect_that(compare_graph(short_name), is_true())
 
   })
@@ -102,7 +103,7 @@ compile_graph <- function(graph_file, uses_xetex){
 compare_graph <- function(graph_name){
 
   if ( is.null(compare_cmd) ) {
-    cat("SKIP")
+    testthat:::test_reporter()$vis_result('SKIP')
     return(TRUE)
   }
 
@@ -110,7 +111,7 @@ compare_graph <- function(graph_name){
   standard_graph <- file.path(test_standard_dir, str_c(graph_name, '.pdf'))
 
   if ( !file.exists(test_output) || !file.exists(standard_graph) ) {
-    cat("SKIP")
+    testthat:::test_reporter()$vis_result('SKIP')
     return(TRUE)
   }
 
@@ -128,8 +129,9 @@ compare_graph <- function(graph_name){
     'bash -c ', shQuote(command_line)),
     intern = TRUE, ignore.stderr = TRUE))
 
-  cat(result)
+  testthat:::test_reporter()$vis_result(result)
 
   return(TRUE)
 
 }
+
