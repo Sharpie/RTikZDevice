@@ -1,3 +1,6 @@
+# Switch to the detailed reporter implemented in helper_reporters.R
+testthat:::with_reporter(DetailedReporter, {
+
 context('Test tikzDevice error and warning messages')
 
 test_that('Null device is not a tikzDevice',{
@@ -63,7 +66,7 @@ test_that('tikzAnnotate refuses to work with a non-tikzDevice',{
 
 })
 
-test_that('UTF8 calculation fails when XeTeX cannot find a character in the current font.',{
+test_that('XeTeX warns about unrecognized UTF8 characters',{
 
   expect_that(
     getLatexStrWidth('α', engine = 'xetex'),
@@ -71,3 +74,7 @@ test_that('UTF8 calculation fails when XeTeX cannot find a character in the curr
   )
 
 })
+
+testthat:::end_context() # Needs to be done manually due to reporter swap
+}) # End reporter swap
+

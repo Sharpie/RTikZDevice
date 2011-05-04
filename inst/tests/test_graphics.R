@@ -1,3 +1,6 @@
+# Switch to the detailed reporter implemented in helper_reporters.R
+testthat:::with_reporter(GraphicsReporter, {
+
 test_graphs <- list(
   list(
     short_name = 'hello_TeX',
@@ -493,8 +496,11 @@ test_that('All graphics devices closed',{
 
 })
 
+testthat:::end_context() # Needs to be done manually due to reporter swap
+}) # End reporter swap
 
-message('\n\nFinished generating TikZ test graphs.')
+
+message('\nFinished generating TikZ test graphs.')
 message('PDF files are in:\n\t', test_output_dir)
 message('\nTeX sources and log files are in:\n\t', test_work_dir)
 

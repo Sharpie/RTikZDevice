@@ -1,3 +1,6 @@
+# This file contains functions that help set up and run the tikzDevice through
+# test graphs.
+
 do_graphics_test <- function(short_name, description, graph_code,
   uses_xetex = FALSE, graph_options = NULL, skip_if = NULL, ...) {
 
@@ -44,14 +47,14 @@ do_graphics_test <- function(short_name, description, graph_code,
 
   })
 
-  test_that('Output passes regression check',{
+  test_that('Output regression check',{
 
-    # TODO:
-    # For future implementation.
-    #
-    # Use the `compare` utility in imagemagick/graphicsmagick to diff the
+    # Uses the `compare` utility in imagemagick/graphicsmagick to diff the
     # generated graph against a "standard". If there are any differences, we
     # changed the code in a way that broke the behavior of the TikzDevice.
+    # This test always "passes" as the real result is the number of pixels that
+    # were found to be different between the test graph and the standard graph.
+    # Such a result must be interpreted by a human.
     expect_that(compare_graph(short_name), is_true())
 
   })
@@ -100,7 +103,7 @@ compile_graph <- function(graph_file, uses_xetex){
 compare_graph <- function(graph_name){
 
   if ( is.null(compare_cmd) ) {
-    cat("SKIP")
+    testthat:::test_reporter()$vis_result('SKIP')
     return(TRUE)
   }
 
@@ -108,33 +111,27 @@ compare_graph <- function(graph_name){
   standard_graph <- file.path(test_standard_dir, str_c(graph_name, '.pdf'))
 
   if ( !file.exists(test_output) || !file.exists(standard_graph) ) {
-    cat("SKIP")
+    testthat:::test_reporter()$vis_result('SKIP')
     return(TRUE)
   }
 
-  tmp_file <- file.path(test_work_dir, 'compare.tmp')
 
   # Normalize and quote some paths in case we are running on Windows
-  test_output <- str_c('"', test_output, '"')
-  standard_graph <- str_c('"', standard_graph, '"')
-  compare_cmd <- str_c('"', compare_cmd, '"')
-  compare_output <- str_c('"',
-    file.path(test_work_dir, str_c(graph_name, '_diff.png')),
-    '"')
+  compare_output <- file.path(test_work_dir, str_c(graph_name, '_diff.png'))
+  command_line <- paste(
+    shQuote(compare_cmd), '-density 300', '-metric AE',
+    shQuote(test_output), shQuote(standard_graph), shQuote(compare_output),
+    "2>&1 | awk '{metric=$NF};END{print metric}'"
+  )
 
-
-  result <- capture.output(system(paste(
+  result <- as.double(system(paste(
     # Force the command to be executed through bash
-    'bash -c \'', compare_cmd, '-density 300', '-metric AE',
-    test_output, standard_graph, compare_output,
-    '>', str_c('"', tmp_file, '"'), '2>&1\'')))
+    'bash -c ', shQuote(command_line)),
+    intern = TRUE, ignore.stderr = TRUE))
 
-  # R does not properly capture the output of `compare` for some reason so we
-  # use bash redirection to collect it in a temp file.
-  result <- as.double(readLines(tmp_file))
-
-  cat(result)
+  testthat:::test_reporter()$vis_result(result)
 
   return(TRUE)
 
 }
+
