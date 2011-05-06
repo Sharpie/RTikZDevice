@@ -1,9 +1,6 @@
 % !TEX TS-program = Sweave
 % !TEX root = tikzDevice.Rnw
 
-% Required packages
-\RequirePackage{xstring}
-
 % Font macros
 \newcommand{\lang}{\textsf}
 % Mbox it to prevent hyphenation of code
@@ -18,28 +15,7 @@
 \newcommand{\TikZ}{Ti\textit{k}Z}
 
 % Source code formatting macros
-\lstloadlanguages{R}
-
 \lstset{basicstyle = \ttfamily}
-
-\lstdefinestyle{sweavechunk}{
-	language = R,
-	% The hacked version of the Sweave output function inserts these tags
-	% around each output portion- we can grab them and apply formatting
-	% to everything inside.
-	moredelim=[is][\color{gray}]
-		{Swe@veBeginOutput}
-		{Swe@veEndOutput},
-	moredelim=[is][]
-		{Swe@veBeginInput}
-		{Swe@veEndInput},
-	% Normal TeX tildes are kind of ugly- let's substitute a math symbol instead.
-	% Shit, why not replace <- as well? *Mad typographic scientist cackle*
-	literate={~}{{$\sim$}}1,
-	showstringspaces = false,
-	upquote = false,
-	commentstyle = {\color{blue!70}\itshape}
-}
 
 \lstdefinestyle{latexsource}{
 	language = [LaTeX]TeX,
@@ -103,167 +79,5 @@
 
 }
 
-
-% Re-define and customize the Schunk environment. Three tasks to perform:
-%
-%   * Capture all output using a verbatim environment and pipe it to a
-%     temporary file.
-%
-%   * Process the temporary file and replace all Sinput/Soutput environments
-%     with custom delimiters that listings can use.
-%
-%   * Re-define Schunk to execute the above to steps and then read in the
-%     final result using lstinputlisting.
-\makeatletter
-
-% This macro initiates a verbatim environment that writes it's contents
-% to a temporary file. Since write registers are precious, we will re-use
-% the register allocated by tikzCodeBlock.
-\def\sweave@startcapture{%
-  \begingroup%
-    \@bsphack%
-    \immediate\openout\tikzCode@tempFile=\jobname.lsttmp\relax%
-    \def\verbatim@processline{%
-      \immediate\write\tikzCode@tempFile{\the\verbatim@line}%
-    }%
-    \let\do\@makeother\dospecials\catcode`\^^M\active%
-    \verbatim@start
-}
-
-% This macro stops the verbatim environment closes the temporary file.
-\def\sweave@stopcapture{%
-    \immediate\closeout\tikzCode@tempFile%
-    \@esphack%
-  \endgroup%
-}
-
-
-% Step 2. This is the tricky bit---loop over every line in \jobname.lsttmp and
-% check for Sinput/Soutput commands. Remove them and add custom delimiters.
-% These delimiters cannot exist on their own line or listings will leave a
-% blank line when it processes them.
-
-% We need to allocate some TeX variables
-\newread\sweave@tmpin % For reading input
-\newif\ifsweave@skipline % For skipping line processing after reading a delimiter
-\newif\ifsweave@outputready % For determining when a line is ready to be written
-\newtoks\sweave@linebuffer % For holding output lines before they are written
-
-% These macros help fill and manage the output buffer.
-\def\sweave@addtobuffer#1{% For appending to the contents of a token list.
-  % Taken from TeX by Topic
-  \toks0={#1} % Store the string to be added in a temporary buffer
-  % Construct a command that sets the line buffer equal to the contents of it's
-  % self plus the temporary buffer.
-  \edef\act{\noexpand\sweave@linebuffer={\the\sweave@linebuffer \the\toks0}}%
-  % Execute that command.
-  \act%
-}
-
-% This macro will add a line of code read from a temp file to the buffer.
-\def\sweave@addoutput#1{%
-  % expandafter is necessary to ensure #1 gets expanded before being appended to
-  % the buffer. Otherwise we get the name of the macros storing the line of
-  % code instead of the line of code.
-  \expandafter\sweave@addtobuffer\expandafter{#1}%
-  \sweave@outputreadytrue % The buffer now has code inside it for writing.
-}
-
-% This macro will write out the contents of the buffer and reset it. The
-% parameter #1 contains the file that should be written to.
-\def\sweave@flushbuffer#1{%
-  \immediate\write#1{\the\sweave@linebuffer}%
-  \sweave@linebuffer={}%
-  \sweave@outputreadyfalse%
-}
-
-% At the end of the file, we may see a \par returned. This helps us match and
-% skip it. Stash the token making up the \par command as a string literal.
-\edef\sweave@parpattern{\string\par}
-
-% We have to redefine the catcode of the latex escape sequence, \, to 12 when
-% reading input from the file so that backslashes don't trigger weird macros.
-% However, this means we can't match against things like \begin{Sinput} that
-% are defined when \ has a catcode of 0. So, we temporarily swap ! for \ and
-% define our patterns.
-\begingroup
-  % Turn ! into an escape character and deactivate \
-  \catcode`\!=0
-  \catcode`\\=12
-  !gdef!sweave@beginsinput{\begin{Sinput}}
-  !gdef!sweave@endsinput{\end{Sinput}}
-  !gdef!sweave@beginsoutput{\begin{Soutput}}
-  !gdef!sweave@endsoutput{\end{Soutput}}
-!endgroup % ! and \ now revert to their normal usage
-
-
-% This is the main show. It loops over the temporary file created by
-% \sweave@startcapture and uses tools from the xstring package to replace the
-% Sinput and Soutput environment with custom delimiters. The parameter #1
-% contains the name of the temporary file.
-\def\sweave@replaceenvs#1{%
-  \immediate\openin\sweave@tmpin=#1\relax%
-  \immediate\openout\tikzCode@tempFile=\jobname.lstin\relax%
-  \loop % Over each line in the input file
-    \ifeof\sweave@tmpin % End of file
-      \sweave@flushbuffer{\tikzCode@tempFile}%
-    \else%
-      % The xstring package does not like characters that have a catcode of 6,
-      % which is a macro parameter usually denoted by #, or 14 which is the
-      % comment character, usually %. So, we read from the file inside a group
-      % where these characters have been redefined to a catcode of 12 which is
-      % "other" and the normal category code of numbers and symbols. We also
-      % have to shift the catcodes of some other TeX constructs that may be
-      % bothersome. The line read from the file is expanded into a string
-      % literal and defined using xdef so that it will survive the \endgroup.
-      \begingroup
-        \catcode`\#=12
-        \catcode`\%=12
-        \catcode`\~=12
-        \catcode`\\=12
-        \immediate\read\sweave@tmpin to \sweave@codeline
-        \xdef\sweave@codeline{\expandafter\string\sweave@codeline}
-      \endgroup
-      % Now the fun starts. Check the contents of the code line for
-      % Sinput/Soutput environment commands.
-      \IfBeginWith{\sweave@codeline}{\sweave@beginsinput}%
-        {\sweave@addtobuffer{Swe@veBeginInput}\sweave@skiplinetrue}% True
-        {}% False
-      \IfBeginWith{\sweave@codeline}{\sweave@endsinput}%
-        {\sweave@addtobuffer{Swe@veEndInput}\sweave@skiplinetrue}%
-        {}%
-      \IfBeginWith{\sweave@codeline}{\sweave@beginsoutput}%
-        {\sweave@addtobuffer{Swe@veBeginOutput}\sweave@skiplinetrue}%
-        {}%
-      \IfBeginWith{\sweave@codeline}{\sweave@endsoutput}%
-        {\sweave@addtobuffer{Swe@veEndOutput}\sweave@skiplinetrue}%
-        {}%
-      \IfBeginWith{\sweave@codeline}{\sweave@parpattern}%
-        {\sweave@skiplinetrue}%
-        {}%
-      % Now process the line
-      \ifsweave@skipline%
-        \sweave@skiplinefalse%
-      \else%
-        \ifsweave@outputready%
-          \sweave@flushbuffer{\tikzCode@tempFile}%
-        \fi%
-        \sweave@addoutput{\sweave@codeline}%
-      \fi%
-  \repeat% Loop around for another line.
-  \immediate\closein\sweave@tmpin%
-  \immediate\closeout\tikzCode@tempFile%
-}
-
-
-% Here we re-define the Schunk environment declared by Sweave.sty
-\def\Schunk{\sweave@startcapture}
-\def\endSchunk{%
-  \sweave@stopcapture%
-  \sweave@replaceenvs{\jobname.lsttmp}%
-  \tikzCodeInput[listing style=sweavechunk]{\jobname.lstin}%
-}
-
-\makeatother
-
 \endinput
+

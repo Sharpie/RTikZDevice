@@ -5,7 +5,9 @@
 % \VignetteIndexEntry{The tikzDevice Package}
 % \VignetteDepends{tikzDevice}
 % \usepackage{Sweave}
-\usepackage[scaled=.9]{couriers}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[scaled=.85]{inconsolata}
 \usepackage[colorlinks]{hyperref}
 
 % Extra text effects (strikethrough)
@@ -36,9 +38,10 @@
 \usepackage{natbib}
 \bibliographystyle{agufull04}
 
-\usepackage[nogin]{Sweave}
+\usepackage[nogin,noae]{Sweave}
 % Extra pretty pretty printing.
 \usepackage{tikzCodeBlock}
+\usepackage{sweavetolst}
 % Macros created for this document. Make sure tikzCodeBlock is loaded first.
 % For now.
 \input{tikzDeviceMacros}
