@@ -1536,11 +1536,35 @@ Now that we have a place to work, we set up a couple of filenames- one for the i
   writeLines("\\batchmode", texIn)
 \end{tikzCodeBlock}
 
-Here we have started a standard \LaTeX{} input file by specifying \code{article} as the document class. We also add the \code{fontenc} package and specify \code{T1} as its option. This ensures we are using the Type 1 font encoding- by default \TeX and \LaTeX{} use an encoding called \code{OT1}. Why do we need to worry about font encodings? Well, a font encoding specifies which \code{ASCII} symbol codes map to which characters and by default, \lang{R} expects us to be using the Type 1 encoding (\lang{R} does support other encodings- but we're ignoring that for now). For example, in the Type 1 encoding, the character that corresponds to the \code{ASCII} code 60 is the less-than sign: `{\usefont{T1}{cmr}{m}{n}\char60}'. If we were to allow \TeX{} to retain its default \code{OT1} encoding, that same character code would instead map to an upside-down exclamation point: `{\char60}'.
+Here we have started a standard \LaTeX{} input file by specifying
+\code{article} as the document class. We also add the \code{fontenc} package
+and specify \code{T1} as its option. This ensures we are using the Type 1 font
+encoding- by default \TeX and \LaTeX{} use an encoding called \code{OT1}. Why
+do we need to worry about font encodings? Well, a font encoding specifies which
+\code{ASCII} symbol codes map to which characters and by default, \lang{R}
+expects us to be using the Type 1 encoding (\lang{R} does support other
+encodings- but we're ignoring that for now). For example, in the Type 1
+encoding, the character that corresponds to the \code{ASCII} code 60 is the
+less-than sign: `{\char60}'. If we were to allow \TeX{}
+to retain its default \code{OT1} encoding, that same character code would
+instead map to an upside-down exclamation point: `{\usefont{OT1}{lmr}{m}{n}\char60}'.
 
-The other two packages we load are the \code{tikz} package and its \code{calc} library. Essentially we will have \TikZ{} drop the character into a box and report some measurements concerning the size of that box. The last command, \code{batchmode} tells \LaTeX{} that there isn't any user available to interact with-- so it should bother to stop and ask any questions while processing this file.
+The other two packages we load are the \code{tikz} package and its \code{calc}
+library. Essentially we will have \TikZ{} drop the character into a box and
+report some measurements concerning the size of that box. The last command,
+\code{batchmode} tells \LaTeX{} that there isn't any user available to interact
+with-- so it should bother to stop and ask any questions while processing this
+file.
 
-The next step is to set up the part of the \LaTeX{} file that will actually calculate and report the widths we are looking for. As mentioned before, this is done by setting the character inside a \TikZ{} node and extracting the dimensions of the box that surrounds it. In an attempt to improve clarity, the following code will be presented as straight \LaTeX{} -- \code{getLatexCharMetrics} inserts it into the \code{texIn} file by means of \code{writeLines} as we have been doing all along. The string highlighted in {\color{red} red} should be replaced with the value of the variable charCode that was passed in to the function\code{getLatexCharMetrics}.
+The next step is to set up the part of the \LaTeX{} file that will actually
+calculate and report the widths we are looking for. As mentioned before, this
+is done by setting the character inside a \TikZ{} node and extracting the
+dimensions of the box that surrounds it. In an attempt to improve clarity, the
+following code will be presented as straight \LaTeX{} --
+\code{getLatexCharMetrics} inserts it into the \code{texIn} file by means of
+\code{writeLines} as we have been doing all along. The string highlighted in
+{\color{red} red} should be replaced with the value of the variable charCode
+that was passed in to the function\code{getLatexCharMetrics}.
 
 \begin{tikzCodeBlock}[title={Extracting character dimensions using \TikZ},listing style=latexexample]
 \begin{tikzpicture}
