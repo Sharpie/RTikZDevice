@@ -72,17 +72,19 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #' See the TikZ vignette for more information and examples.
 #'
 #' @usage tikzAnnotate(annotation)
-#'   tikzCoord(x, y, name)
+#'   tikzCoord(x, y, name, units = 'user')
 #'   tikzAnnotateGrob(annotation)
-#'   tikzCoordGrob(x, y, name, units)
+#'   tikzCoordGrob(x, y, name, units = 'native')
 #' @param annotation A character vector, one element per line to be added to
 #'   the open tikz device.
 #' @param x numeric, x location for a named coordinate in user coordinates
 #' @param y numeric, y location for a named coordinate in user coordinates
+#' @param units Character string specifying the unit system associated with
+#'   \code{x} and \code{y}. See \code{\link{grconvertX}} for acceptable
+#'   units in base graphics and \code{\link{unit}} for acceptable
+#'   units in grid graphics.
 #' @param name Character string giving a name for the coordinate (as seen by
 #'   TikZ)
-#' @param units Character string specifying the unit system to be used in grid
-#'   graphics. See \code{\link{unit}} for details.
 #' @return Nothing returned.
 #'
 #' @author Cameron Bracken <cameron.bracken@@gmail.com> and Charlie Sharpsteen
@@ -174,16 +176,18 @@ function (annotation)
 }
 
 tikzCoord <-
-function( x, y, name ){
+function( x, y, name, units = 'user'){
 
 	# Ensure we got a character.
 	if( !is.character(name) ){
 		stop( "The coordinate name must be a character!" )
 	}
 
-	# Convert user coordinates to device coordinates.
-	tikzX <- grconvertX( x, to = 'device' )
-	tikzY <- grconvertY( y, to = 'device' )
+	# Convert coordinates to device coordinates.
+  if ( units != 'device' ) {
+    tikzX <- grconvertX(x, from = units, to = 'device')
+    tikzY <- grconvertY(y, from = units, to = 'device')
+  }
 
   # Use tikzAnnotate() to add a coordinate.
   tikzAnnotate(paste('\\coordinate (', name, ') at (',
@@ -218,8 +222,6 @@ drawDetails.tikz_annotation <- function(x, recording) {
 drawDetails.tikz_coord <- function(x, recording) {
 
   coords <- gridToDevice(x$x, x$y, x$units)
-
-  tikzAnnotate(paste('\\coordinate (', x$coord_name, ') at (',
-    coords[1], ',', coords[2], ');', sep=''))
+  tikzCoord(coords[1], coords[2], x$cord_name, units = 'device')
 
 }
