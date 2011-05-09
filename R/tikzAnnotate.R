@@ -72,44 +72,53 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #' See the TikZ vignette for more information and examples.
 #'
 #' @usage tikzAnnotate(annotation)
+#'   tikzNode(x = NULL, y = NULL,
+#'     opts = NULL, name = NULL, content = NULL, units = 'user')
 #'   tikzCoord(x, y, name, units = 'user')
 #'   tikzAnnotateGrob(annotation)
+#'   tikzNodeGrob(x = NULL, y = NULL,
+#'     opts = NULL, name = NULL, content = NULL, units = 'native')
 #'   tikzCoordGrob(x, y, name, units = 'native')
 #' @param annotation A character vector, one element per line to be added to
 #'   the open tikz device.
 #' @param x numeric, x location for a named coordinate in user coordinates
 #' @param y numeric, y location for a named coordinate in user coordinates
+#' @param opts A character string that will be used as options for a \code{node}.
+#'   See the "Nodes and Edges" section of the TikZ manual for complete details.
+#' @param name Optional character string that will be used as a name for a
+#'   \code{coordiinate} or \code{node}. Other TikZ commands can use this
+#'   name to refer to an object's location.
+#' @param content A character string that will be used as the content to be displayed
+#'   inside of a \code{node}. If left as \code{NULL} a \code{coordinate} will be
+#'   created instead. If a \code{node} with empty content is truely desired,
+#'   pass an empty string \code{""}.
 #' @param units Character string specifying the unit system associated with
 #'   \code{x} and \code{y}. See \code{\link{grconvertX}} for acceptable
 #'   units in base graphics and \code{\link{unit}} for acceptable
 #'   units in grid graphics.
-#' @param name Character string giving a name for the coordinate (as seen by
-#'   TikZ)
 #' @return Nothing returned.
 #'
 #' @author Cameron Bracken <cameron.bracken@@gmail.com> and Charlie Sharpsteen
 #'   \email{source@@sharpsteen.net}
 #'
 #' @name tikzAnnotate
-#' @aliases tikzAnnotate tikzCoord tikzAnnotateGrob tikzCoordGrob
+#' @aliases tikzAnnotate tikzNode tikzCoord tikzAnnotateGrob tikzNodeGrob tikzCoordGrob
 #' @seealso
 #'   \code{\link{grconvertX}}
 #'   \code{\link{grconvertY}}
-#'   \code{\link{tikzDevice}}
-#'   \code{\link{tikz}}
 #'   \code{\link{gridToDevice}}
 #'   \code{\link{unit}}
+#'   \code{\link{tikz}}
 #'
 #' @keywords device
 #'
 #' @examples
 #'
 #' \dontrun{
-#' #### Example 1
-#' 	library(tikzDevice)
-#' 	options(tikzLatexPackages = c(getOption('tikzLatexPackages'),
-#' 		"\\\\usetikzlibrary{shapes.arrows}"))
-#' 	tikz(standAlone=TRUE)
+#' #### Example 1: Base Graphics
+#' 	require(tikzDevice)
+#' 	tikz(standAlone=TRUE, packages = c(getOption('tikzLatexPackages'),
+#'    '\\\\usetikzlibrary{shapes.arrows,shapes.callouts}))
 #' 	plot(1)
 #' 	x <- grconvertX(1,,'device')
 #' 	y <- grconvertY(1,,'device')
@@ -155,9 +164,10 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #' 	dev.off()
 #' }
 #'
-#' @export tikzAnnotate tikzCoord tikzAnnotateGrob tikzCoordGrob
+#' @export tikzAnnotate tikzNode tikzCoord tikzAnnotateGrob tikzNodeGrob tikzCoordGrob
 #' @importFrom grid grob drawDetails
 #' @S3method drawDetails tikz_annotation
+#' @S3method drawDetails tikz_node
 #' @S3method drawDetails tikz_coord
 NULL
 
@@ -175,28 +185,50 @@ function (annotation)
 	invisible()
 }
 
-tikzCoord <-
-function( x, y, name, units = 'user'){
+tikzNode <- function(
+  x = NULL, y = NULL,
+  opts = NULL,
+  name = NULL, content = NULL,
+  units = 'user'
+) {
+  # If there is no node content, we create a coordinate.
+  node_string <- ifelse(is.null(content), '\\coordinate', '\\node')
 
-	# Ensure we got a character.
-	if( !is.character(name) ){
-		stop( "The coordinate name must be a character!" )
-	}
+  # Process the other components.
+  if ( !is.null(opts) ) {
+    node_string <- paste(node_string, '[', opts, ']', sep = '')
+  }
+  if ( !is.null(name) ) {
+    # Ensure we got a character.
+    if ( !is.character(name) ) {
+      stop( "The coordinate name must be a character!" )
+    }
 
-	# Convert coordinates to device coordinates.
-  if ( units != 'device' ) {
-    tikzX <- grconvertX(x, from = units, to = 'device')
-    tikzY <- grconvertY(y, from = units, to = 'device')
+    node_string <- paste(node_string, ' (', name, ')', sep = '')
+  }
+  if ( !is.null(x) && !is.null(y) ) {
+    # Convert coordinates to device coordinates.
+    if ( units != 'device' ) {
+      x <- grconvertX(x, from = units, to = 'device')
+      y <- grconvertY(y, from = units, to = 'device')
+    }
+
+    node_string <- paste(node_string,
+      ' at (', round(x,2), ',', round(y,2), ')', sep = '')
+  }
+  if ( !is.null(content) ) {
+    node_string <- paste(node_string, ' {', content, '}', sep = '')
   }
 
   # Use tikzAnnotate() to add a coordinate.
-  tikzAnnotate(paste('\\coordinate (', name, ') at (',
-    tikzX, ',', tikzY, ');', sep=''))
+  tikzAnnotate(paste(node_string, ';', sep = ''))
 
-	# Return the coordinate name, invisibly.
-	invisible(
-		paste( '(', name, ')', sep = '' )
-	)
+}
+
+
+tikzCoord <- function( x, y, name, units = 'user') {
+
+  tikzNode(x = x, y = y, name = name, units = units)
 
 }
 
@@ -207,15 +239,41 @@ tikzAnnotateGrob <- function(annotation) {
 
 }
 
+tikzNodeGrob <- function(
+  x = NULL, y = NULL,
+  opts = NULL, name = NULL,
+  content = NULL,
+  units = 'native'
+) {
+
+  grob(x = x, y = y, opts = opts, coord_name = name, content = content,
+    units = units, cl = 'tikz_node')
+
+}
+
 tikzCoordGrob <- function(x, y, name, units = 'native') {
 
   grob(x = x, y = y, coord_name = name, units = units, cl = 'tikz_coord')
 
 }
 
+
 drawDetails.tikz_annotation <- function(x, recording) {
 
   tikzAnnotate(x$annotation)
+
+}
+
+drawDetails.tikz_node <- function(x, recording) {
+
+  if ( is.null(x$x) && is.null(x$y) ) {
+    coords <- c(NULL, NULL)
+  } else {
+    coords <- gridToDevice(x$x, x$y, x$units)
+  }
+
+  tikzNode(coords[1], coords[2], x$opts,
+    x$cord_name, x$content, units = 'device')
 
 }
 
