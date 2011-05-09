@@ -124,3 +124,56 @@ function( x, y, name ){
 	)
 
 }
+
+
+#' Convert grid coordinates to device coordinates
+#'
+#' This function converts a coordinate pair specifying a location in a
+#' grid \code{\link{viewport}} in grid units to a coordinate pair specifying a
+#' location in device units relative to the lower left corner of the plotting
+#' canvas.
+#'
+#' @param x x coordinate.
+#' @param y y coordinate. If no values are given for \code{x} and \code{y}, the
+#'   location of the lower-left corner of the current viewport will be
+#'   calculated.
+#' @param units Character string indicating the units of \code{x} and \code{y}.
+#'   See the \code{\link{unit}} function for acceptable unit types.
+#'
+#' @return A tuple of coordinates in device units.
+#'
+#' @author Charlie Sharpsteen \email{source@@sharpsteen.net}
+#'
+#' @keywords graphics grid conversion units
+#' @seealso
+#'   \code{\link{unit}}
+#'   \code{\link{viewport}}
+#'   \code{\link{convertX}}
+#'   \code{\link{convertY}}
+#'   \code{\link{current.transform}}
+#'
+#'
+#' @export
+#' @importFrom grid convertX convertY current.transform
+gridToDevice <- function(x = 0, y = 0, units = 'native') {
+  # Converts a coordinate pair from the current viewport to an "absolute
+  # location" measured in device units from the lower left corner. This is done
+  # by first casting to inches in the current viewport and then using the
+  # current.transform() matric to obtain inches in the device canvas.
+  x <- convertX(unit(x, units), unitTo = 'inches', valueOnly = TRUE)
+  y <- convertY(unit(y, units), unitTo = 'inches', valueOnly = TRUE)
+
+  transCoords <- c(x,y,1) %*% current.transform()
+  transCoords <- (transCoords / transCoords[3])
+
+  return(
+    # Finally, cast from inches to device coordinates (which are TeX points for
+    # the tikzDevice)
+    c(
+      grconvertX(transCoords[1], from = 'inches', to = 'device'),
+      grconvertY(transCoords[2], from = 'inches', to = 'device')
+    )
+  )
+
+}
+
