@@ -199,6 +199,18 @@ tikzNode <- function(
     node_string <- paste(node_string, ' (', name, ')', sep = '')
   }
   if ( !is.null(x) && !is.null(y) ) {
+    # For now, we demand that x and y be scalar values.
+    # TODO: Vectorize this function
+    if ( length(x) > 1 ) {
+      warning("More than one X coordinate specified. Only the first will be used!")
+      x <- x[1]
+    }
+
+    if ( length(y) > 1 ) {
+      warning("More than one Y coordinate specified. Only the first will be used!")
+      y <- y[1]
+    }
+
     # Convert coordinates to device coordinates.
     if ( units != 'device' ) {
       x <- grconvertX(x, from = units, to = 'device')

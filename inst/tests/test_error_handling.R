@@ -75,6 +75,30 @@ test_that('XeTeX warns about unrecognized UTF8 characters',{
 
 })
 
+test_that('tikzNode warns about more than one X coordinate value',{
+  tikz()
+  plot.new()
+  on.exit(dev.off())
+
+  expect_that(
+    tikzCoord(c(1,2), 2, 'test'),
+    gives_warning('More than one X coordinate specified')
+  )
+
+})
+
+test_that('tikzNode warns about more than one Y coordinate value',{
+  tikz()
+  plot.new()
+  on.exit(dev.off())
+
+  expect_that(
+    tikzCoord(1, c(1,2), 'test'),
+    gives_warning('More than one Y coordinate specified')
+  )
+
+})
+
 testthat:::end_context() # Needs to be done manually due to reporter swap
 }) # End reporter swap
 
