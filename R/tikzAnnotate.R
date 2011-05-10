@@ -55,21 +55,33 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #' This function allows custom (LaTeX) commands to be added to the output of an
 #' active tikzDevice.
 #'
-#' \code{tikzAnnotate} is intended to allow the drawing of TikZ commands for
-#' annotating graphics. If you annotate a graphic with a command that needs a
-#' coordinate \strong{you must convert user coordinates to device coordinates
-#' with the \code{\link{grconvertX}} or \code{\link{grconvertY}} function}.
+#' \code{tikzAnnotate} is intended to allow the insertion of arbitrary TikZ
+#' commands into the output stream of a graphic. For LaTeX commands that
+#' reference specific locations in an R plot, coordinates must be specified in
+#' "device units" which for \code{tikz} output are TeX points relative to the
+#' lower left corner of the device canvas. Functions such as
+#' \code{\link{grconvertX}} and \code{\link{gridToDevice}} can help make the
+#' necessary conversions for base and grid graphics. The \code{tikzNode} and
+#' \code{tikzCoord} functions automatically perform unit conversions acording
+#' the the value of their \code{units} parameters.
 #'
-#' \code{tikzCoord} is a wrapper for \code{tikzAnnotate} that inserts TikZ
-#' \code{\\coordinate} commands into the output.  Coordinates are named
-#' locations that may be referred to by other TikZ drawing commands.
+#' \code{tikzNode} is a wrapper for \code{tikzAnnotate} that inserts TikZ
+#' \code{\\node} or \code{\\coordinates} commands into the output. The
+#' difference between a node and a coordinate is the presence of a
+#' \code{content} section that can contain arbitrary LaTeX text. This is
+#' useful for adding textual annotations at specific locations in a TikZ
+#' graphic. The \code{tikzCoord} function is a wrapper for \code{tikzNode}
+#' that simplifies the task of inserting named coordinates.
 #'
-#' \code{tikzAnnotateGrob} and \code{tikzCoordGrob} create "graphics objects"
-#' that are suitable for use with the grid graphics system.
-#' \code{tikzCoordGrob} uses \code{\link{gridToDevice}} to translate between
-#' grid coordinates and device coordinates.
+#' Additionally, the \code{tikzAnnotateGrob}, \code{tikzNodeGrob} and
+#' \code{tikzCoordGrob} functions are supplied for creating grid objects
+#' or "\code{\link{grob}}s" that can be used in Grid graphics. High level
+#' wrapper functions \code{grid.tikzAnnotate}, \code{grid.tikzNode} and
+#' \code{grid.tikzCoord} are also supplied which creat and render a \code{grob}
+#' in one step.
 #'
-#' See the TikZ vignette for more information and examples.
+#' See the TikZ Device vignette for more information and examples and the
+#' TikZ manual for the definitive reference on what is possible with nodes.
 #'
 #' @usage tikzAnnotate(annotation)
 #'   tikzNode(x = NULL, y = NULL,
@@ -79,6 +91,11 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #'   tikzNodeGrob(x = NULL, y = NULL,
 #'     opts = NULL, name = NULL, content = NULL, units = 'native')
 #'   tikzCoordGrob(x, y, name, units = 'native')
+#'   grid.tikzAnnotate(annotation, draw = TRUE)
+#'   grid.tikzNode(x = NULL, y = NULL,
+#'     opts = NULL, name = NULL, content = NULL, units = 'native', draw = TRUE)
+#'   grid.tikzCoord(x, y, name, units = 'native', draw = TRUE)
+#'
 #' @param annotation A character vector, one element per line to be added to
 #'   the open tikz device.
 #' @param x numeric, x location for a named coordinate in user coordinates
@@ -87,30 +104,23 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #'   See the "Nodes and Edges" section of the TikZ manual for complete details.
 #' @param name Optional character string that will be used as a name for a
 #'   \code{coordiinate} or \code{node}. Other TikZ commands can use this
-#'   name to refer to an object's location.
+#'   name to refer to a location in a graphic.
 #' @param content A character string that will be used as the content to be displayed
 #'   inside of a \code{node}. If left as \code{NULL} a \code{coordinate} will be
-#'   created instead. If a \code{node} with empty content is truely desired,
-#'   pass an empty string \code{""}.
+#'   created instead of a \code{node}. If a \code{node} with empty content is truely
+#'   desired, pass an empty string \code{""}.
 #' @param units Character string specifying the unit system associated with
 #'   \code{x} and \code{y}. See \code{\link{grconvertX}} for acceptable
 #'   units in base graphics and \code{\link{unit}} for acceptable
 #'   units in grid graphics.
+#' @param draw A logical value indicating whether graphics output should be
+#'   produced.
+#'
 #' @return Nothing returned.
 #'
 #' @author Cameron Bracken <cameron.bracken@@gmail.com> and Charlie Sharpsteen
 #'   \email{source@@sharpsteen.net}
 #'
-#' @name tikzAnnotate
-#' @aliases tikzAnnotate tikzNode tikzCoord tikzAnnotateGrob tikzNodeGrob tikzCoordGrob
-#' @seealso
-#'   \code{\link{grconvertX}}
-#'   \code{\link{grconvertY}}
-#'   \code{\link{gridToDevice}}
-#'   \code{\link{unit}}
-#'   \code{\link{tikz}}
-#'
-#' @keywords device
 #'
 #' @examples
 #'
@@ -156,13 +166,32 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #'
 #' }
 #'
-#' @export tikzAnnotate tikzNode tikzCoord tikzAnnotateGrob tikzNodeGrob tikzCoordGrob
+#'
+#' @name tikzAnnotate
+#' @keywords tikz device annotation
+#' @seealso
+#'   \code{\link{grconvertX}}
+#'   \code{\link{grconvertY}}
+#'   \code{\link{gridToDevice}}
+#'   \code{\link{unit}}
+#'   \code{\link{tikz}}
+#' @aliases
+#'   tikzAnnotate tikzNode tikzCoord
+#'   tikzAnnotateGrob tikzNodeGrob tikzCoordGrob
+#'   grid.tikzAnnotate grid.tikzNode grid.tikzCoord
+#' @export
+#'   tikzAnnotate tikzNode tikzCoord
+#'   tikzAnnotateGrob tikzNodeGrob tikzCoordGrob
+#'   grid.tikzAnnotate grid.tikzNode grid.tikzCoord
 #' @importFrom grid grob drawDetails
 #' @S3method drawDetails tikz_annotation
 #' @S3method drawDetails tikz_node
 #' @S3method drawDetails tikz_coord
 NULL
 
+#-------------------------------------------------------------------------------
+#                         Annotation of Base Graphics
+#-------------------------------------------------------------------------------
 tikzAnnotate <-
 function (annotation)
 {
@@ -237,6 +266,15 @@ tikzCoord <- function( x, y, name, units = 'user') {
 }
 
 
+#-------------------------------------------------------------------------------
+#                         Annotation of Grid Graphics
+#
+# These functions are merely wrappers that call the base graphics functions in
+# the end.
+#-------------------------------------------------------------------------------
+
+# Constructors for grid objects (grobs)
+#--------------------------------------
 tikzAnnotateGrob <- function(annotation) {
 
   grob(annotation = annotation, cl = 'tikz_annotation')
@@ -261,7 +299,50 @@ tikzCoordGrob <- function(x, y, name, units = 'native') {
 
 }
 
+# Grid wrapper functions
+#-----------------------
+grid.tikzAnnotate <- function(annotation, draw = TRUE) {
 
+  annotate_grob <- tikzAnnotateGrob(annotation)
+  if ( draw ) { grid.draw(annotate_grob) }
+
+  invisible( annotate_grob )
+
+}
+
+grid.tikzNode <- function(
+  x = NULL, y = NULL,
+  opts = NULL, name = NULL,
+  content = NULL,
+  units = 'native',
+  draw = TRUE
+) {
+
+  node_grob <- tikzNodeGrob(
+    x = x, y = y,
+    opts = opts, name = name, content = content,
+    units = units
+  )
+  if (draw) { grid.draw(node_grob) }
+
+  invisible(node_grob)
+
+}
+
+grid.tikzCoord <- function(x, y, name, units = 'native', draw = TRUE) {
+
+  coord_grob <- tikzCoordGrob(x = x, y = y, name = name, units = units)
+  if (draw) { grid.draw(coord_grob) }
+
+  invisible(coord_grob)
+
+}
+
+# Grid execution
+#---------------
+# These S3 methods get executed when TikZ annotation grobs get drawn to a
+# device. They handle the actual "drawing" of the annotations by calling to the
+# base graphics functions.
 drawDetails.tikz_annotation <- function(x, recording) {
 
   tikzAnnotate(x$annotation)
@@ -277,13 +358,13 @@ drawDetails.tikz_node <- function(x, recording) {
   }
 
   tikzNode(coords[1], coords[2], x$opts,
-    x$cord_name, x$content, units = 'device')
+    x$coord_name, x$content, units = 'device')
 
 }
 
 drawDetails.tikz_coord <- function(x, recording) {
 
   coords <- gridToDevice(x$x, x$y, x$units)
-  tikzCoord(coords[1], coords[2], x$cord_name, units = 'device')
+  tikzCoord(coords[1], coords[2], x$coord_name, units = 'device')
 
 }
