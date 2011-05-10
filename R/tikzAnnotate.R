@@ -115,53 +115,45 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #' @examples
 #'
 #' \dontrun{
-#' #### Example 1: Base Graphics
-#' 	require(tikzDevice)
-#' 	tikz(standAlone=TRUE, packages = c(getOption('tikzLatexPackages'),
-#'    '\\\\usetikzlibrary{shapes.arrows,shapes.callouts}))
-#' 	plot(1)
-#' 	x <- grconvertX(1,,'device')
-#' 	y <- grconvertY(1,,'device')
-#' 	tikzAnnotate(paste('\\\\node[single arrow,anchor=tip,draw,fill=green] at (',
-#' 		x,',',y,') {Look over here!};'))
-#' 	dev.off()
 #'
-#' #### Example 2
-#' 	options(tikzLatexPackages =
-#' 	    c(getOption('tikzLatexPackages'),
-#' 	        c("\\\\usetikzlibrary{decorations.pathreplacing}",
-#' 	        "\\\\usetikzlibrary{shapes.arrows}")))
+#' ### Example 1: Annotations in Base Graphics
+#' # Load some additional TikZ libraries
+#' tikz("annotation.tex",width=4,height=4,
+#'   packages = c(getOption('tikzLatexPackages'),
+#'     "\\usetikzlibrary{decorations.pathreplacing}",
+#'     "\\usetikzlibrary{positioning}",
+#'     "\\usetikzlibrary{shapes.arrows,shapes.symbols}")
+#' )
 #'
-#' 	p <- rgamma(300,1)
-#' 	outliers <- which( p > quantile(p,.75)+1.5*IQR(p) )
+#' p <- rgamma (300 ,1)
+#' outliers <- which( p > quantile(p,.75)+1.5*IQR(p) )
+#' boxplot(p)
 #'
-#' 	tikz("annotation.tex",width=4,height=4)
-#' 	    boxplot(p)
+#' # Add named coordinates that other TikZ commands can hook onto
+#' tikzCoord(1, min(p[outliers]), 'min outlier')
+#' tikzCoord(1, max(p[outliers]), 'max outlier')
 #'
-#' 	    min.outlier <- grconvertY(min( p[outliers] ),, "device")
-#' 	    max.outlier <- grconvertY(max( p[outliers] ),, "device")
-#' 	    x <- grconvertX(1,,"device")
+#' # Use tikzAnnotate to insert arbitrary code, such as drawing a
+#' # fancy path between min outlier and max outlier.
+#' tikzAnnotate(c("\\draw[very thick,red,",
+#'   # Turn the path into a brace.
+#'   'decorate,decoration={brace,amplitude=12pt},',
+#'   # Shift it 1em to the left of the coordinates
+#'   'transform canvas={xshift=-1em}]',
+#'   '(min outlier) --',
+#'   # Add a node with some text in the middle of the path
+#'   'node[single arrow,anchor=tip,fill=white,draw=green,',
+#'   'left=14pt,text width=0.70in,align=center]',
+#'   '{Holy Outliers Batman!}', '(max outlier);'))
 #'
-#' 	    tikzAnnotate(paste("\\\\node (min) at (",x,',',min.outlier,") {};"))
-#' 	    tikzAnnotate(paste("\\\\node (max) at (",x,',',max.outlier,") {};"))
-#' 	    tikzAnnotate(c("\\\\draw[decorate,very thick,red,",
-#' 	        "decoration={brace,amplitude=20pt}] (min) ",
-#' 	        "-- node[single arrow,anchor=tip,left=20pt,draw=green] ",
-#' 	        "{Look at These Outliers!} (max);"))
-#' 	    tikzAnnotate(c("\\\\node[starburst, fill=green, ",
-#' 	        "draw=blue, very thick,right=of max]  (burst) {Wow!};"))
-#' 	    tikzAnnotate(c("\\\\draw[->, very thick] (burst.west) -- (max);"))
+#' # tikzNode can be used to place nodes with customized options and content
+#' tikzNode(
+#'   opts='starburst,fill=green,draw=blue,very thick,right=of max outlier',
+#'   content='Wow!'
+#' )
 #'
-#' 	dev.off()
-#' 	setTikzDefaults()
+#' dev.off()
 #'
-#' #### Example 3 - Using tikzCoord
-#' 	tikz(standAlone=TRUE)
-#' 	plot(1:2,type='l')
-#' 	tikzCoord(1,1,'one')
-#' 	tikzCoord(1,1,'two')
-#' 	tikzAnnotate("\\\\draw[black] (one) -- (two);")
-#' 	dev.off()
 #' }
 #'
 #' @export tikzAnnotate tikzNode tikzCoord tikzAnnotateGrob tikzNodeGrob tikzCoordGrob
