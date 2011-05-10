@@ -164,6 +164,29 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #'
 #' dev.off()
 #'
+#'
+#' ### Example 2: Annotations in Grid Graphics
+#' require(grid)
+#'
+#' tikz("grid_annotation.tex",width=4,height=4,
+#'   packages = c(getOption('tikzLatexPackages'),
+#'     "\\usetikzlibrary{shapes.callouts}")
+#' )
+#'
+#' pushViewport(plotViewport())
+#' pushViewport(dataViewport(1:10, 1:10))
+#'
+#' grid.rect()
+#' grid.xaxis()
+#' grid.yaxis()
+#' grid.points(1:10, 1:10)
+#'
+#' for ( i in seq(2,8,2) ){
+#'   grid.tikzNode(i,i,opts='ellipse callout,draw,anchor=pointer',content=i)
+#' }
+#'
+#' dev.off()
+#'
 #' }
 #'
 #'

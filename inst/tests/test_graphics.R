@@ -298,6 +298,34 @@ test_graphs <- list(
   ),
 
   list(
+    short_name = 'grid_annotation',
+    description = 'Annotation of grid graphics',
+    tags = c('grid', 'annotation'),
+    graph_options = list(
+      tikzLatexPackages = c(getOption('tikzLatexPackages'),
+        "\\usetikzlibrary{shapes.callouts}"
+      )
+    ),
+    graph_code = quote({
+
+      require(grid)
+
+      pushViewport(plotViewport())
+      pushViewport(dataViewport(1:10, 1:10))
+
+      grid.rect()
+      grid.xaxis()
+      grid.yaxis()
+      grid.points(1:10, 1:10)
+
+      for ( i in seq(2,8,2) ){
+        grid.tikzNode(i,i,opts='ellipse callout,draw,anchor=pointer',content=i)
+      }
+
+    })
+  ),
+
+  list(
     short_name = 'ggplot2_test',
     description = 'Test of ggplot2 graphics',
     tags = c('ggplot2'),
