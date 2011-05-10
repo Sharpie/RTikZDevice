@@ -33,6 +33,9 @@ do_graphics_test <- function(short_name, description, graph_code,
   graph_file <- file.path(test_work_dir, str_c(short_name,'.tex'))
 
   test_that('Graph is created cleanly',{
+    # Set random number generator to a known state so results will be
+    # reproducible
+    set.seed(4) # As specified by RFC 1149.5 ;)
 
     expect_that(
       create_graph(graph_code, graph_file, uses_xetex),
