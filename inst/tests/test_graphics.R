@@ -255,6 +255,77 @@ test_graphs <- list(
   ),
 
   list(
+    short_name = 'base_annotation',
+    description = 'Annotation of base graphics',
+    tags = c('base', 'annotation'),
+    graph_options = list(
+      tikzLatexPackages = c(getOption('tikzLatexPackages'),
+        "\\usetikzlibrary{decorations.pathreplacing}",
+        "\\usetikzlibrary{positioning}",
+        "\\usetikzlibrary{shapes.arrows,shapes.symbols}"
+      )
+    ),
+    graph_code = quote({
+
+      p <- rgamma (300 ,1)
+      outliers <- which( p > quantile(p,.75)+1.5*IQR(p) )
+      boxplot(p)
+
+      # Add named coordinates that other TikZ commands can hook onto
+      tikzCoord(1, min(p[outliers]), 'min outlier')
+      tikzCoord(1, max(p[outliers]), 'max outlier')
+
+      # Use tikzAnnotate to insert arbitrary code, such as drawing a fancy path
+      # between min outlier and max outlier.
+      tikzAnnotate(c("\\draw[very thick,red,",
+        # Turn the path into a brace.
+        'decorate,decoration={brace,amplitude=12pt},',
+        # Shift it 1em to the left of the coordinates
+        'transform canvas={xshift=-1em}]',
+        '(min outlier) --',
+        # Add a node with some text in the middle of the path
+        'node[single arrow,anchor=tip,fill=white,draw=green,',
+        'left=14pt,text width=0.70in,align=center]',
+        '{Holy Outliers Batman!}', '(max outlier);'))
+
+      # tikzNode can be used to place nodes with customized options and content
+      tikzNode(
+        opts='starburst,fill=green,draw=blue,very thick,right=of max outlier',
+        content='Wow!'
+      )
+
+    })
+  ),
+
+  list(
+    short_name = 'grid_annotation',
+    description = 'Annotation of grid graphics',
+    tags = c('grid', 'annotation'),
+    graph_options = list(
+      tikzLatexPackages = c(getOption('tikzLatexPackages'),
+        "\\usetikzlibrary{shapes.callouts}"
+      )
+    ),
+    graph_code = quote({
+
+      require(grid)
+
+      pushViewport(plotViewport())
+      pushViewport(dataViewport(1:10, 1:10))
+
+      grid.rect()
+      grid.xaxis()
+      grid.yaxis()
+      grid.points(1:10, 1:10)
+
+      for ( i in seq(2,8,2) ){
+        grid.tikzNode(i,i,opts='ellipse callout,draw,anchor=pointer',content=i)
+      }
+
+    })
+  ),
+
+  list(
     short_name = 'ggplot2_test',
     description = 'Test of ggplot2 graphics',
     tags = c('ggplot2'),

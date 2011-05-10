@@ -964,36 +964,44 @@ will produce the output in \autoref{fig:xelatex}!  Please note some of the fonts
 The function \code{tikzAnnotate} provides the ability to annotate you graphics with \TikZ{} commands.  There are a lot of exciting possibilities with this feature; It basically opens up the door for you to draw anything on your plot that can be drawn with \TikZ{}. Check out the results in \autoref{fig:annotation}.
 
 <<annotation,echo=T,results=hide,keep.source=T>>=
-options(tikzLatexPackages = 
-    c(getOption('tikzLatexPackages'),
-        c("\\usetikzlibrary{decorations.pathreplacing}",
-        "\\usetikzlibrary{shapes.arrows}")))
+require(tikzDevice)
 
-p <- rgamma(300,1)
+# Load some additional TikZ libraries
+tikz("annotation.tex",width=4,height=4,
+  packages = c(getOption('tikzLatexPackages'),
+    "\\usetikzlibrary{decorations.pathreplacing}",
+    "\\usetikzlibrary{positioning}",
+    "\\usetikzlibrary{shapes.arrows,shapes.symbols}")
+)
+
+p <- rgamma (300 ,1)
 outliers <- which( p > quantile(p,.75)+1.5*IQR(p) )
-
-tikz("annotation.tex",width=4,height=4)
 boxplot(p)
 
-min.outlier <- grconvertY(min( p[outliers] ),, "device")
-max.outlier <- grconvertY(max( p[outliers] ),, "device")
-x <- grconvertX(1,,"device")
+# Add named coordinates that other TikZ commands can hook onto
+tikzCoord(1, min(p[outliers]), 'min outlier')
+tikzCoord(1, max(p[outliers]), 'max outlier')
 
-tikzAnnotate(paste("\\coordinate (min) at (",x,',',min.outlier,") {};"))
-tikzAnnotate(paste("\\coordinate (max) at (",x,',',max.outlier,") {};"))
+# Use tikzAnnotate to insert arbitrary code, such as drawing a
+# fancy path between min outlier and max outlier.
+tikzAnnotate(c("\\draw[very thick,red,",
+  # Turn the path into a brace.
+  'decorate,decoration={brace,amplitude=12pt},',
+  # Shift it 1em to the left of the coordinates
+  'transform canvas={xshift=-1em}]',
+  '(min outlier) --',
+  # Add a node with some text in the middle of the path
+  'node[single arrow,anchor=tip,fill=white,draw=green,',
+  'left=14pt,text width=0.70in,align=center]',
+  '{Holy Outliers Batman!}', '(max outlier);'))
 
-tikzAnnotate(c("\\draw[decorate,very thick,red,",
-    "decoration={brace,amplitude=20pt}] (min) ",
-    "-- node[single arrow,anchor=tip,fill=white,left=20pt,draw=green] ",
-    "{Look at These Outliers!} (max);"))
-
-tikzAnnotate(c("\\node[starburst, fill=green, ",
-    "draw=blue, very thick,right=of max]  (burst) {Wow!};"))
-
-tikzAnnotate(c("\\draw[->, very thick] (burst.west) -- (max);"))
+# tikzNode can be used to place nodes with customized options and content
+tikzNode(
+  opts='starburst,fill=green,draw=blue,very thick,right=of max outlier',
+  content='Wow!'
+)
 
 dev.off()
-setTikzDefaults()
 @
 
 \begin{figure}[!h]

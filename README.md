@@ -97,6 +97,21 @@ to the development of the package!
 
 ---
 
+#### New Features
+
+- The annotation system has been improved. A new function `tikzNode` has been
+  added that makes it easy to insert TikZ nodes with custom options and
+  content. `tikzCoord` is now a wrapper for `tikzNode` that simplifies the
+  function call required to get a plain coordinate.
+
+- Annotation of Grid graphics is now supported. New functions
+  `tikzAnnotateGrob`, `tikzNodeGrob` and `tikzCoordGrob` allow the creation of
+  Grid grobs that execute annotiation commands when drawn to a `tikz` device.
+  Wrapper functions `grid.tikzAnnotate`, `grid.tikzNode` and `grid.tikzCoord`
+  are also provided. The necessary transformations between Grid coordinates,
+  which are viewport-centric, to absolute device coordinates are handled by a
+  new function `gridToDevice`.
+
 #### Behind the Scenes
 
 - The tikzDevice is now checked with "visual regression testing" which compares
