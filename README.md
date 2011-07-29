@@ -103,6 +103,8 @@ to the development of the package!
 
 #### Behind the Scenes
 
+  - Upgrade documentation generation from Roxygen to Roxygen2.
+
   - Some magic numbers that control the leading used in the margin text of base
     graphics were adjusted to values used by the PDF device. Hopefully this
     will make the spacing used by x axis labels and y axis labels a bit more
