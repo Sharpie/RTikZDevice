@@ -1068,9 +1068,9 @@ static void TikZ_Text( double x, double y, const char *str,
     cleanString = Sanitize( tikzString );
   	if(tikzInfo->debug == TRUE)
     	printOutput(tikzInfo,"\n%% Sanatized %s to %s\n",tikzString,cleanString);
-    printOutput(tikzInfo, "%s%%\n};\n", cleanString);
+    printOutput(tikzInfo, "%s};\n", cleanString);
   }else{
-    printOutput(tikzInfo, "%s%%\n};\n", tikzString);
+    printOutput(tikzInfo, "%s};\n", tikzString);
   }
 
   /* 
