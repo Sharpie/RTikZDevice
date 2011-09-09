@@ -112,6 +112,13 @@ to the development of the package!
   which are viewport-centric, to absolute device coordinates are handled by a
   new function `gridToDevice`.
 
+#### Bug Fixes
+
+- Fixed a bug where the outline of the background bounding box was being drawn
+  with the forground color instead of the background color. This was
+  unnoticible except when a non-white background was used. Thanks to Matthieu
+  Stigler for reporting.
+
 #### Behind the Scenes
 
 - The tikzDevice is now checked with "visual regression testing" which compares
