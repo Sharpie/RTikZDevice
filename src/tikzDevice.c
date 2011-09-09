@@ -600,7 +600,7 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
   /* Fill canvas background */
   printOutput(tikzInfo, "\\fill[color=fillColor,");
-  SetAlpha(plotParams->col, TRUE, tikzInfo);
+  SetAlpha(plotParams->fill, TRUE, tikzInfo);
   printOutput(tikzInfo, "] (0,0) rectangle (%6.2f,%6.2f);\n",
     deviceInfo->right,deviceInfo->top);
 
