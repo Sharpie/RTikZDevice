@@ -81,7 +81,7 @@ SEXP TikZ_StartDevice ( SEXP args ){
   Rboolean standAlone, bareBones;
   const char *documentDeclaration, *packages, *footer;
   double baseSize;
-  Rboolean console, sanitize;
+  Rboolean console, sanitize, onefile;
 
   /* 
    * pGEDevDesc is a variable provided by the R Graphics Engine
@@ -112,6 +112,8 @@ SEXP TikZ_StartDevice ( SEXP args ){
   /* For now these are assumed to be in inches. */
   width = asReal(CAR(args)); args = CDR(args);
   height = asReal(CAR(args)); args = CDR(args);
+
+  onefile = asLogical(CAR(args)); args = CDR(args);
   
   /* Recover initial background and foreground colors. */
   bg = CHAR(asChar(CAR(args))); args = CDR(args);
@@ -180,7 +182,7 @@ SEXP TikZ_StartDevice ( SEXP args ){
      * R graphics function hooks with the appropriate C routines
      * in this file.
     */
-    if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, baseSize,
+    if( !TikZ_Setup( deviceInfo, fileName, width, height, onefile, bg, fg, baseSize,
         standAlone, bareBones, documentDeclaration, packages,
         footer, console, sanitize, engine ) ){
       /* 
@@ -221,7 +223,7 @@ SEXP TikZ_StartDevice ( SEXP args ){
 static Rboolean TikZ_Setup(
   pDevDesc deviceInfo,
   const char *fileName,
-  double width, double height,
+  double width, double height, Rboolean onefile,
   const char *bg, const char *fg, double baseSize,
   Rboolean standAlone, Rboolean bareBones,
   const char *documentDeclaration,
@@ -265,8 +267,21 @@ static Rboolean TikZ_Setup(
   }
 
   /* Copy TikZ-specific information to the tikzInfo variable. */
-  tikzInfo->outFileName = (char*) calloc(strlen(fileName) + 1, sizeof(char));
-  strcpy(tikzInfo->outFileName, fileName);
+	if(onefile == FALSE){
+		
+		// Hopefully 10 extra digits will be enough for the separate file name
+  	tikzInfo->outFileName = (char*) calloc(strlen(fileName) + 10, sizeof(char));
+		tikzInfo->originalFileName = (char*) calloc(strlen(fileName) + 1, sizeof(char));
+  	sprintf(tikzInfo->outFileName, fileName, 1);
+		strcpy(tikzInfo->originalFileName, fileName);
+		//Rprintf("First file name: %s\n",tikzInfo->outFileName);
+		
+	}else{
+		
+		tikzInfo->outFileName = (char*) calloc(strlen(fileName) + 1, sizeof(char));
+		strcpy(tikzInfo->outFileName, fileName);
+		
+	}
   tikzInfo->engine = engine;
   tikzInfo->rasterFileCount = 1;
   tikzInfo->firstPage = TRUE;
@@ -285,6 +300,7 @@ static Rboolean TikZ_Setup(
   tikzInfo->polyLine = FALSE;
   tikzInfo->console = console;
   tikzInfo->sanitize = sanitize;
+  tikzInfo->onefile = onefile;
 
   /* Incorporate tikzInfo into deviceInfo. */
   deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -505,7 +521,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
   if(tikzInfo->outFileName[0] == '\0'){
     //If empty file name output to console
     tikzInfo->console = TRUE; 
-  }else{  
+  }else{
     if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
       return FALSE;
   }
@@ -569,7 +585,10 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
   if ( tikzInfo->firstPage ){
+	
     tikzInfo->firstPage = FALSE;
+		tikzInfo->pageNum = 1;
+		
   }else{
 
     /* End the current TikZ environment, unless we are making bare bones code. */
@@ -578,6 +597,40 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
       printOutput(tikzInfo, "\\end{scope}\n");
       printOutput(tikzInfo, "\\end{tikzpicture}\n");
       
+			tikzInfo->pageNum++;
+			
+				// If we need to output to a new file
+			if(tikzInfo->onefile == FALSE){
+				
+					// Close off the document if in standAlone mode
+				if(tikzInfo->standAlone == TRUE)
+			    printOutput(tikzInfo,"\n\\end{document}\n");
+				
+					//Close current file
+				fclose(tikzInfo->outputFile);
+				
+					//Re-assign new file name with incremented page number
+	  		sprintf(tikzInfo->outFileName, tikzInfo->originalFileName, tikzInfo->pageNum);
+	
+					// Open the new file
+				if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
+		      error("Cannot open new file.");
+				
+				/* Print header comment */
+			  Print_TikZ_Header( tikzInfo );
+			
+				/* Header for a standalone LaTeX document, 
+				* need to print it again if we are writing to a new file
+				*/
+			  if(tikzInfo->standAlone == TRUE){
+			    printOutput(tikzInfo,"%s",tikzInfo->documentDeclaration);
+			    printOutput(tikzInfo,"%s",tikzInfo->packages);
+			    printOutput(tikzInfo,"\\begin{document}\n\n");
+			  }
+			
+				//Rprintf("New file name: %s\n",tikzInfo->outFileName);
+			}
+
       /*Next clipping region will be the first on the page*/
       tikzInfo->firstClip = TRUE;
 
