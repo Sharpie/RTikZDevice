@@ -112,6 +112,9 @@ to the development of the package!
   which are viewport-centric, to absolute device coordinates are handled by a
   new function `gridToDevice`.
 
+- Support has been added for the `dev.capabilities` function scheduled to
+  appear in R 2.14.0.
+
 #### Bug Fixes
 
 - Fixed a bug where the outline of the background bounding box was being drawn
