@@ -7,12 +7,8 @@ function(libname, pkgname) {
   # on the path. If LaTeX can not be found, loading of
   # this package will be aborted as a LaTeX compiler is
   # required in order to determine string metrics.
-
-  if( !require( filehash, quietly=TRUE ) ){ 
-    stop("tikzDevice requires the filehash package to be available.") 
-  }
-  
   # Ensure package options are set
+
   setTikzDefaults( overwrite = FALSE )
 
   versionInfo <- read.dcf(file.path( libname, pkgname, "DESCRIPTION"))
@@ -30,7 +26,7 @@ function(libname, pkgname) {
   checkedXelatex <- c()
 
   latexTest <- function( pathToTeX, pathDesc ){
-    
+
     Sys.setenv("PATH" = Sys.getenv("PATH"))
     latexPath <<- Sys.which( paste( pathToTeX ) )
 
