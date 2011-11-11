@@ -374,6 +374,15 @@ static Rboolean TikZ_Setup(
       break;
   }
 
+#if R_GE_version >= 9
+  /* Added in 2.14.0 for `dev.capabilities`. In all cases 0 means NA (unset). */
+  deviceInfo->haveTransparency = 2;  /* 1 = no, 2 = yes */
+  deviceInfo->haveTransparentBg = 2; /* 1 = no, 2 = fully, 3 = semi */
+  deviceInfo->haveRaster = 2;        /* 1 = no, 2 = yes, 3 = except for missing values */
+  deviceInfo->haveCapture = 1;       /* 1 = no, 2 = yes */
+  deviceInfo->haveLocator = 1;       /* 1 = no, 2 = yes */
+#endif
+
   /*
    * Initialize device parameters. These concern properties such as the 
    * plotting canvas size, the initial foreground and background colors and 
@@ -600,7 +609,7 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
   /* Fill canvas background */
   printOutput(tikzInfo, "\\fill[color=fillColor,");
-  SetAlpha(plotParams->col, TRUE, tikzInfo);
+  SetAlpha(plotParams->fill, TRUE, tikzInfo);
   printOutput(tikzInfo, "] (0,0) rectangle (%6.2f,%6.2f);\n",
     deviceInfo->right,deviceInfo->top);
 
@@ -1068,9 +1077,9 @@ static void TikZ_Text( double x, double y, const char *str,
     cleanString = Sanitize( tikzString );
   	if(tikzInfo->debug == TRUE)
     	printOutput(tikzInfo,"\n%% Sanatized %s to %s\n",tikzString,cleanString);
-    printOutput(tikzInfo, "%s%%\n};\n", cleanString);
+    printOutput(tikzInfo, "%s};\n", cleanString);
   }else{
-    printOutput(tikzInfo, "%s%%\n};\n", tikzString);
+    printOutput(tikzInfo, "%s};\n", tikzString);
   }
 
   /* 
@@ -1351,7 +1360,7 @@ TikZ_Path( double *x, double *y,
   printOutput(tikzInfo, ";\n");
 
 }
-#endif
+#endif /* End code only for R Graphics v8 or newer (R 2.12.0 or newer) */
 
 
 /*

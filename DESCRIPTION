@@ -4,9 +4,9 @@ Maintainer: The tikzDevice team
 License: GPL (>= 3)
 BugReports: https://github.com/Sharpie/RTikZDevice/issues
 Title: A Device for R Graphics Output in PGF/TikZ Format
-Version: 0.6.2
-Date: 2011-05-03
-Author: Charlie Sharpsteen and Cameron Bracken
+LazyLoad: yes
+Author: Charlie Sharpsteen <chuck@sharpsteen.net> and Cameron Bracken
+    <cameron.bracken@gmail.com>
 Description: The TikZ device enables LaTeX-ready output from R graphics
     functions. This is done by producing code that can be understood by
     the TikZ graphics language. All text in a graphic output with the
@@ -15,8 +15,12 @@ Description: The TikZ device enables LaTeX-ready output from R graphics
     means that LaTeX mathematics can be typeset directly into labels
     and annotations!  Graphics produced this way can also be annotated
     with custom TikZ commands.
+SystemRequirements: pgf (>= 2.00)
+Version: 0.6.2
 URL: https://github.com/Sharpie/RTikZDevice
+Date: 2011-04-14
 Depends: R (>= 2.11.0), filehash
 Suggests: testthat (>= 0.4), evaluate, stringr, ggplot2, maps
-SystemRequirements: pgf (>= 2.00)
-LazyLoad: yes
+Collate: 'anyMultibyteUTF8Characters.R' 'cacheMetrics.R'
+    'deviceUtils.R' 'latexStrWidth.R' 'sanitizeTexString.R' 'tikz.R'
+    'tikzAnnotate.R' 'tikzInternal.R' 'zzz.R'

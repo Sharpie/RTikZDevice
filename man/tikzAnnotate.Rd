@@ -3,83 +3,150 @@
 \alias{tikzAnnotate}
 \title{Add Custom TikZ Code to an Active Device...}
 \usage{tikzAnnotate(annotation)
-tikzCoord(x, y, name)}
-\description{Add Custom TikZ Code to an Active Device
-This function allows custom (LaTeX) commands to be added to the output of an
-active tikzDevice.}
-\details{\code{tikzAnnotate()} is intended to allow the drawing of TikZ commands for
-annotating graphics. If you annotate a graphic with a command that needs a
-coordinate \strong{you must convert user coordinates to device coordinates
-with the \code{\link{grconvertX}} or \code{\link{grconvertY}} function}.
+tikzNode(x = NULL, y = NULL,
+opts = NULL, name = NULL, content = NULL, units = 'user')
+tikzCoord(x, y, name, units = 'user')
+tikzAnnotateGrob(annotation)
+tikzNodeGrob(x = NULL, y = NULL,
+opts = NULL, name = NULL, content = NULL, units = 'native')
+tikzCoordGrob(x, y, name, units = 'native')
+grid.tikzAnnotate(annotation, draw = TRUE)
+grid.tikzNode(x = NULL, y = NULL,
+opts = NULL, name = NULL, content = NULL, units = 'native', draw = TRUE)
+grid.tikzCoord(x, y, name, units = 'native', draw = TRUE)}
+\description{Add Custom TikZ Code to an Active Device}
+\details{This function allows custom (LaTeX) commands to be added to the output of an
+active tikzDevice.
 
-\code{tikzCoord()} is a wrapper for \code{tikzAnnotate()} that inserts TikZ
-\code{\\coordinate} commands into the output.  Coordinates are named
-locations that may be referred to by other TikZ drawing commands.
+\code{tikzAnnotate} is intended to allow the insertion of arbitrary TikZ
+commands into the output stream of a graphic. For LaTeX commands that
+reference specific locations in an R plot, coordinates must be specified in
+"device units" which for \code{tikz} output are TeX points relative to the
+lower left corner of the device canvas. Functions such as
+\code{\link{grconvertX}} and \code{\link{gridToDevice}} can help make the
+necessary conversions for base and grid graphics. The \code{tikzNode} and
+\code{tikzCoord} functions automatically perform unit conversions acording
+the the value of their \code{units} parameters.
 
-See the TikZ manual for more information.}
+\code{tikzNode} is a wrapper for \code{tikzAnnotate} that inserts TikZ
+\code{\\node} or \code{\\coordinates} commands into the output. The
+difference between a node and a coordinate is the presence of a
+\code{content} section that can contain arbitrary LaTeX text. This is
+useful for adding textual annotations at specific locations in a TikZ
+graphic. The \code{tikzCoord} function is a wrapper for \code{tikzNode}
+that simplifies the task of inserting named coordinates.
+
+Additionally, the \code{tikzAnnotateGrob}, \code{tikzNodeGrob} and
+\code{tikzCoordGrob} functions are supplied for creating grid objects
+or "\code{\link{grob}}s" that can be used in Grid graphics. High level
+wrapper functions \code{grid.tikzAnnotate}, \code{grid.tikzNode} and
+\code{grid.tikzCoord} are also supplied which creat and render a \code{grob}
+in one step.
+
+See the TikZ Device vignette for more information and examples and the
+TikZ manual for the definitive reference on what is possible with nodes.}
 \value{Nothing returned.}
 \author{Cameron Bracken <cameron.bracken@gmail.com> and Charlie Sharpsteen
 \email{source@sharpsteen.net}}
-\alias{tikzAnnotate}
-\alias{tikzCoord}
-\seealso{\code{\link{grconvertX}},
-\code{\link{grconvertY}},\code{\link{tikzDevice}}, \code{\link{tikz}}}
+\keyword{tikz}
 \keyword{device}
+\keyword{annotation}
+\seealso{\code{\link{grconvertX}}
+\code{\link{grconvertY}}
+\code{\link{gridToDevice}}
+\code{\link{unit}}
+\code{\link{tikz}}}
+\alias{tikzAnnotate}
+\alias{tikzNode}
+\alias{tikzCoord}
+\alias{tikzAnnotateGrob}
+\alias{tikzNodeGrob}
+\alias{tikzCoordGrob}
+\alias{grid.tikzAnnotate}
+\alias{grid.tikzNode}
+\alias{grid.tikzCoord}
 \arguments{\item{annotation}{A character vector, one element per line to be added to
 the open tikz device.}
 \item{x}{numeric, x location for a named coordinate in user coordinates}
 \item{y}{numeric, y location for a named coordinate in user coordinates}
-\item{name}{Character string giving a name for the coordinate (as seen by
-TikZ)}
+\item{opts}{A character string that will be used as options for a \code{node}.
+See the "Nodes and Edges" section of the TikZ manual for complete details.}
+\item{name}{Optional character string that will be used as a name for a
+\code{coordiinate} or \code{node}. Other TikZ commands can use this
+name to refer to a location in a graphic.}
+\item{content}{A character string that will be used as the content to be displayed
+inside of a \code{node}. If left as \code{NULL} a \code{coordinate} will be
+created instead of a \code{node}. If a \code{node} with empty content is truely
+desired, pass an empty string \code{""}.}
+\item{units}{Character string specifying the unit system associated with
+\code{x} and \code{y}. See \code{\link{grconvertX}} for acceptable
+units in base graphics and \code{\link{unit}} for acceptable
+units in grid graphics.}
+\item{draw}{A logical value indicating whether graphics output should be
+produced.}
 }
 \examples{\dontrun{
-#### Example 1
-library(tikzDevice)
-options(tikzLatexPackages = c(getOption('tikzLatexPackages'),
-"\\\\usetikzlibrary{shapes.arrows}"))
-tikz(standAlone=TRUE)
-plot(1)
-x <- grconvertX(1,,'device')
-y <- grconvertY(1,,'device')
-tikzAnnotate(paste('\\\\node[single arrow,anchor=tip,draw,fill=green] at (',
-x,',',y,') {Look over here!};'))
-dev.off()
 
-#### Example 2
-options(tikzLatexPackages =
-c(getOption('tikzLatexPackages'),
-c("\\\\usetikzlibrary{decorations.pathreplacing}",
-"\\\\usetikzlibrary{shapes.arrows}")))
+### Example 1: Annotations in Base Graphics
+# Load some additional TikZ libraries
+tikz("annotation.tex",width=4,height=4,
+packages = c(getOption('tikzLatexPackages'),
+"\\usetikzlibrary{decorations.pathreplacing}",
+"\\usetikzlibrary{positioning}",
+"\\usetikzlibrary{shapes.arrows,shapes.symbols}")
+)
 
-p <- rgamma(300,1)
+p <- rgamma (300 ,1)
 outliers <- which( p > quantile(p,.75)+1.5*IQR(p) )
-
-tikz("annotation.tex",width=4,height=4)
 boxplot(p)
 
-min.outlier <- grconvertY(min( p[outliers] ),, "device")
-max.outlier <- grconvertY(max( p[outliers] ),, "device")
-x <- grconvertX(1,,"device")
+# Add named coordinates that other TikZ commands can hook onto
+tikzCoord(1, min(p[outliers]), 'min outlier')
+tikzCoord(1, max(p[outliers]), 'max outlier')
 
-tikzAnnotate(paste("\\\\node (min) at (",x,',',min.outlier,") {};"))
-tikzAnnotate(paste("\\\\node (max) at (",x,',',max.outlier,") {};"))
-tikzAnnotate(c("\\\\draw[decorate,very thick,red,",
-"decoration={brace,amplitude=20pt}] (min) ",
-"-- node[single arrow,anchor=tip,left=20pt,draw=green] ",
-"{Look at These Outliers!} (max);"))
-tikzAnnotate(c("\\\\node[starburst, fill=green, ",
-"draw=blue, very thick,right=of max]  (burst) {Wow!};"))
-tikzAnnotate(c("\\\\draw[->, very thick] (burst.west) -- (max);"))
+# Use tikzAnnotate to insert arbitrary code, such as drawing a
+# fancy path between min outlier and max outlier.
+tikzAnnotate(c("\\draw[very thick,red,",
+# Turn the path into a brace.
+'decorate,decoration={brace,amplitude=12pt},',
+# Shift it 1em to the left of the coordinates
+'transform canvas={xshift=-1em}]',
+'(min outlier) --',
+# Add a node with some text in the middle of the path
+'node[single arrow,anchor=tip,fill=white,draw=green,',
+'left=14pt,text width=0.70in,align=center]',
+'{Holy Outliers Batman!}', '(max outlier);'))
+
+# tikzNode can be used to place nodes with customized options and content
+tikzNode(
+opts='starburst,fill=green,draw=blue,very thick,right=of max outlier',
+content='Wow!'
+)
 
 dev.off()
-setTikzDefaults()
 
-#### Example 3 - Using tikzCoord
-tikz(standAlone=TRUE)
-plot(1:2,type='l')
-tikzCoord(1,1,'one')
-tikzCoord(1,1,'two')
-tikzAnnotate("\\\\draw[black] (one) -- (two);")
+
+### Example 2: Annotations in Grid Graphics
+require(grid)
+
+tikz("grid_annotation.tex",width=4,height=4,
+packages = c(getOption('tikzLatexPackages'),
+"\\usetikzlibrary{shapes.callouts}")
+)
+
+pushViewport(plotViewport())
+pushViewport(dataViewport(1:10, 1:10))
+
+grid.rect()
+grid.xaxis()
+grid.yaxis()
+grid.points(1:10, 1:10)
+
+for ( i in seq(2,8,2) ){
+grid.tikzNode(i,i,opts='ellipse callout,draw,anchor=pointer',content=i)
+}
+
 dev.off()
+
 }}
 

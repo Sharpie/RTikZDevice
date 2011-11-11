@@ -5,7 +5,9 @@
 % \VignetteIndexEntry{The tikzDevice Package}
 % \VignetteDepends{tikzDevice}
 % \usepackage{Sweave}
-\usepackage[scaled=.9]{couriers}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[scaled=.85]{inconsolata}
 \usepackage[colorlinks]{hyperref}
 
 % Extra text effects (strikethrough)
@@ -36,9 +38,10 @@
 \usepackage{natbib}
 \bibliographystyle{agufull04}
 
-\usepackage[nogin]{Sweave}
+\usepackage[nogin,noae]{Sweave}
 % Extra pretty pretty printing.
 \usepackage{tikzCodeBlock}
+\usepackage{sweavetolst}
 % Macros created for this document. Make sure tikzCodeBlock is loaded first.
 % For now.
 \input{tikzDeviceMacros}
@@ -961,36 +964,44 @@ will produce the output in \autoref{fig:xelatex}!  Please note some of the fonts
 The function \code{tikzAnnotate} provides the ability to annotate you graphics with \TikZ{} commands.  There are a lot of exciting possibilities with this feature; It basically opens up the door for you to draw anything on your plot that can be drawn with \TikZ{}. Check out the results in \autoref{fig:annotation}.
 
 <<annotation,echo=T,results=hide,keep.source=T>>=
-options(tikzLatexPackages = 
-    c(getOption('tikzLatexPackages'),
-        c("\\usetikzlibrary{decorations.pathreplacing}",
-        "\\usetikzlibrary{shapes.arrows}")))
+require(tikzDevice)
 
-p <- rgamma(300,1)
+# Load some additional TikZ libraries
+tikz("annotation.tex",width=4,height=4,
+  packages = c(getOption('tikzLatexPackages'),
+    "\\usetikzlibrary{decorations.pathreplacing}",
+    "\\usetikzlibrary{positioning}",
+    "\\usetikzlibrary{shapes.arrows,shapes.symbols}")
+)
+
+p <- rgamma (300 ,1)
 outliers <- which( p > quantile(p,.75)+1.5*IQR(p) )
-
-tikz("annotation.tex",width=4,height=4)
 boxplot(p)
 
-min.outlier <- grconvertY(min( p[outliers] ),, "device")
-max.outlier <- grconvertY(max( p[outliers] ),, "device")
-x <- grconvertX(1,,"device")
+# Add named coordinates that other TikZ commands can hook onto
+tikzCoord(1, min(p[outliers]), 'min outlier')
+tikzCoord(1, max(p[outliers]), 'max outlier')
 
-tikzAnnotate(paste("\\coordinate (min) at (",x,',',min.outlier,") {};"))
-tikzAnnotate(paste("\\coordinate (max) at (",x,',',max.outlier,") {};"))
+# Use tikzAnnotate to insert arbitrary code, such as drawing a
+# fancy path between min outlier and max outlier.
+tikzAnnotate(c("\\draw[very thick,red,",
+  # Turn the path into a brace.
+  'decorate,decoration={brace,amplitude=12pt},',
+  # Shift it 1em to the left of the coordinates
+  'transform canvas={xshift=-1em}]',
+  '(min outlier) --',
+  # Add a node with some text in the middle of the path
+  'node[single arrow,anchor=tip,fill=white,draw=green,',
+  'left=14pt,text width=0.70in,align=center]',
+  '{Holy Outliers Batman!}', '(max outlier);'))
 
-tikzAnnotate(c("\\draw[decorate,very thick,red,",
-    "decoration={brace,amplitude=20pt}] (min) ",
-    "-- node[single arrow,anchor=tip,fill=white,left=20pt,draw=green] ",
-    "{Look at These Outliers!} (max);"))
-
-tikzAnnotate(c("\\node[starburst, fill=green, ",
-    "draw=blue, very thick,right=of max]  (burst) {Wow!};"))
-
-tikzAnnotate(c("\\draw[->, very thick] (burst.west) -- (max);"))
+# tikzNode can be used to place nodes with customized options and content
+tikzNode(
+  opts='starburst,fill=green,draw=blue,very thick,right=of max outlier',
+  content='Wow!'
+)
 
 dev.off()
-setTikzDefaults()
 @
 
 \begin{figure}[!h]
@@ -1533,11 +1544,35 @@ Now that we have a place to work, we set up a couple of filenames- one for the i
   writeLines("\\batchmode", texIn)
 \end{tikzCodeBlock}
 
-Here we have started a standard \LaTeX{} input file by specifying \code{article} as the document class. We also add the \code{fontenc} package and specify \code{T1} as its option. This ensures we are using the Type 1 font encoding- by default \TeX and \LaTeX{} use an encoding called \code{OT1}. Why do we need to worry about font encodings? Well, a font encoding specifies which \code{ASCII} symbol codes map to which characters and by default, \lang{R} expects us to be using the Type 1 encoding (\lang{R} does support other encodings- but we're ignoring that for now). For example, in the Type 1 encoding, the character that corresponds to the \code{ASCII} code 60 is the less-than sign: `{\usefont{T1}{cmr}{m}{n}\char60}'. If we were to allow \TeX{} to retain its default \code{OT1} encoding, that same character code would instead map to an upside-down exclamation point: `{\char60}'.
+Here we have started a standard \LaTeX{} input file by specifying
+\code{article} as the document class. We also add the \code{fontenc} package
+and specify \code{T1} as its option. This ensures we are using the Type 1 font
+encoding- by default \TeX and \LaTeX{} use an encoding called \code{OT1}. Why
+do we need to worry about font encodings? Well, a font encoding specifies which
+\code{ASCII} symbol codes map to which characters and by default, \lang{R}
+expects us to be using the Type 1 encoding (\lang{R} does support other
+encodings- but we're ignoring that for now). For example, in the Type 1
+encoding, the character that corresponds to the \code{ASCII} code 60 is the
+less-than sign: `{\char60}'. If we were to allow \TeX{}
+to retain its default \code{OT1} encoding, that same character code would
+instead map to an upside-down exclamation point: `{\usefont{OT1}{lmr}{m}{n}\char60}'.
 
-The other two packages we load are the \code{tikz} package and its \code{calc} library. Essentially we will have \TikZ{} drop the character into a box and report some measurements concerning the size of that box. The last command, \code{batchmode} tells \LaTeX{} that there isn't any user available to interact with-- so it should bother to stop and ask any questions while processing this file.
+The other two packages we load are the \code{tikz} package and its \code{calc}
+library. Essentially we will have \TikZ{} drop the character into a box and
+report some measurements concerning the size of that box. The last command,
+\code{batchmode} tells \LaTeX{} that there isn't any user available to interact
+with-- so it should bother to stop and ask any questions while processing this
+file.
 
-The next step is to set up the part of the \LaTeX{} file that will actually calculate and report the widths we are looking for. As mentioned before, this is done by setting the character inside a \TikZ{} node and extracting the dimensions of the box that surrounds it. In an attempt to improve clarity, the following code will be presented as straight \LaTeX{} -- \code{getLatexCharMetrics} inserts it into the \code{texIn} file by means of \code{writeLines} as we have been doing all along. The string highlighted in {\color{red} red} should be replaced with the value of the variable charCode that was passed in to the function\code{getLatexCharMetrics}.
+The next step is to set up the part of the \LaTeX{} file that will actually
+calculate and report the widths we are looking for. As mentioned before, this
+is done by setting the character inside a \TikZ{} node and extracting the
+dimensions of the box that surrounds it. In an attempt to improve clarity, the
+following code will be presented as straight \LaTeX{} --
+\code{getLatexCharMetrics} inserts it into the \code{texIn} file by means of
+\code{writeLines} as we have been doing all along. The string highlighted in
+{\color{red} red} should be replaced with the value of the variable charCode
+that was passed in to the function\code{getLatexCharMetrics}.
 
 \begin{tikzCodeBlock}[title={Extracting character dimensions using \TikZ},listing style=latexexample]
 \begin{tikzpicture}
