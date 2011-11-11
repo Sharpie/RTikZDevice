@@ -61,7 +61,7 @@ help:
 # Development Tasks
 #------------------------------------------------------------------------------
 deps:
-	"$(RBIN)/R" --vanilla --slave -e "install.packages(c('filehash','roxygen','testthat','ggplot2'))"
+	"$(RBIN)/R" --slave -e "install.packages(c('filehash','roxygen','testthat','ggplot2', 'maps'))"
 
 
 docs:
