@@ -7,12 +7,11 @@
 
 
 \details{
-
   \tabular{ll}{
     Package: \tab tikzDevice\cr
     Type: \tab Package\cr
-    Version: \tab 0.6.1\cr
-    Date: \tab 2011-04-14\cr
+    Version: \tab 0.6.2\cr
+    Date: \tab 2011-11-13\cr
     License: \tab GPL 3.0 or greater\cr
     LazyLoad: \tab yes\cr
   }
