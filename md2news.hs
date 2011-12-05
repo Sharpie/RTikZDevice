@@ -21,7 +21,7 @@ formats them into Rd strings and returns a list of the results.
 pandocToRd :: Pandoc -> [String]
 -- mapMaybe is like a regular functional mapping except it throws out Nothing
 -- values and unpacks Just values.
-pandocToRd parsed = map show $ mapMaybe blockToRd (getBlocks parsed)
+pandocToRd parsed = concat $ mapMaybe elementToRd (hierarchicalize $ getBlocks parsed)
 
 
 {-
@@ -35,6 +35,15 @@ documentation of the pandoc-types package:
 -}
 getBlocks :: Pandoc -> [Block]
 getBlocks (Pandoc meta blocks) = blocks
+
+
+elementToRd :: Element -> Maybe [String]
+elementToRd (Blk block) = blockToRd block
+elementToRd (Sec level num ident label contents) = case level of
+  1 -> return $ ["\\section{" ++ (concat $ inlineListToRd label) ++ "}{"] ++ (concat $ mapMaybe elementToRd contents) ++ ["}\n"]
+  2 -> return $ ["\\subsection{" ++ (concat $ inlineListToRd label) ++ "}{"] ++ (concat $ mapMaybe elementToRd contents) ++ ["}"]
+  _ -> Nothing -- Rdoc only has 2 header levels. Silently ignoring anything else
+
 
 {-
 This function is responsible for possibly formatting each block element into a
