@@ -1,4 +1,8 @@
 .git*
+NEWS.md
+NEWS.pdf
+README.md
+TODO
 updateVersion.sh
 md2news.hs
 Makefile
