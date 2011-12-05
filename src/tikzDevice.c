@@ -401,8 +401,8 @@ static Rboolean TikZ_Setup(
   deviceInfo->right = dim2dev( width );
 
   /* Set default character size in pixels. */
-  deviceInfo->cra[0] = 9;
-  deviceInfo->cra[1] = 12;
+  deviceInfo->cra[0] = 0.9 * baseSize;
+  deviceInfo->cra[1] = 1.2 * baseSize;
 
   /* Set initial font. */
   deviceInfo->startfont = 1;
@@ -417,9 +417,9 @@ static Rboolean TikZ_Setup(
    * We hope.
    *
   */
-  deviceInfo->xCharOffset = 0;
-  deviceInfo->yCharOffset = 0;
-  deviceInfo->yLineBias = 0;
+  deviceInfo->xCharOffset = 0.4900;
+  deviceInfo->yCharOffset = 0.3333;
+  deviceInfo->yLineBias = 0.2;
 
   /* Specify the number of inches per pixel in the x and y directions. */
   deviceInfo->ipr[0] = 1/dim2dev(1);
