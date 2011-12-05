@@ -84,13 +84,10 @@ inlineToRd other = return $ show other
 
 sanitizeString :: String -> String
 sanitizeString = escapeStringUsing latexEscapes
-  where latexEscapes = backslashEscapes "{}$%&_#" ++
+  where latexEscapes = backslashEscapes "{}%&_#\\" ++
                        [ ('^', "\\^{}")
-                       , ('\\', "\\textbackslash{}")
                        , ('~', "\\ensuremath{\\sim}")
                        , ('|', "\\textbar{}")
-                       , ('<', "\\textless{}")
-                       , ('>', "\\textgreater{}")
                        , ('[', "{[}")  -- to avoid interpretation as
                        , (']', "{]}")  -- optional arguments
                        , ('\160', "~")
