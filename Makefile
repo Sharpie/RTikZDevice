@@ -28,7 +28,7 @@ test_tags:=
 endif
 
 
-.PHONY: help
+.PHONY: help news
 
 help:
 	@echo "\nExecute development tasks for $(PKGNAME)\n"
@@ -39,6 +39,8 @@ help:
 	@echo "  deps       Install dependencies for package development"
 	@echo "  docs       Invoke roxygen to generate Rd files in a seperate"
 	@echo "             directory"
+	@echo "  news       Create NEWS.Rd and NEWS.pdf from NEWS.md. Requires"
+	@echo "             GHC and Pandoc to be installed."
 	@echo "  vignette   Build a copy of the package vignette"
 	@echo "  build      Invoke docs and then create a package"
 	@echo "  check      Invoke build and then check the package"
@@ -72,6 +74,16 @@ docs:
 	cd ../$(PKGSRC).build;\
 		rm Makefile
 
+news:
+	rm -f NEWS.pdf
+	./md2news.hs NEWS.md
+	# Use this instead of Rd2txt. Rd2txt *does not* produce plaintext. The output
+	# has a bunch of formatting junk for underlines and such.
+	"$(RBIN)/R" --vanilla --slave -e "require(tools);Rd2txt('NEWS.Rd', 'NEWS', options=list(underline_titles=FALSE))"
+	R CMD Rd2pdf NEWS.Rd
+	# Move news into the inst directory so that it will be available to users
+	# after installing the package.
+	mv NEWS.Rd inst
 
 vignette:
 	cd inst/doc;\

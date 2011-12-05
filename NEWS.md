@@ -1,11 +1,10 @@
 ---
 
-### Version: 0.6.2
-Released: 11-13-2011
+# Changes in version 0.6.2 (2011-11-13)
 
 ---
 
-#### New Features
+## New Features
 
 - The annotation system has been improved. A new function `tikzNode` has been
   added that makes it easy to insert TikZ nodes with custom options and
@@ -22,14 +21,14 @@ Released: 11-13-2011
 
 - Support has been added for the `dev.capabilities` function in R 2.14.0.
 
-#### Bug Fixes
+## Bug Fixes
 
 - Fixed a bug where the outline of the background bounding box was being drawn
   with the forground color instead of the background color. This was
   unnoticible except when a non-white background was used. Thanks to Matthieu
   Stigler for reporting.
 
-#### Behind the Scenes
+## Behind the Scenes
 
 - The tikzDevice is now checked with "visual regression testing" which compares
   the results of graphics tests against a set of standard images using a visual
@@ -47,12 +46,11 @@ Released: 11-13-2011
 
 ---
 
-### Version: 0.6.1
-Released: 4-14-2011
+# Changes in version 0.6.1 (2011-4-14)
 
 ---
 
-#### Bug Fixes
+## Bug Fixes
 
 - Fixed a bug where `tikz` was not applying background color to the plot
   canvas.
@@ -63,12 +61,11 @@ Released: 4-14-2011
 
 ---
 
-### Version: 0.6.0
-Released: 4-13-2011
+# Changes in version 0.6.0 (2011-4-13)
 
 ---
 
-#### New Features
+## New Features
 
 - Unicode Support!!!! XeLaTeX may now be used calculate metrics and widths for
   Unicode characters. PdfLaTeX remains the default LaTeX compiler, but this may
@@ -96,7 +93,7 @@ Released: 4-13-2011
   functionality is used.
 
 
-#### Bug Fixes
+## Bug Fixes
 
 - Fixed a bug where the `lwd` parameter used to control line widths was
   declared by tikzDevice to be of type `int` when it is actually a `double`.
@@ -104,13 +101,13 @@ Released: 4-13-2011
   Baptiste Auguie for reporting this issue.
 
 
-#### Depreciation Notices
+## Depreciation Notices
 
 - Versions of R < 2.11.0 are no longer supported due to lack of required
   functions for handling Unicode strings.
 
 
-#### Behind the Scenes
+## Behind the Scenes
 
 - New Makefile for executing common development tasks.
 
@@ -124,11 +121,11 @@ Released: 4-13-2011
 
 ---
 
-### Version: 0.5.3
+# Changes in version 0.5.3
 
 ---
 
-#### Bug Fixes
+## Bug Fixes
 
 - R 2.12.x now throws a warning message when shell commands run via `system()`
   have non-zero exit conditions.  The metric calculation runs LaTeX on a file
@@ -147,18 +144,18 @@ Released: 4-13-2011
 
 ---
 
-### Version: 0.5.2
+# Changes in version 0.5.2
 
 ---
 
-#### Contributors
+## Contributors
 The following people contributed to this release of the tikzDevice:
 
 - mlt for reporting problems with the Sanitize function that led to the
   discovery of two situations where buffer overflows were occurring.
 
 
-#### Bug Fixes
+## Bug Fixes
 
 - Fixed buffer overflows and memory leaks related to string pointers in
   tikzDevice.c.
@@ -170,11 +167,11 @@ The following people contributed to this release of the tikzDevice:
 
 ---
 
-### Version: 0.5.1
+# Changes in version 0.5.1
 
 ---
 
-#### Bug Fixes
+## Bug Fixes
 
 - A stub function has been added so that the `polypath()` function
   introduced in R 2.12.0 won't crash the device.
@@ -200,11 +197,11 @@ The following people contributed to this release of the tikzDevice:
 
 ---
 
-### Version 0.5.0 Beta
+# Changes in version 0.5.0
 
 ---
 
-#### Contributors
+## Contributors
 The following people contributed to this release of the tikzDevice:
 
 - Lorenzo Isella contributed bug reports and examples that led to the
@@ -217,7 +214,7 @@ The following people contributed to this release of the tikzDevice:
 - Gabor Grothendieck for the idea for sending output to the screen 
   for use with sink() (i.e. the "console" option)
 
-#### New Features
+## New Features
 
 - "console" option for directing tikz() output back into the R console
   instead of to a file.
@@ -233,7 +230,7 @@ The following people contributed to this release of the tikzDevice:
   These locations may be referenced by other TikZ drawing commands.
 
 
-#### Bug Fixes
+## Bug Fixes
 
 - Removed bad colon in the DESCRIPTION file.
 
@@ -255,7 +252,7 @@ The following people contributed to this release of the tikzDevice:
 
 ---
 
-### Version 0.4.0 Beta
+# Changes in version 0.4.0
 
 ---
 
@@ -269,10 +266,3 @@ The following people contributed to this release of the tikzDevice:
   price to compute the width of a string, we 
   hopefully only pay it once.
 
----
-
-### Version <= 0.3.0 Alpha/Pre-Alpha
-
----
-
-- Internal Alpha/Pre-Alpha

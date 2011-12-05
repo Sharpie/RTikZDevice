@@ -1,5 +1,6 @@
 .git*
 updateVersion.sh
+md2news.hs
 Makefile
 tests/test_work
 tests/test_output
