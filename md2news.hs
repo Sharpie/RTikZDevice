@@ -109,6 +109,6 @@ main = do
   let results = pandocToRd parsed_markdown
   -- The unlines function joins a list of strings into one big string using
   -- newlines
-  writeFile "NEWS.Rd" $ unlines results
+  writeFile "NEWS.Rd" $ unlines $ ["\\name{NEWS}", "\\title{tikzDevice Changelog}", "\\encoding{UTF-8}\n"] ++ results
   putStrLn "Output written to NEWS.Rd"
 
