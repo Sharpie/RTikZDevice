@@ -664,8 +664,6 @@ static void TikZ_Clip( double x0, double x1,
       "\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
       x0,y0,x1,y1);
       
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
 }
 
 static void TikZ_Size( double *left, double *right,
@@ -1114,8 +1112,7 @@ static void TikZ_Circle( double x, double y, double r,
       "%% Drawing Circle at x = %f, y = %f, r = %f\n",
       x,y,r);
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /* Start drawing, open an options bracket. */
   printOutput(tikzInfo,"\n\\draw[");
@@ -1146,8 +1143,7 @@ static void TikZ_Rectangle( double x0, double y0,
       "%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f\n",
       x0,y0,x1,y1);
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /* Start drawing, open an options bracket. */
   printOutput(tikzInfo,"\n\\draw[");
@@ -1180,8 +1176,7 @@ static void TikZ_Line( double x1, double y1,
       "%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
       x1,y1,x2,y2);
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /* Start drawing a line, open an options bracket. */
   printOutput(tikzInfo,"\n\\draw[");
@@ -1209,8 +1204,7 @@ static void TikZ_Polyline( int n, double *x, double *y,
     printOutput(tikzInfo,
       "%% Starting Polyline\n");
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /* Start drawing, open an options bracket. */
   printOutput(tikzInfo,"\n\\draw[");
@@ -1256,10 +1250,9 @@ static void TikZ_Polygon( int n, double *x, double *y,
   if(tikzInfo->debug == TRUE) 
     printOutput(tikzInfo,
       "%% Starting Polygon\n");
-      
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
-  
+
+  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+
   /* Start drawing, open an options bracket. */
   printOutput(tikzInfo,"\n\\draw[");
   
@@ -1309,8 +1302,7 @@ TikZ_Path( double *x, double *y,
 
   if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing polypath with %i subpaths\n", npoly); }
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /*
    * Start drawing, open an options bracket.
@@ -1618,6 +1610,38 @@ static TikZ_DrawOps TikZ_GetDrawOps(pGEcontext plotParams)
 
   return ops;
 };
+
+static void TikZ_DefineColors(pGEcontext plotParams, pDevDesc deviceInfo, TikZ_DrawOps ops)
+{
+  int color;
+
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if ( ops & DRAWOP_DRAW ) {
+    color = plotParams->col;
+    if ( color != tikzInfo->oldDrawColor ) {
+      tikzInfo->oldDrawColor = color;
+      printOutput(tikzInfo,
+        "\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+        R_RED(color)/255.0,
+        R_GREEN(color)/255.0,
+        R_BLUE(color)/255.0);
+    }
+  }
+
+  if ( ops & DRAWOP_FILL ) {
+    color = plotParams->fill;
+    if( color != tikzInfo->oldFillColor ) {
+      tikzInfo->oldFillColor = color;
+      printOutput(tikzInfo,
+        "\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+        R_RED(color)/255.0,
+        R_GREEN(color)/255.0,
+        R_BLUE(color)/255.0);
+    }
+  }
+
+}
 
 
 /* This function either prints out the color definitions for outline and fill 
