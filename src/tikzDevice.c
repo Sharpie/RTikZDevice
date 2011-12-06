@@ -410,12 +410,13 @@ static Rboolean TikZ_Setup(
   /* Set base font size. */
   deviceInfo->startps = baseSize;
 
-  /* 
+  /*
    * Apparently these are supposed to center text strings over the points at
-   * which they are plotted. TikZ does this automagically.
+   * which they are plotted.
    *
-   * We hope.
-   *
+   * Values cribbed from devPS.c in the R source. In paticular, setting
+   * `yLineBias` to 0 causes text in the margins of an x axis to recieve more
+   * leading that text in the margins of a y axis.
   */
   deviceInfo->xCharOffset = 0.4900;
   deviceInfo->yCharOffset = 0.3333;
