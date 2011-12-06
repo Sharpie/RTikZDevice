@@ -1602,6 +1602,24 @@ static void TikZ_Mode( int mode, pDevDesc deviceInfo ){}
 
 ==============================================================================*/
 
+/*
+ * This function constructs a value that can be tested using a bitwise and to
+ * determine if a given plotting opertion will result in a visible fill or
+ * stroke.
+ */
+static TikZ_DrawOps TikZ_GetDrawOps(pGEcontext plotParams)
+{
+  TikZ_DrawOps ops = DRAWOP_NOOP;
+
+  if( !R_TRANSPARENT(plotParams->col) )
+    ops |= DRAWOP_DRAW;
+  if( !R_TRANSPARENT(plotParams->fill) )
+    ops |= DRAWOP_FILL;
+
+  return ops;
+};
+
+
 /* This function either prints out the color definitions for outline and fill 
  * colors or the style tags in the \draw[] command, the defineColor parameter 
  * tells if the color/style is being defined or used.

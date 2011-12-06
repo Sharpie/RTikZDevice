@@ -155,7 +155,22 @@ static void TikZ_Mode( int mode, pDevDesc deviceInfo );
 
 
 /*Internal style definition routines*/
-static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
+
+/*
+ * This enumeration specifies the kinds of drawing operations that need to be
+ * performed, such as filling or drawing a path.
+ *
+ * When adding new members, use the next power of 2 as so that the presence or
+ * absance of an operation can be determined using bitwise operators.
+ */
+typedef enum {
+  DRAWOP_NOOP = 0,
+  DRAWOP_DRAW = 1,
+  DRAWOP_FILL = 2
+} TikZ_DrawOps;
+static TikZ_DrawOps TikZ_GetDrawOps(pGEcontext plotParams);
+
+static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
 	pDevDesc deviceInfo);
 static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo);
 static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo);
