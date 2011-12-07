@@ -111,3 +111,7 @@ to the development of the package!
     graphics were adjusted to values used by the PDF device. Hopefully this
     will make the spacing used by x axis labels and y axis labels a bit more
     symmetric.
+
+  - The code that handles line color and fill color has been completely
+    refactored to avoid useless operations such as 0 transparency fills and
+    draws.

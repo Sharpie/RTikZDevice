@@ -174,17 +174,6 @@ static void TikZ_DefineColors(const pGEcontext plotParams, pDevDesc deviceInfo, 
 static void TikZ_WriteDrawOptions(const pGEcontext plotParams, pDevDesc deviceInfo, TikZ_DrawOps ops);
 static void TikZ_WriteLineStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo);
 
-static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
-	pDevDesc deviceInfo);
-static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo);
-static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo);
-static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo);
-static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo);
-static void SetDashPattern(int lty, tikzDevDesc *tikzInfo);
-static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo);
-static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
-static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo);
-static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
 static double ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
 
 /* Utility Routines*/
