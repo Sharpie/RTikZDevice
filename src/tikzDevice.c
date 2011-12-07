@@ -1120,17 +1120,9 @@ static void TikZ_Circle( double x, double y, double r,
   TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
-  /* 
-   * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
-  */ 
-  
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
-
-  
   /* End options, print coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) circle (%6.2f);\n",
     x,y,r);
@@ -1151,16 +1143,9 @@ static void TikZ_Rectangle( double x0, double y0,
   TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
-
-  /* 
-   * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
-  */
-  
   /* End options, print coordinates. */
   printOutput(tikzInfo, 
     "] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
@@ -1184,13 +1169,9 @@ static void TikZ_Line( double x1, double y1,
   TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /* Start drawing a line, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-  
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
-  /* More options would go here such as line thickness, style, color etc. */
-  
   /* End options, print coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) -- (%6.2f,%6.2f);\n",
     x1,y1,x2,y2);
@@ -1209,17 +1190,20 @@ static void TikZ_Polyline( int n, double *x, double *y,
     printOutput(tikzInfo,
       "%% Starting Polyline\n");
 
-  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams) & DRAWOP_DRAW);
 
   /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-
-  /* More options would go here such as line thickness, style and color */
-  /*Define the draw styles*/
-  //Setting polyline is a quick hack so that the fill color is not set for poylines
-  tikzInfo->polyLine = TRUE;
-  StyleDef(FALSE, plotParams, deviceInfo);
-  tikzInfo->polyLine = FALSE;
+  printOutput(tikzInfo,"\n\\path[");
+  /*
+   * FIXME:
+   * Any fill operations returned by TikZ_GetDrawOps are removed by
+   * applying a bitwise and with `DRAWOP_DRAW`. This is because the old
+   * StyleDef-based code had an ugly hack in it that explicitly disabled
+   * filling for polypaths.
+   *
+   * This fixme is here because we have no tests that detect this supposed bug.
+   */
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams) & DRAWOP_DRAW);
 
   /* End options, print first set of coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
@@ -1259,15 +1243,8 @@ static void TikZ_Polygon( int n, double *x, double *y,
   TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-  
-  /* 
-   * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
-  */
-  
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /* End options, print first set of coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
@@ -1312,15 +1289,13 @@ TikZ_Path( double *x, double *y,
   /*
    * Start drawing, open an options bracket.
    *
-   * We use \filldraw instead of the normal \draw, because filldraw has builtin
-   * support for handling rule-based filling of operlaping polygons as R expects.
+   * TikZ has built-in support for handling rule-based filling of operlaping
+   * polygons as R expects.
    *
    * Thank you TikZ!
    */
-  printOutput(tikzInfo,"\n\\filldraw[");
-
-  /* Define the draw styles */
-  StyleDef(FALSE, plotParams, deviceInfo);
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
 
   /*
    * Select rule to be used for overlapping fills as specified by the 'winding'
@@ -1328,9 +1303,9 @@ TikZ_Path( double *x, double *y,
    * manual for details.
    */
   if (winding) {
-    printOutput(tikzInfo, "nonzero rule");
+    printOutput(tikzInfo, ",nonzero rule");
   } else {
-    printOutput(tikzInfo, "even odd rule");
+    printOutput(tikzInfo, ",even odd rule");
   }
 
   printOutput(tikzInfo, "]");
@@ -1648,6 +1623,121 @@ static void TikZ_DefineColors(pGEcontext plotParams, pDevDesc deviceInfo, TikZ_D
 
 }
 
+/*
+ * NOTE: This function operates under the assumption that no other functions
+ * have written into the options bracket for a path. Custom path options should
+ * be added after the call to `TikZ_WriteDrawOptions` and should remember to
+ * bring their own commas.
+ */
+static void TikZ_WriteDrawOptions(const pGEcontext plotParams, pDevDesc deviceInfo,
+    TikZ_DrawOps ops)
+{
+  /* Bail out if there is nothing to do */
+  if ( ops == DRAWOP_NOOP )
+    return;
+
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if ( ops & DRAWOP_DRAW ) {
+    printOutput(tikzInfo, "draw=drawColor");
+    if( !R_OPAQUE(plotParams->col) )
+      printOutput(tikzInfo, ",draw opacity=%4.2f", R_ALPHA(plotParams->col)/255.0);
+
+    TikZ_WriteLineStyle(plotParams, tikzInfo);
+  }
+
+  if ( ops & DRAWOP_FILL ) {
+    /* Toss in a comma if we printed draw options */
+    if ( ops & DRAWOP_DRAW )
+      printOutput(tikzInfo, ",");
+
+    printOutput(tikzInfo, "fill=fillColor");
+    if( !R_OPAQUE(plotParams->fill) )
+      printOutput(tikzInfo, ",fill opacity=%4.2f", R_ALPHA(plotParams->fill)/255.0);
+  }
+
+}
+
+static void TikZ_WriteLineStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo)
+{
+  double lwd = plotParams->lwd;
+
+  /*
+   * Set the line width, 0.4pt is the TikZ default so scale lwd=1 relative to
+   * that
+   */
+  printOutput(tikzInfo,",line width=%4.1fpt", 0.4*lwd);
+
+  if ( lwd && (plotParams->lty > 1) ) {
+    char dashlist[8];
+    int i, nlty, lty = plotParams->lty;
+
+    /*
+     * From ?par :
+     *
+     * Line types can either be specified by giving an index into a small
+     * built-in table of line types (1 = solid, 2 = dashed, etc, see lty above)
+     * or directly as the lengths of on/off stretches of line. This is done
+     * with a string of an even number (up to eight) of characters, namely
+     * non-zero (hexadecimal) digits which give the lengths in consecutive
+     * positions in the string. For example, the string "33" specifies three
+     * units on followed by three off and "3313" specifies three units on
+     * followed by three off followed by one on and finally three off. The
+     * ‘units’ here are (on most devices) proportional to lwd, and with lwd = 1
+     * are in pixels or points or 1/96 inch.
+     *
+     * The five standard dash-dot line types (lty = 2:6) correspond to:
+     *  c("44", "13", "1343", "73", "2262")
+     *
+     * (0=blank, 1=solid (default), 2=dashed, 3=dotted, 4=dotdash, 5=longdash,
+     * 6=twodash)
+     */
+
+    /*Retrieve the line type pattern*/
+    for ( i = 0; i < 8 && lty & 15 ; i++ ) {
+      dashlist[i] = lty & 15;
+      lty = lty >> 4;
+    }
+    nlty = i; i = 0;
+
+    printOutput(tikzInfo, ",dash pattern=");
+
+    /*Set the dash pattern*/
+    while( i < nlty ){
+      if( (i % 2) == 0 ){
+        printOutput(tikzInfo, "on %dpt ", dashlist[i]);
+      }else{
+        printOutput(tikzInfo, "off %dpt ", dashlist[i]);
+      }
+      i++;
+    }
+  }
+
+  switch ( plotParams->ljoin ) {
+    case GE_ROUND_JOIN:
+      printOutput(tikzInfo, ",line join=round");
+      break;
+    case GE_MITRE_JOIN:
+      /* Default if nothing is specified */
+      if(plotParams->lmitre != 10)
+        printOutput(tikzInfo, ",mitre limit=%4.2f",plotParams->lmitre);
+      break;
+    case GE_BEVEL_JOIN:
+      printOutput(tikzInfo, ",line join=bevel");
+  }
+
+  switch ( plotParams->lend ) {
+    case GE_ROUND_CAP:
+      printOutput(tikzInfo, ",line cap=round");
+      break;
+    case GE_BUTT_CAP:
+      /* Default if nothing is specified */
+      break;
+    case GE_SQUARE_CAP:
+      printOutput(tikzInfo, ",line cap=rect");
+  }
+
+}
 
 /* This function either prints out the color definitions for outline and fill 
  * colors or the style tags in the \draw[] command, the defineColor parameter 

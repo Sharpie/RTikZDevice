@@ -171,6 +171,8 @@ typedef enum {
 static TikZ_DrawOps TikZ_GetDrawOps(pGEcontext plotParams);
 
 static void TikZ_DefineColors(const pGEcontext plotParams, pDevDesc deviceInfo, TikZ_DrawOps ops);
+static void TikZ_WriteDrawOptions(const pGEcontext plotParams, pDevDesc deviceInfo, TikZ_DrawOps ops);
+static void TikZ_WriteLineStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo);
 
 static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
 	pDevDesc deviceInfo);
