@@ -1042,41 +1042,36 @@ static void TikZ_Text( double x, double y, const char *str,
       "%% Drawing node at x = %f, y = %f\n",
       x,y);
 
-  // Print out a definition for the text color.
-  SetColor( plotParams->col, TRUE, tikzInfo );  
+  TikZ_DefineColors(plotParams, deviceInfo, DRAWOP_DRAW);
 
   /* Start a node for the text, open an options bracket. */
-  printOutput(tikzInfo,"\n\\node[");
+  printOutput(tikzInfo,"\n\\node[text=drawColor");
 
   /* Rotate the text if desired. */
   if( rot != 0 )
-    printOutput(tikzInfo, "rotate=%6.2f,", rot );
+    printOutput(tikzInfo, ",rotate=%6.2f", rot );
 
-  /* More options would go here such as scaling, color etc. */
-  
-  // Add a reference to the text color to the node options.
-  SetColor( plotParams->col, FALSE, tikzInfo );
   /* End options, print coordinates and string. */
-  printOutput(tikzInfo, "anchor=");
-  
+  printOutput(tikzInfo, ",anchor=");
+
   //Justify the text
   if(fabs(hadj - 0.0) < tol){
     //Left Justified
-    printOutput(tikzInfo, "base west,");
+    printOutput(tikzInfo, "base west");
   }
   if(fabs(hadj - 0.5) < tol){
     //Center Justified
-    printOutput(tikzInfo, "base,");
+    printOutput(tikzInfo, "base");
   }
   if(fabs(hadj - 1) < tol){
     //Right Justified
-    printOutput(tikzInfo, "base east,");
+    printOutput(tikzInfo, "base east");
   }
-    
-  printOutput(tikzInfo, 
-    "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
+
+  printOutput(tikzInfo,
+    ",inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
     fontScale, x, y);
-  
+
   char *cleanString = NULL;
   if(tikzInfo->sanitize == TRUE){
     //If using the sanitize option call back to R for the sanitized string
