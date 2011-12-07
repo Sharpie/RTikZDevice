@@ -1046,6 +1046,9 @@ static void TikZ_Text( double x, double y, const char *str,
 
   /* Start a node for the text, open an options bracket. */
   printOutput(tikzInfo,"\n\\node[text=drawColor");
+  /* FIXME: Should bail out of this function early if text is fully transparent */
+  if( !R_OPAQUE(plotParams->col) )
+    printOutput(tikzInfo, ",text opacity=%4.2f", R_ALPHA(plotParams->col)/255.0);
 
   /* Rotate the text if desired. */
   if( rot != 0 )

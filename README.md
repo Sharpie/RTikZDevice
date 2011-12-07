@@ -101,6 +101,8 @@ to the development of the package!
 
 #### Bug Fixes
 
+  - Colorized text now obeys transparency settings.
+
 #### Behind the Scenes
 
   - Upgrade documentation generation from Roxygen to Roxygen2.
