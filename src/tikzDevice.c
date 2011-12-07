@@ -603,14 +603,21 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
   } /* End if first page */
 
+  /*
+   * Emit a path that encloses the entire canvas area in order to ensure that
+   * the final typeset plot is the size the user specified. Adding the `use as
+   * bounding box` key to the path options should save TikZ some work when it
+   * comes to calculating the bounding of the graphic from its contents.
+   */
+  TikZ_DefineColors(plotParams, deviceInfo, DRAWOP_FILL);
 
-  /* Define default colors */
-  SetColor(plotParams->col, TRUE, tikzInfo);
-  SetFill(plotParams->fill, TRUE, tikzInfo);
+  printOutput(tikzInfo, "\\path[use as bounding box");
 
-  /* Fill canvas background */
-  printOutput(tikzInfo, "\\fill[color=fillColor,");
-  SetAlpha(plotParams->fill, TRUE, tikzInfo);
+  /* TODO: Consider only filling when the color is not transparent. */
+  printOutput(tikzInfo, ",fill=fillColor");
+  if( !R_OPAQUE(plotParams->fill) )
+    printOutput(tikzInfo, ",fill opacity=%4.2f", R_ALPHA(plotParams->fill)/255.0);
+
   printOutput(tikzInfo, "] (0,0) rectangle (%6.2f,%6.2f);\n",
     deviceInfo->right,deviceInfo->top);
 
