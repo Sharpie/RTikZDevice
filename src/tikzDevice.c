@@ -242,19 +242,6 @@ static Rboolean TikZ_Setup(
    * tikzInfo is a structure which is defined in the file tikzDevice.h
   */
   tikzDevDesc *tikzInfo;
-  
-  pGEcontext plotParams;
-
-  /*
-   * pGEcontext is actually a *pointer* to a structure of type
-   * R_GE_gcontext. If we don't allocate it, it will be passed
-   * into the initialization routine without actually pointing
-   * to anything. This causes nasty crashes- for some reason
-   * only on Windows and Linux...
-  */  
-  if( !( plotParams = (pGEcontext) malloc(sizeof(pGEcontext)) ) ){
-    return FALSE;
-  }
 
   /* 
    * Initialize tikzInfo, return false if this fails. A false return
@@ -276,13 +263,10 @@ static Rboolean TikZ_Setup(
   tikzInfo->firstClip = TRUE;
   tikzInfo->oldFillColor = 0;
   tikzInfo->oldDrawColor = 0;
-  tikzInfo->oldLineType = 0;
-  tikzInfo->plotParams = plotParams;
   tikzInfo->stringWidthCalls = 0;
   tikzInfo->documentDeclaration = documentDeclaration;
   tikzInfo->packages = packages;
   tikzInfo->footer = footer;
-  tikzInfo->polyLine = FALSE;
   tikzInfo->console = console;
   tikzInfo->sanitize = sanitize;
 
@@ -644,27 +628,14 @@ static void TikZ_Clip( double x0, double x1,
   printOutput(tikzInfo,
     "\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
     x0,y0,x1,y1);
-  
+
   /*
-   *     *** UGLY HACK ***
-   * 
-   * So, the device was building fine on Linux and Windows,
-   * but when it came time to comple the output- pdflatex
-   * barfed on both systems, complaining about fillColor or
-   * drawColor not being defined. I'm pretty sure this is
-   * because those color values are not preserved accross
-   * scopes.
-   *
-   * I'm too tired to figure out the StyleDef code in detail
-   * right now, so i'm tweaking the stored values here in
-   * the hopes that it will force a reprint of style after
-   * we begin a new scope.
-   *
-   * Seems to work.
-  */
+   * Color definitions do not persist accross scopes. Set the cached colors to
+   * "impossible" values so that the first drawing operation inside the scope
+   * will trigger a re-definition of colors.
+   */
   tikzInfo->oldFillColor = -999;
   tikzInfo->oldDrawColor = -999;
-  tikzInfo->oldLineType = -999;
 
   if(tikzInfo->debug == TRUE)
     printOutput(tikzInfo,

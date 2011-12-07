@@ -58,13 +58,10 @@ typedef struct {
 	Rboolean firstClip;
 	int oldFillColor;
 	int oldDrawColor;
-	int oldLineType;
-	pGEcontext plotParams;
 	int stringWidthCalls;
 	const char *documentDeclaration;
 	const char *packages;
 	const char *footer;
-	Rboolean polyLine;
 	Rboolean console;
 	Rboolean sanitize;
 } tikzDevDesc;
