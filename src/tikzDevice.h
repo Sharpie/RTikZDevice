@@ -38,6 +38,12 @@ typedef enum {
   xetex = 2
 } tikz_engine;
 
+typedef enum {
+  TIKZ_START_CLIP = 1,
+  TIKZ_NO_CLIP = 0,
+  TIKZ_FINISH_CLIP = -1
+} TikZ_ClipState;
+
 
 /*
  * tikzDevDesc is a structure that is used to hold information
@@ -55,7 +61,6 @@ typedef struct {
 	Rboolean debug;
 	Rboolean standAlone;
 	Rboolean bareBones;
-	Rboolean firstClip;
 	int oldFillColor;
 	int oldDrawColor;
 	int oldLineType;
@@ -67,6 +72,7 @@ typedef struct {
 	Rboolean polyLine;
 	Rboolean console;
 	Rboolean sanitize;
+  TikZ_ClipState clipState;
 } tikzDevDesc;
 
 
@@ -174,5 +180,6 @@ static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 static char *Sanitize(const char *str);
 static Rboolean contains_multibyte_chars(const char *str);
 static double dim2dev( double length );
+static void TikZ_CheckClip(pDevDesc deviceInfo);
 
 #endif // End of Once Only header

@@ -273,7 +273,6 @@ static Rboolean TikZ_Setup(
   tikzInfo->debug = DEBUG;
   tikzInfo->standAlone = standAlone;
   tikzInfo->bareBones = bareBones;
-  tikzInfo->firstClip = TRUE;
   tikzInfo->oldFillColor = 0;
   tikzInfo->oldDrawColor = 0;
   tikzInfo->oldLineType = 0;
@@ -285,6 +284,7 @@ static Rboolean TikZ_Setup(
   tikzInfo->polyLine = FALSE;
   tikzInfo->console = console;
   tikzInfo->sanitize = sanitize;
+  tikzInfo->clipState = TIKZ_NO_CLIP;
 
   /* Incorporate tikzInfo into deviceInfo. */
   deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -548,7 +548,10 @@ static void TikZ_Close( pDevDesc deviceInfo){
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  printOutput(tikzInfo, "\\end{scope}\n");
+  if ( tikzInfo->clipState == TIKZ_FINISH_CLIP ) {
+    printOutput(tikzInfo, "\\end{scope}\n");
+    tikzInfo->clipState = TIKZ_NO_CLIP;
+  }
 
   /* End the tikz environment if we're not doing a bare bones plot. */
   if( tikzInfo->bareBones != TRUE )
@@ -584,12 +587,12 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
     /* End the current TikZ environment, unless we are making bare bones code. */
     if( tikzInfo->bareBones != TRUE ){
-      
-      printOutput(tikzInfo, "\\end{scope}\n");
+
+      if ( tikzInfo->clipState == TIKZ_FINISH_CLIP ) {
+        printOutput(tikzInfo, "\\end{scope}\n");
+        tikzInfo->clipState = TIKZ_NO_CLIP;
+      }
       printOutput(tikzInfo, "\\end{tikzpicture}\n");
-      
-      /*Next clipping region will be the first on the page*/
-      tikzInfo->firstClip = TRUE;
 
       /*Show only for debugging*/
       if(tikzInfo->debug == TRUE) 
@@ -616,9 +619,9 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 
 }
 
-static void TikZ_Clip( double x0, double x1, 
-    double y0, double y1, pDevDesc deviceInfo ){
-  
+static void TikZ_Clip( double x0, double x1,
+    double y0, double y1, pDevDesc deviceInfo )
+{
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
@@ -626,18 +629,10 @@ static void TikZ_Clip( double x0, double x1,
   deviceInfo->clipLeft = x0;
   deviceInfo->clipTop = y1;
   deviceInfo->clipRight = x1;
-  
-  if(tikzInfo->firstClip == FALSE){
+
+  if ( tikzInfo->clipState == TIKZ_FINISH_CLIP )
     printOutput(tikzInfo, "\\end{scope}\n");
-  }else{
-    tikzInfo->firstClip = FALSE;
-  }
-  
-  printOutput(tikzInfo, "\\begin{scope}\n");
-  printOutput(tikzInfo,
-    "\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-    x0,y0,x1,y1);
-  
+
   /*
    *     *** UGLY HACK ***
    * 
@@ -659,13 +654,8 @@ static void TikZ_Clip( double x0, double x1,
   tikzInfo->oldDrawColor = -999;
   tikzInfo->oldLineType = -999;
 
-  if(tikzInfo->debug == TRUE)
-    printOutput(tikzInfo,
-      "\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-      x0,y0,x1,y1);
-      
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
+  tikzInfo->clipState = TIKZ_START_CLIP;
+
 }
 
 static void TikZ_Size( double *left, double *right,
@@ -1037,6 +1027,7 @@ static void TikZ_Text( double x, double y, const char *str,
       "%% Drawing node at x = %f, y = %f\n",
       x,y);
 
+  TikZ_CheckClip(deviceInfo);
   // Print out a definition for the text color.
   SetColor( plotParams->col, TRUE, tikzInfo );  
 
@@ -1114,6 +1105,7 @@ static void TikZ_Circle( double x, double y, double r,
       "%% Drawing Circle at x = %f, y = %f, r = %f\n",
       x,y,r);
 
+  TikZ_CheckClip(deviceInfo);
   /*Define the colors for fill and border*/
   StyleDef(TRUE, plotParams, deviceInfo);
 
@@ -1146,6 +1138,7 @@ static void TikZ_Rectangle( double x0, double y0,
       "%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f\n",
       x0,y0,x1,y1);
 
+  TikZ_CheckClip(deviceInfo);
   /*Define the colors for fill and border*/
   StyleDef(TRUE, plotParams, deviceInfo);
 
@@ -1180,6 +1173,7 @@ static void TikZ_Line( double x1, double y1,
       "%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
       x1,y1,x2,y2);
 
+  TikZ_CheckClip(deviceInfo);
   /*Define the colors for fill and border*/
   StyleDef(TRUE, plotParams, deviceInfo);
 
@@ -1209,6 +1203,7 @@ static void TikZ_Polyline( int n, double *x, double *y,
     printOutput(tikzInfo,
       "%% Starting Polyline\n");
 
+  TikZ_CheckClip(deviceInfo);
   /*Define the colors for fill and border*/
   StyleDef(TRUE, plotParams, deviceInfo);
 
@@ -1256,7 +1251,8 @@ static void TikZ_Polygon( int n, double *x, double *y,
   if(tikzInfo->debug == TRUE) 
     printOutput(tikzInfo,
       "%% Starting Polygon\n");
-      
+
+  TikZ_CheckClip(deviceInfo);
   /*Define the colors for fill and border*/
   StyleDef(TRUE, plotParams, deviceInfo);
   
@@ -1309,6 +1305,7 @@ TikZ_Path( double *x, double *y,
 
   if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing polypath with %i subpaths\n", npoly); }
 
+  TikZ_CheckClip(deviceInfo);
   /*Define the colors for fill and border*/
   StyleDef(TRUE, plotParams, deviceInfo);
 
@@ -1516,6 +1513,8 @@ static void TikZ_Raster(
 
   SEXP rasterFile;
   PROTECT( rasterFile = eval(RCallBack, namespace) );
+
+  TikZ_CheckClip(deviceInfo);
 
   /* Position the image using a node */
   printOutput(tikzInfo, "\\node[inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f, %6.2f) {\n",
@@ -2049,3 +2048,23 @@ static double dim2dev( double length ){
   return length*72.27;
 }
 
+static void TikZ_CheckClip(pDevDesc deviceInfo)
+{
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if ( tikzInfo->clipState == TIKZ_START_CLIP ) {
+    printOutput(tikzInfo, "\\begin{scope}\n");
+    printOutput(tikzInfo,
+      "\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+      deviceInfo->clipLeft, deviceInfo->clipBottom,
+      deviceInfo->clipRight, deviceInfo->clipTop);
+
+    if ( tikzInfo->debug == TRUE )
+      printOutput(tikzInfo,
+        "\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+        deviceInfo->clipLeft, deviceInfo->clipBottom,
+        deviceInfo->clipRight, deviceInfo->clipTop);
+
+    tikzInfo->clipState = TIKZ_FINISH_CLIP;
+  }
+}
