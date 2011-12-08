@@ -1081,6 +1081,7 @@ static void TikZ_Circle( double x, double y, double r,
 
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams);
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
@@ -1088,11 +1089,11 @@ static void TikZ_Circle( double x, double y, double r,
       "%% Drawing Circle at x = %f, y = %f, r = %f\n",
       x,y,r);
 
-  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing, open an options bracket. */
   printOutput(tikzInfo,"\n\\path[");
-  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
   /* End options, print coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) circle (%6.2f);\n",
@@ -1104,6 +1105,7 @@ static void TikZ_Rectangle( double x0, double y0,
 
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams);
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
@@ -1111,11 +1113,11 @@ static void TikZ_Rectangle( double x0, double y0,
       "%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f\n",
       x0,y0,x1,y1);
 
-  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing, open an options bracket. */
   printOutput(tikzInfo,"\n\\path[");
-  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
   /* End options, print coordinates. */
   printOutput(tikzInfo, 
@@ -1130,6 +1132,7 @@ static void TikZ_Line( double x1, double y1,
 
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams);
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
@@ -1137,11 +1140,11 @@ static void TikZ_Line( double x1, double y1,
       "%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
       x1,y1,x2,y2);
 
-  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing a line, open an options bracket. */
   printOutput(tikzInfo,"\n\\path[");
-  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
   /* End options, print coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) -- (%6.2f,%6.2f);\n",
@@ -1155,16 +1158,6 @@ static void TikZ_Polyline( int n, double *x, double *y,
 
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-
-  /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE) 
-    printOutput(tikzInfo,
-      "%% Starting Polyline\n");
-
-  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams) & DRAWOP_DRAW);
-
-  /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\path[");
   /*
    * FIXME:
    * Any fill operations returned by TikZ_GetDrawOps are removed by
@@ -1174,7 +1167,18 @@ static void TikZ_Polyline( int n, double *x, double *y,
    *
    * This fixme is here because we have no tests that detect this supposed bug.
    */
-  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams) & DRAWOP_DRAW);
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams) & DRAWOP_DRAW;
+
+  /*Show only for debugging*/
+  if(tikzInfo->debug == TRUE) 
+    printOutput(tikzInfo,
+      "%% Starting Polyline\n");
+
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
+
+  /* Start drawing, open an options bracket. */
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
   /* End options, print first set of coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
@@ -1205,17 +1209,18 @@ static void TikZ_Polygon( int n, double *x, double *y,
 
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams);
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
     printOutput(tikzInfo,
       "%% Starting Polygon\n");
 
-  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing, open an options bracket. */
   printOutput(tikzInfo,"\n\\path[");
-  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
   /* End options, print first set of coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
@@ -1252,10 +1257,11 @@ TikZ_Path( double *x, double *y,
 
   int i, j, index;
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams);
 
   if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing polypath with %i subpaths\n", npoly); }
 
-  TikZ_DefineColors(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /*
    * Start drawing, open an options bracket.
@@ -1266,7 +1272,7 @@ TikZ_Path( double *x, double *y,
    * Thank you TikZ!
    */
   printOutput(tikzInfo,"\n\\path[");
-  TikZ_WriteDrawOptions(plotParams, deviceInfo, TikZ_GetDrawOps(plotParams));
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
   /*
    * Select rule to be used for overlapping fills as specified by the 'winding'
