@@ -39,6 +39,12 @@ typedef enum {
 } tikz_engine;
 
 typedef enum {
+  TIKZ_START_PAGE = 1,
+  TIKZ_NO_PAGE = 0,
+  TIKZ_FINISH_PAGE = -1
+} TikZ_PageState;
+
+typedef enum {
   TIKZ_START_CLIP = 1,
   TIKZ_NO_CLIP = 0,
   TIKZ_FINISH_CLIP = -1
@@ -57,7 +63,6 @@ typedef struct {
   char *outFileName;
   tikz_engine engine;
   int rasterFileCount;
-	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
 	Rboolean bareBones;
@@ -70,6 +75,7 @@ typedef struct {
 	Rboolean console;
 	Rboolean sanitize;
   TikZ_ClipState clipState;
+  TikZ_PageState pageState;
 } tikzDevDesc;
 
 
@@ -185,6 +191,6 @@ static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 static char *Sanitize(const char *str);
 static Rboolean contains_multibyte_chars(const char *str);
 static double dim2dev( double length );
-static void TikZ_CheckClip(pDevDesc deviceInfo);
+static void TikZ_CheckState(pDevDesc deviceInfo);
 
 #endif // End of Once Only header

@@ -103,6 +103,9 @@ to the development of the package!
 
   - Colorized text now obeys transparency settings.
 
+  - The tikzDevice no longer produces output for plots that are completely
+    empty.
+
 #### Behind the Scenes
 
   - Upgrade documentation generation from Roxygen to Roxygen2.

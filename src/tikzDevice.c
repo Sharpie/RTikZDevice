@@ -256,7 +256,6 @@ static Rboolean TikZ_Setup(
   strcpy(tikzInfo->outFileName, fileName);
   tikzInfo->engine = engine;
   tikzInfo->rasterFileCount = 1;
-  tikzInfo->firstPage = TRUE;
   tikzInfo->debug = DEBUG;
   tikzInfo->standAlone = standAlone;
   tikzInfo->bareBones = bareBones;
@@ -269,6 +268,7 @@ static Rboolean TikZ_Setup(
   tikzInfo->console = console;
   tikzInfo->sanitize = sanitize;
   tikzInfo->clipState = TIKZ_NO_CLIP;
+  tikzInfo->pageState = TIKZ_NO_PAGE;
 
   /* Incorporate tikzInfo into deviceInfo. */
   deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -514,17 +514,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
     printOutput(tikzInfo,"\\begin{document}\n\n");
   }
 
-  /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE)
-    printOutput(tikzInfo,"%% Beginning tikzpicture\n");
-    
-  /* Start the tikz environment if we have not specified a bare bones plot. */
-  if( tikzInfo->bareBones != TRUE ){
-    printOutput(tikzInfo, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-  }
-
   return TRUE;
-
 }
 
 static void TikZ_Close( pDevDesc deviceInfo){
@@ -538,9 +528,11 @@ static void TikZ_Close( pDevDesc deviceInfo){
   }
 
   /* End the tikz environment if we're not doing a bare bones plot. */
-  if( tikzInfo->bareBones != TRUE )
+  if( tikzInfo->bareBones != TRUE && tikzInfo->pageState == TIKZ_FINISH_PAGE ) {
     printOutput(tikzInfo, "\\end{tikzpicture}\n");
-  
+    tikzInfo->pageState = TIKZ_NO_PAGE;
+  }
+
   /* Close off the standalone document*/
   if(tikzInfo->standAlone == TRUE)
     printOutput(tikzInfo,"\n\\end{document}\n");
@@ -560,54 +552,33 @@ static void TikZ_Close( pDevDesc deviceInfo){
 
 }
 
-static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
-
+static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo )
+{
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  if ( tikzInfo->firstPage ){
-    tikzInfo->firstPage = FALSE;
-  }else{
+  if ( tikzInfo->clipState == TIKZ_FINISH_CLIP ) {
+    printOutput(tikzInfo, "\\end{scope}\n");
+    tikzInfo->clipState = TIKZ_NO_CLIP;
+  }
 
-    /* End the current TikZ environment, unless we are making bare bones code. */
-    if( tikzInfo->bareBones != TRUE ){
-
-      if ( tikzInfo->clipState == TIKZ_FINISH_CLIP ) {
-        printOutput(tikzInfo, "\\end{scope}\n");
-        tikzInfo->clipState = TIKZ_NO_CLIP;
-      }
-      printOutput(tikzInfo, "\\end{tikzpicture}\n");
-
-      /*Show only for debugging*/
-      if(tikzInfo->debug == TRUE) 
-        printOutput(tikzInfo,
-          "%% Beginning new tikzpicture 'page'\n");
-
-      /* Start a new TikZ envioronment. */
-      printOutput(tikzInfo, 
-        "\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-    } // End if not bare bones.
-
-  } /* End if first page */
+  if ( tikzInfo->bareBones != TRUE && tikzInfo->pageState == TIKZ_FINISH_PAGE )
+    printOutput(tikzInfo, "\\end{tikzpicture}\n");
 
   /*
-   * Emit a path that encloses the entire canvas area in order to ensure that
-   * the final typeset plot is the size the user specified. Adding the `use as
-   * bounding box` key to the path options should save TikZ some work when it
-   * comes to calculating the bounding of the graphic from its contents.
+   * Color definitions do not persist accross tikzpicture environments. Set the
+   * cached colors to "impossible" values so that the first drawing operation
+   * inside the next environment will trigger a re-definition of colors.
    */
-  TikZ_DefineColors(plotParams, deviceInfo, DRAWOP_FILL);
+  tikzInfo->oldFillColor = -999;
+  tikzInfo->oldDrawColor = -999;
 
-  printOutput(tikzInfo, "\\path[use as bounding box");
-
-  /* TODO: Consider only filling when the color is not transparent. */
-  printOutput(tikzInfo, ",fill=fillColor");
-  if( !R_OPAQUE(plotParams->fill) )
-    printOutput(tikzInfo, ",fill opacity=%4.2f", R_ALPHA(plotParams->fill)/255.0);
-
-  printOutput(tikzInfo, "] (0,0) rectangle (%6.2f,%6.2f);\n",
-    deviceInfo->right,deviceInfo->top);
-
+  /*
+   * Setting this flag will cause the `TikZ_CheckState` function to emit the
+   * code required to begin a new `tikzpicture` enviornment. `TikZ_CheckState`
+   * is called by every graphics function that generates visible output.
+   */
+  tikzInfo->pageState = TIKZ_START_PAGE;
 }
 
 static void TikZ_Clip( double x0, double x1,
@@ -1005,7 +976,7 @@ static void TikZ_Text( double x, double y, const char *str,
       "%% Drawing node at x = %f, y = %f\n",
       x,y);
 
-  TikZ_CheckClip(deviceInfo);
+  TikZ_CheckState(deviceInfo);
   TikZ_DefineColors(plotParams, deviceInfo, DRAWOP_DRAW);
 
   /* Start a node for the text, open an options bracket. */
@@ -1082,7 +1053,7 @@ static void TikZ_Circle( double x, double y, double r,
       "%% Drawing Circle at x = %f, y = %f, r = %f\n",
       x,y,r);
 
-  TikZ_CheckClip(deviceInfo);
+  TikZ_CheckState(deviceInfo);
   TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing, open an options bracket. */
@@ -1107,7 +1078,7 @@ static void TikZ_Rectangle( double x0, double y0,
       "%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f\n",
       x0,y0,x1,y1);
 
-  TikZ_CheckClip(deviceInfo);
+  TikZ_CheckState(deviceInfo);
   TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing, open an options bracket. */
@@ -1135,7 +1106,7 @@ static void TikZ_Line( double x1, double y1,
       "%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
       x1,y1,x2,y2);
 
-  TikZ_CheckClip(deviceInfo);
+  TikZ_CheckState(deviceInfo);
   TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing a line, open an options bracket. */
@@ -1170,7 +1141,7 @@ static void TikZ_Polyline( int n, double *x, double *y,
     printOutput(tikzInfo,
       "%% Starting Polyline\n");
 
-  TikZ_CheckClip(deviceInfo);
+  TikZ_CheckState(deviceInfo);
   TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing, open an options bracket. */
@@ -1213,7 +1184,7 @@ static void TikZ_Polygon( int n, double *x, double *y,
     printOutput(tikzInfo,
       "%% Starting Polygon\n");
 
-  TikZ_CheckClip(deviceInfo);
+  TikZ_CheckState(deviceInfo);
   TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing, open an options bracket. */
@@ -1259,7 +1230,7 @@ TikZ_Path( double *x, double *y,
 
   if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing polypath with %i subpaths\n", npoly); }
 
-  TikZ_CheckClip(deviceInfo);
+  TikZ_CheckState(deviceInfo);
   TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /*
@@ -1465,7 +1436,7 @@ static void TikZ_Raster(
   SEXP rasterFile;
   PROTECT( rasterFile = eval(RCallBack, namespace) );
 
-  TikZ_CheckClip(deviceInfo);
+  TikZ_CheckState(deviceInfo);
 
   /* Position the image using a node */
   printOutput(tikzInfo, "\\node[inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f, %6.2f) {\n",
@@ -1966,9 +1937,53 @@ static double dim2dev( double length ){
   return length*72.27;
 }
 
-static void TikZ_CheckClip(pDevDesc deviceInfo)
+
+/*
+ * This function checks to see if a new page or clipping scope needs to be
+ * started and is called by every function that produces visible output. Having
+ * this function allows the creation of new pages or clipping scopes to be
+ * deferred until there is actually output to place in the environment.
+ */
+static void TikZ_CheckState(pDevDesc deviceInfo)
 {
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if( tikzInfo->pageState == TIKZ_START_PAGE ) {
+
+    if ( tikzInfo->debug == TRUE )
+      printOutput(tikzInfo,
+        "%% Beginning new tikzpicture 'page'\n");
+
+    if ( tikzInfo->bareBones != TRUE )
+      printOutput(tikzInfo, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
+
+    /*
+     * Emit a path that encloses the entire canvas area in order to ensure that
+     * the final typeset plot is the size the user specified. Adding the `use as
+     * bounding box` key to the path options should save TikZ some work when it
+     * comes to calculating the bounding of the graphic from its contents.
+     */
+    int color = deviceInfo->startfill;
+    tikzInfo->oldFillColor = color;
+    printOutput(tikzInfo,
+      "\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+      R_RED(color)/255.0,
+      R_GREEN(color)/255.0,
+      R_BLUE(color)/255.0);
+
+    printOutput(tikzInfo, "\\path[use as bounding box");
+
+    /* TODO: Consider only filling when the color is not transparent. */
+    printOutput(tikzInfo, ",fill=fillColor");
+    if( !R_OPAQUE(color) )
+      printOutput(tikzInfo, ",fill opacity=%4.2f", R_ALPHA(color)/255.0);
+
+    printOutput(tikzInfo, "] (0,0) rectangle (%6.2f,%6.2f);\n",
+      deviceInfo->right,deviceInfo->top);
+
+    tikzInfo->pageState = TIKZ_FINISH_PAGE;
+  } /* End if pageState == TIKZ_START_PAGE */
+
 
   if ( tikzInfo->clipState == TIKZ_START_CLIP ) {
     printOutput(tikzInfo, "\\begin{scope}\n");
@@ -1984,5 +1999,6 @@ static void TikZ_CheckClip(pDevDesc deviceInfo)
         deviceInfo->clipRight, deviceInfo->clipTop);
 
     tikzInfo->clipState = TIKZ_FINISH_CLIP;
-  }
+  } /* End if clipState == TIKZ_START_CLIP */
+
 }
