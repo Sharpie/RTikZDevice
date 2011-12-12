@@ -1560,8 +1560,15 @@ static TikZ_DrawOps TikZ_GetDrawOps(pGEcontext plotParams)
 {
   TikZ_DrawOps ops = DRAWOP_NOOP;
 
-  if( !R_TRANSPARENT(plotParams->col) )
+  /*
+   * NOTE:
+   *
+   * Should also check that `plotParams.lty > 0` as a line type of 0 means
+   * "blank". However, R does not seem to set this parameter consistently.
+   */
+  if( !R_TRANSPARENT(plotParams->col) && (plotParams->lwd > 0) )
     ops |= DRAWOP_DRAW;
+
   if( !R_TRANSPARENT(plotParams->fill) )
     ops |= DRAWOP_FILL;
 
@@ -1637,15 +1644,14 @@ static void TikZ_WriteDrawOptions(const pGEcontext plotParams, pDevDesc deviceIn
 
 static void TikZ_WriteLineStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo)
 {
-  double lwd = plotParams->lwd;
 
   /*
    * Set the line width, 0.4pt is the TikZ default so scale lwd=1 relative to
    * that
    */
-  printOutput(tikzInfo,",line width=%4.1fpt", 0.4*lwd);
+  printOutput(tikzInfo,",line width=%4.1fpt", 0.4*plotParams->lwd);
 
-  if ( lwd && (plotParams->lty > 1) ) {
+  if ( plotParams->lty > 1 ) {
     char dashlist[8];
     int i, nlty, lty = plotParams->lty;
 
