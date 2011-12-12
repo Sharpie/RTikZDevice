@@ -63,13 +63,10 @@ typedef struct {
 	Rboolean bareBones;
 	int oldFillColor;
 	int oldDrawColor;
-	int oldLineType;
-	pGEcontext plotParams;
 	int stringWidthCalls;
 	const char *documentDeclaration;
 	const char *packages;
 	const char *footer;
-	Rboolean polyLine;
 	Rboolean console;
 	Rboolean sanitize;
   TikZ_ClipState clipState;
@@ -161,17 +158,25 @@ static void TikZ_Mode( int mode, pDevDesc deviceInfo );
 
 
 /*Internal style definition routines*/
-static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
-	pDevDesc deviceInfo);
-static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo);
-static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo);
-static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo);
-static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo);
-static void SetDashPattern(int lty, tikzDevDesc *tikzInfo);
-static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo);
-static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
-static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo);
-static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
+
+/*
+ * This enumeration specifies the kinds of drawing operations that need to be
+ * performed, such as filling or drawing a path.
+ *
+ * When adding new members, use the next power of 2 as so that the presence or
+ * absance of an operation can be determined using bitwise operators.
+ */
+typedef enum {
+  DRAWOP_NOOP = 0,
+  DRAWOP_DRAW = 1,
+  DRAWOP_FILL = 2
+} TikZ_DrawOps;
+static TikZ_DrawOps TikZ_GetDrawOps(pGEcontext plotParams);
+
+static void TikZ_DefineColors(const pGEcontext plotParams, pDevDesc deviceInfo, TikZ_DrawOps ops);
+static void TikZ_WriteDrawOptions(const pGEcontext plotParams, pDevDesc deviceInfo, TikZ_DrawOps ops);
+static void TikZ_WriteLineStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo);
+
 static double ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
 
 /* Utility Routines*/

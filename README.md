@@ -101,6 +101,8 @@ to the development of the package!
 
 #### Bug Fixes
 
+  - Colorized text now obeys transparency settings.
+
 #### Behind the Scenes
 
   - Upgrade documentation generation from Roxygen to Roxygen2.
@@ -114,6 +116,10 @@ to the development of the package!
     operation occurs that can be clipped. This prevents empty clipping scopes
     from appearing in the output and can reduce the size of the output by ~3/4
     in some cases.
+
+  - The code that handles line color and fill color has been completely
+    refactored to avoid useless operations such as 0 transparency fills and
+    draws.
 
 #### Contributors
 The following people contributed to this release of the tikzDevice:
