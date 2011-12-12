@@ -603,8 +603,12 @@ static void TikZ_Clip( double x0, double x1,
   tikzInfo->oldFillColor = -999;
   tikzInfo->oldDrawColor = -999;
 
+  /*
+   * Setting this flag will cause the `TikZ_CheckState` function to emit the
+   * code required to begin a new clipping scope. `TikZ_CheckState` is called
+   * by every graphics function that generates visible output.
+   */
   tikzInfo->clipState = TIKZ_START_CLIP;
-
 }
 
 static void TikZ_Size( double *left, double *right,
