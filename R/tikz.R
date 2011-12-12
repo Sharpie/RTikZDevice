@@ -176,6 +176,7 @@
 #' }
 #'
 #' @export
+#' @useDynLib tikzDevice TikZ_StartDevice
 tikz <-
 function (file = "./Rplots.tex", width = 7, height = 7,
   bg="transparent", fg="black", pointsize = 10, standAlone = FALSE,
@@ -245,10 +246,9 @@ function (file = "./Rplots.tex", width = 7, height = 7,
   packages <- paste( paste( packages, collapse='\n'), collapse='\n')
   footer <- paste( paste( footer,collapse='\n'), collapse='\n')
 
-  .External('TikZ_StartDevice', file, width, height, bg, fg, baseSize,
+  .External(TikZ_StartDevice, file, width, height, bg, fg, baseSize,
     standAlone, bareBones, documentDeclaration, packages, footer, console,
-    sanitize, engine,
-    PACKAGE='tikzDevice')
+    sanitize, engine)
 
   invisible()
 

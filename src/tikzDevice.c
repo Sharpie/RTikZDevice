@@ -242,19 +242,6 @@ static Rboolean TikZ_Setup(
    * tikzInfo is a structure which is defined in the file tikzDevice.h
   */
   tikzDevDesc *tikzInfo;
-  
-  pGEcontext plotParams;
-
-  /*
-   * pGEcontext is actually a *pointer* to a structure of type
-   * R_GE_gcontext. If we don't allocate it, it will be passed
-   * into the initialization routine without actually pointing
-   * to anything. This causes nasty crashes- for some reason
-   * only on Windows and Linux...
-  */  
-  if( !( plotParams = (pGEcontext) malloc(sizeof(pGEcontext)) ) ){
-    return FALSE;
-  }
 
   /* 
    * Initialize tikzInfo, return false if this fails. A false return
@@ -269,22 +256,19 @@ static Rboolean TikZ_Setup(
   strcpy(tikzInfo->outFileName, fileName);
   tikzInfo->engine = engine;
   tikzInfo->rasterFileCount = 1;
-  tikzInfo->firstPage = TRUE;
   tikzInfo->debug = DEBUG;
   tikzInfo->standAlone = standAlone;
   tikzInfo->bareBones = bareBones;
-  tikzInfo->firstClip = TRUE;
   tikzInfo->oldFillColor = 0;
   tikzInfo->oldDrawColor = 0;
-  tikzInfo->oldLineType = 0;
-  tikzInfo->plotParams = plotParams;
   tikzInfo->stringWidthCalls = 0;
   tikzInfo->documentDeclaration = documentDeclaration;
   tikzInfo->packages = packages;
   tikzInfo->footer = footer;
-  tikzInfo->polyLine = FALSE;
   tikzInfo->console = console;
   tikzInfo->sanitize = sanitize;
+  tikzInfo->clipState = TIKZ_NO_CLIP;
+  tikzInfo->pageState = TIKZ_NO_PAGE;
 
   /* Incorporate tikzInfo into deviceInfo. */
   deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -410,12 +394,13 @@ static Rboolean TikZ_Setup(
   /* Set base font size. */
   deviceInfo->startps = baseSize;
 
-  /* 
+  /*
    * Apparently these are supposed to center text strings over the points at
-   * which they are plotted. TikZ does this automagically.
+   * which they are plotted.
    *
-   * We hope.
-   *
+   * Values cribbed from devPS.c in the R source. In paticular, setting
+   * `yLineBias` to 0 causes text in the margins of an x axis to recieve more
+   * leading that text in the margins of a y axis.
   */
   deviceInfo->xCharOffset = 0.4900;
   deviceInfo->yCharOffset = 0.3333;
@@ -529,17 +514,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
     printOutput(tikzInfo,"\\begin{document}\n\n");
   }
 
-  /*Show only for debugging*/
-  if(tikzInfo->debug == TRUE)
-    printOutput(tikzInfo,"%% Beginning tikzpicture\n");
-    
-  /* Start the tikz environment if we have not specified a bare bones plot. */
-  if( tikzInfo->bareBones != TRUE ){
-    printOutput(tikzInfo, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-  }
-
   return TRUE;
-
 }
 
 static void TikZ_Close( pDevDesc deviceInfo){
@@ -547,12 +522,17 @@ static void TikZ_Close( pDevDesc deviceInfo){
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  printOutput(tikzInfo, "\\end{scope}\n");
+  if ( tikzInfo->clipState == TIKZ_FINISH_CLIP ) {
+    printOutput(tikzInfo, "\\end{scope}\n");
+    tikzInfo->clipState = TIKZ_NO_CLIP;
+  }
 
   /* End the tikz environment if we're not doing a bare bones plot. */
-  if( tikzInfo->bareBones != TRUE )
+  if( tikzInfo->bareBones != TRUE && tikzInfo->pageState == TIKZ_FINISH_PAGE ) {
     printOutput(tikzInfo, "\\end{tikzpicture}\n");
-  
+    tikzInfo->pageState = TIKZ_NO_PAGE;
+  }
+
   /* Close off the standalone document*/
   if(tikzInfo->standAlone == TRUE)
     printOutput(tikzInfo,"\n\\end{document}\n");
@@ -572,52 +552,38 @@ static void TikZ_Close( pDevDesc deviceInfo){
 
 }
 
-static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
-
+static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo )
+{
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
-  if ( tikzInfo->firstPage ){
-    tikzInfo->firstPage = FALSE;
-  }else{
+  if ( tikzInfo->clipState == TIKZ_FINISH_CLIP ) {
+    printOutput(tikzInfo, "\\end{scope}\n");
+    tikzInfo->clipState = TIKZ_NO_CLIP;
+  }
 
-    /* End the current TikZ environment, unless we are making bare bones code. */
-    if( tikzInfo->bareBones != TRUE ){
-      
-      printOutput(tikzInfo, "\\end{scope}\n");
-      printOutput(tikzInfo, "\\end{tikzpicture}\n");
-      
-      /*Next clipping region will be the first on the page*/
-      tikzInfo->firstClip = TRUE;
+  if ( tikzInfo->bareBones != TRUE && tikzInfo->pageState == TIKZ_FINISH_PAGE )
+    printOutput(tikzInfo, "\\end{tikzpicture}\n");
 
-      /*Show only for debugging*/
-      if(tikzInfo->debug == TRUE) 
-        printOutput(tikzInfo,
-          "%% Beginning new tikzpicture 'page'\n");
+  /*
+   * Color definitions do not persist accross tikzpicture environments. Set the
+   * cached colors to "impossible" values so that the first drawing operation
+   * inside the next environment will trigger a re-definition of colors.
+   */
+  tikzInfo->oldFillColor = -999;
+  tikzInfo->oldDrawColor = -999;
 
-      /* Start a new TikZ envioronment. */
-      printOutput(tikzInfo, 
-        "\n\\begin{tikzpicture}[x=1pt,y=1pt]\n");
-    } // End if not bare bones.
-
-  } /* End if first page */
-
-
-  /* Define default colors */
-  SetColor(plotParams->col, TRUE, tikzInfo);
-  SetFill(plotParams->fill, TRUE, tikzInfo);
-
-  /* Fill canvas background */
-  printOutput(tikzInfo, "\\fill[color=fillColor,");
-  SetAlpha(plotParams->fill, TRUE, tikzInfo);
-  printOutput(tikzInfo, "] (0,0) rectangle (%6.2f,%6.2f);\n",
-    deviceInfo->right,deviceInfo->top);
-
+  /*
+   * Setting this flag will cause the `TikZ_CheckState` function to emit the
+   * code required to begin a new `tikzpicture` enviornment. `TikZ_CheckState`
+   * is called by every graphics function that generates visible output.
+   */
+  tikzInfo->pageState = TIKZ_START_PAGE;
 }
 
-static void TikZ_Clip( double x0, double x1, 
-    double y0, double y1, pDevDesc deviceInfo ){
-  
+static void TikZ_Clip( double x0, double x1,
+    double y0, double y1, pDevDesc deviceInfo )
+{
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
 
@@ -625,46 +591,24 @@ static void TikZ_Clip( double x0, double x1,
   deviceInfo->clipLeft = x0;
   deviceInfo->clipTop = y1;
   deviceInfo->clipRight = x1;
-  
-  if(tikzInfo->firstClip == FALSE){
+
+  if ( tikzInfo->clipState == TIKZ_FINISH_CLIP )
     printOutput(tikzInfo, "\\end{scope}\n");
-  }else{
-    tikzInfo->firstClip = FALSE;
-  }
-  
-  printOutput(tikzInfo, "\\begin{scope}\n");
-  printOutput(tikzInfo,
-    "\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-    x0,y0,x1,y1);
-  
+
   /*
-   *     *** UGLY HACK ***
-   * 
-   * So, the device was building fine on Linux and Windows,
-   * but when it came time to comple the output- pdflatex
-   * barfed on both systems, complaining about fillColor or
-   * drawColor not being defined. I'm pretty sure this is
-   * because those color values are not preserved accross
-   * scopes.
-   *
-   * I'm too tired to figure out the StyleDef code in detail
-   * right now, so i'm tweaking the stored values here in
-   * the hopes that it will force a reprint of style after
-   * we begin a new scope.
-   *
-   * Seems to work.
-  */
+   * Color definitions do not persist accross scopes. Set the cached colors to
+   * "impossible" values so that the first drawing operation inside the scope
+   * will trigger a re-definition of colors.
+   */
   tikzInfo->oldFillColor = -999;
   tikzInfo->oldDrawColor = -999;
-  tikzInfo->oldLineType = -999;
 
-  if(tikzInfo->debug == TRUE)
-    printOutput(tikzInfo,
-      "\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
-      x0,y0,x1,y1);
-      
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
+  /*
+   * Setting this flag will cause the `TikZ_CheckState` function to emit the
+   * code required to begin a new clipping scope. `TikZ_CheckState` is called
+   * by every graphics function that generates visible output.
+   */
+  tikzInfo->clipState = TIKZ_START_CLIP;
 }
 
 static void TikZ_Size( double *left, double *right,
@@ -1036,41 +980,40 @@ static void TikZ_Text( double x, double y, const char *str,
       "%% Drawing node at x = %f, y = %f\n",
       x,y);
 
-  // Print out a definition for the text color.
-  SetColor( plotParams->col, TRUE, tikzInfo );  
+  TikZ_CheckState(deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, DRAWOP_DRAW);
 
   /* Start a node for the text, open an options bracket. */
-  printOutput(tikzInfo,"\n\\node[");
+  printOutput(tikzInfo,"\n\\node[text=drawColor");
+  /* FIXME: Should bail out of this function early if text is fully transparent */
+  if( !R_OPAQUE(plotParams->col) )
+    printOutput(tikzInfo, ",text opacity=%4.2f", R_ALPHA(plotParams->col)/255.0);
 
   /* Rotate the text if desired. */
   if( rot != 0 )
-    printOutput(tikzInfo, "rotate=%6.2f,", rot );
+    printOutput(tikzInfo, ",rotate=%6.2f", rot );
 
-  /* More options would go here such as scaling, color etc. */
-  
-  // Add a reference to the text color to the node options.
-  SetColor( plotParams->col, FALSE, tikzInfo );
   /* End options, print coordinates and string. */
-  printOutput(tikzInfo, "anchor=");
-  
+  printOutput(tikzInfo, ",anchor=");
+
   //Justify the text
   if(fabs(hadj - 0.0) < tol){
     //Left Justified
-    printOutput(tikzInfo, "base west,");
+    printOutput(tikzInfo, "base west");
   }
   if(fabs(hadj - 0.5) < tol){
     //Center Justified
-    printOutput(tikzInfo, "base,");
+    printOutput(tikzInfo, "base");
   }
   if(fabs(hadj - 1) < tol){
     //Right Justified
-    printOutput(tikzInfo, "base east,");
+    printOutput(tikzInfo, "base east");
   }
-    
-  printOutput(tikzInfo, 
-    "inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
+
+  printOutput(tikzInfo,
+    ",inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
     fontScale, x, y);
-  
+
   char *cleanString = NULL;
   if(tikzInfo->sanitize == TRUE){
     //If using the sanitize option call back to R for the sanitized string
@@ -1106,6 +1049,7 @@ static void TikZ_Circle( double x, double y, double r,
 
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams);
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
@@ -1113,21 +1057,13 @@ static void TikZ_Circle( double x, double y, double r,
       "%% Drawing Circle at x = %f, y = %f, r = %f\n",
       x,y,r);
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  TikZ_CheckState(deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
-  /* 
-   * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
-  */ 
-  
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
-
-  
   /* End options, print coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) circle (%6.2f);\n",
     x,y,r);
@@ -1138,6 +1074,7 @@ static void TikZ_Rectangle( double x0, double y0,
 
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams);
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
@@ -1145,20 +1082,13 @@ static void TikZ_Rectangle( double x0, double y0,
       "%% Drawing Rectangle from x0 = %f, y0 = %f to x1 = %f, y1 = %f\n",
       x0,y0,x1,y1);
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  TikZ_CheckState(deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
-
-  /* 
-   * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
-  */
-  
   /* End options, print coordinates. */
   printOutput(tikzInfo, 
     "] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
@@ -1172,6 +1102,7 @@ static void TikZ_Line( double x1, double y1,
 
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams);
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
@@ -1179,17 +1110,13 @@ static void TikZ_Line( double x1, double y1,
       "%% Drawing line from x1 = %10.4f, y1 = %10.4f to x2 = %10.4f, y2 = %10.4f\n",
       x1,y1,x2,y2);
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  TikZ_CheckState(deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing a line, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-  
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
-  /* More options would go here such as line thickness, style, color etc. */
-  
   /* End options, print coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) -- (%6.2f,%6.2f);\n",
     x1,y1,x2,y2);
@@ -1202,24 +1129,28 @@ static void TikZ_Polyline( int n, double *x, double *y,
 
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  /*
+   * FIXME:
+   * Any fill operations returned by TikZ_GetDrawOps are removed by
+   * applying a bitwise and with `DRAWOP_DRAW`. This is because the old
+   * StyleDef-based code had an ugly hack in it that explicitly disabled
+   * filling for polypaths.
+   *
+   * This fixme is here because we have no tests that detect this supposed bug.
+   */
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams) & DRAWOP_DRAW;
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
     printOutput(tikzInfo,
       "%% Starting Polyline\n");
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  TikZ_CheckState(deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-
-  /* More options would go here such as line thickness, style and color */
-  /*Define the draw styles*/
-  //Setting polyline is a quick hack so that the fill color is not set for poylines
-  tikzInfo->polyLine = TRUE;
-  StyleDef(FALSE, plotParams, deviceInfo);
-  tikzInfo->polyLine = FALSE;
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
   /* End options, print first set of coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
@@ -1250,25 +1181,19 @@ static void TikZ_Polygon( int n, double *x, double *y,
 
   /* Shortcut pointers to variables of interest. */
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams);
 
   /*Show only for debugging*/
   if(tikzInfo->debug == TRUE) 
     printOutput(tikzInfo,
       "%% Starting Polygon\n");
-      
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
-  
+
+  TikZ_CheckState(deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
+
   /* Start drawing, open an options bracket. */
-  printOutput(tikzInfo,"\n\\draw[");
-  
-  /* 
-   * More options would go here such as line thickness, style, line 
-   * and fill color etc. 
-  */
-  
-  /*Define the draw styles*/
-  StyleDef(FALSE, plotParams, deviceInfo);
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
   /* End options, print first set of coordinates. */
   printOutput(tikzInfo, "] (%6.2f,%6.2f) --\n",
@@ -1305,24 +1230,23 @@ TikZ_Path( double *x, double *y,
 
   int i, j, index;
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+  TikZ_DrawOps ops = TikZ_GetDrawOps(plotParams);
 
   if(tikzInfo->debug) { printOutput(tikzInfo, "%% Drawing polypath with %i subpaths\n", npoly); }
 
-  /*Define the colors for fill and border*/
-  StyleDef(TRUE, plotParams, deviceInfo);
+  TikZ_CheckState(deviceInfo);
+  TikZ_DefineColors(plotParams, deviceInfo, ops);
 
   /*
    * Start drawing, open an options bracket.
    *
-   * We use \filldraw instead of the normal \draw, because filldraw has builtin
-   * support for handling rule-based filling of operlaping polygons as R expects.
+   * TikZ has built-in support for handling rule-based filling of operlaping
+   * polygons as R expects.
    *
    * Thank you TikZ!
    */
-  printOutput(tikzInfo,"\n\\filldraw[");
-
-  /* Define the draw styles */
-  StyleDef(FALSE, plotParams, deviceInfo);
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
 
   /*
    * Select rule to be used for overlapping fills as specified by the 'winding'
@@ -1330,9 +1254,9 @@ TikZ_Path( double *x, double *y,
    * manual for details.
    */
   if (winding) {
-    printOutput(tikzInfo, "nonzero rule");
+    printOutput(tikzInfo, ",nonzero rule");
   } else {
-    printOutput(tikzInfo, "even odd rule");
+    printOutput(tikzInfo, ",even odd rule");
   }
 
   printOutput(tikzInfo, "]");
@@ -1516,6 +1440,8 @@ static void TikZ_Raster(
   SEXP rasterFile;
   PROTECT( rasterFile = eval(RCallBack, namespace) );
 
+  TikZ_CheckState(deviceInfo);
+
   /* Position the image using a node */
   printOutput(tikzInfo, "\\node[inner sep=0pt,outer sep=0pt,anchor=south west,rotate=%6.2f] at (%6.2f, %6.2f) {\n",
     rot, x, y);
@@ -1601,79 +1527,39 @@ static void TikZ_Mode( int mode, pDevDesc deviceInfo ){}
 
 ==============================================================================*/
 
-/* This function either prints out the color definitions for outline and fill 
- * colors or the style tags in the \draw[] command, the defineColor parameter 
- * tells if the color/style is being defined or used.
- * SetLineStyle and CheckAndSetAlpha are only run if the style is being used 
- * because there are no color definitions outside of the draw command. 
-*/
-static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
-            pDevDesc deviceInfo){
-  
-  /* Shortcut pointers to variables of interest. */
+/*
+ * This function constructs a value that can be tested using a bitwise and to
+ * determine if a given plotting opertion will result in a visible fill or
+ * stroke.
+ */
+static TikZ_DrawOps TikZ_GetDrawOps(pGEcontext plotParams)
+{
+  TikZ_DrawOps ops = DRAWOP_NOOP;
+
+  /*
+   * NOTE:
+   *
+   * Should also check that `plotParams.lty > 0` as a line type of 0 means
+   * "blank". However, R does not seem to set this parameter consistently.
+   */
+  if( !R_TRANSPARENT(plotParams->col) && (plotParams->lwd > 0) )
+    ops |= DRAWOP_DRAW;
+
+  if( !R_TRANSPARENT(plotParams->fill) )
+    ops |= DRAWOP_FILL;
+
+  return ops;
+};
+
+static void TikZ_DefineColors(pGEcontext plotParams, pDevDesc deviceInfo, TikZ_DrawOps ops)
+{
+  int color;
+
   tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-  
-  /*From devPS.c, PS_Circle()*/
-  int code;
-  /* code is set as follows */
-  /* code == 0, nothing to draw */
-  /* code == 1, outline only */
-  /* code == 2, fill only */
-  /* code == 3, outline and fill */
 
-  code = 3 - 2 * (R_TRANSPARENT(plotParams->fill)) - 
-          (R_TRANSPARENT(plotParams->col));
-
-  if (code) {
-    if(code & 1) {
-      /* Define outline draw color*/
-      SetColor(plotParams->col, defineColor, tikzInfo);
-      if(defineColor == FALSE){
-        SetLineStyle(plotParams->lty, plotParams->lwd, tikzInfo);
-        SetLineEnd(plotParams->lend, tikzInfo);
-        SetLineJoin(plotParams->ljoin, 
-              plotParams->lmitre, tikzInfo);
-      }
-    }
-    if(code & 2){
-      /* Define fill color*/
-      SetFill(plotParams->fill, defineColor, tikzInfo);
-    }
-  }
-  /*Set Alpha*/
-  if(defineColor == FALSE){
-    /*Set Fill opacity Alpha*/
-    SetAlpha(plotParams->fill, TRUE, tikzInfo);
-    /*Set Draw opacity Alpha*/
-    SetAlpha(plotParams->col, FALSE, tikzInfo);
-  }
-  
-}
-
-static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo){
-  
-  if(def == TRUE){
-    if(color != tikzInfo->oldFillColor){
-      tikzInfo->oldFillColor = color;
-      printOutput(tikzInfo,
-        "\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
-        R_RED(color)/255.0,
-        R_GREEN(color)/255.0,
-        R_BLUE(color)/255.0);
-    }
-  }else{
-    //Quick hack to not show fill colors with polylines
-    if(tikzInfo->polyLine == FALSE)
-      printOutput(tikzInfo, "fill=fillColor,");
-  }
-  
-}
-
-
-static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo){
-  
-  if(def == TRUE){
-    if(color != tikzInfo->oldDrawColor){
+  if ( ops & DRAWOP_DRAW ) {
+    color = plotParams->col;
+    if ( color != tikzInfo->oldDrawColor ) {
       tikzInfo->oldDrawColor = color;
       printOutput(tikzInfo,
         "\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
@@ -1681,129 +1567,136 @@ static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo){
         R_GREEN(color)/255.0,
         R_BLUE(color)/255.0);
     }
-  }else{
-    printOutput(tikzInfo, "color=drawColor,");
   }
-}
 
-static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo){
-    
-  SetLineWeight(lwd, tikzInfo);
-  
-  if (lty && lwd) {
-  
-    SetDashPattern(lty, tikzInfo);
-  }
-}
-
-static void SetDashPattern(int lty, tikzDevDesc *tikzInfo){
-  char dashlist[8];
-  int i, nlty;
-  
-  /* From ?par
-   * Line types can either be specified by giving an index into a small 
-   * built-in table of line types (1 = solid, 2 = dashed, etc, see lty 
-   * above) or directly as the lengths of on/off stretches of line. This 
-   * is done with a string of an even number (up to eight) of characters, 
-   * namely non-zero (hexadecimal) digits which give the lengths in 
-   * consecutive positions in the string. For example, the string "33" 
-   * specifies three units on followed by three off and "3313" specifies 
-   * three units on followed by three off followed by one on and finally 
-   * three off. The ‘units’ here are (on most devices) proportional to lwd, 
-   * and with lwd = 1 are in pixels or points or 1/96 inch.
-
-   * The five standard dash-dot line types (lty = 2:6) correspond to 
-   * c("44", "13", "1343", "73", "2262").
-   * 
-   * (0=blank, 1=solid (default), 2=dashed, 
-   *  3=dotted, 4=dotdash, 5=longdash, 6=twodash) 
-  */
-  
-  /*Retrieve the line type pattern*/
-  for(i = 0; i < 8 && lty & 15 ; i++) {
-    dashlist[i] = lty & 15;
-    lty = lty >> 4;
-  }
-  nlty = i; i = 0; 
-  
-  printOutput(tikzInfo, "dash pattern=");
-  
-  /*Set the dash pattern*/
-  while(i < nlty){
-    if( (i % 2) == 0 ){
-      printOutput(tikzInfo, "on %dpt ", dashlist[i]);
-    }else{
-      printOutput(tikzInfo, "off %dpt ", dashlist[i]);
+  if ( ops & DRAWOP_FILL ) {
+    color = plotParams->fill;
+    if( color != tikzInfo->oldFillColor ) {
+      tikzInfo->oldFillColor = color;
+      printOutput(tikzInfo,
+        "\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+        R_RED(color)/255.0,
+        R_GREEN(color)/255.0,
+        R_BLUE(color)/255.0);
     }
-    i++;
   }
-  printOutput(tikzInfo, ",");
+
 }
 
-static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo){
-  
-  /*Set the line width, 0.4pt is the TikZ default so scale lwd=1 to that*/
-  if(lwd != 1.0)
-    printOutput(tikzInfo,"line width=%4.1fpt,",0.4*lwd);
-}
+/*
+ * NOTE: This function operates under the assumption that no other functions
+ * have written into the options bracket for a path. Custom path options should
+ * be added after the call to `TikZ_WriteDrawOptions` and should remember to
+ * bring their own commas.
+ */
+static void TikZ_WriteDrawOptions(const pGEcontext plotParams, pDevDesc deviceInfo,
+    TikZ_DrawOps ops)
+{
+  /* Bail out if there is nothing to do */
+  if ( ops == DRAWOP_NOOP )
+    return;
 
-static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo){
-  
-  /* If the parameter fill == TRUE then set the fill opacity otherwise set 
-   * the outline opacity
-  */
-  
-  unsigned int alpha = R_ALPHA(color);
-  
-  /*draw opacity and fill opacity separately here*/
-  if(!R_OPAQUE(color)){
-    if(fill == TRUE)
-      printOutput(tikzInfo,"fill opacity=%4.2f,",alpha/255.0);
-    else
-      printOutput(tikzInfo,"draw opacity=%4.2f,",alpha/255.0);
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if ( ops & DRAWOP_DRAW ) {
+    printOutput(tikzInfo, "draw=drawColor");
+    if( !R_OPAQUE(plotParams->col) )
+      printOutput(tikzInfo, ",draw opacity=%4.2f", R_ALPHA(plotParams->col)/255.0);
+
+    TikZ_WriteLineStyle(plotParams, tikzInfo);
   }
-  
+
+  if ( ops & DRAWOP_FILL ) {
+    /* Toss in a comma if we printed draw options */
+    if ( ops & DRAWOP_DRAW )
+      printOutput(tikzInfo, ",");
+
+    printOutput(tikzInfo, "fill=fillColor");
+    if( !R_OPAQUE(plotParams->fill) )
+      printOutput(tikzInfo, ",fill opacity=%4.2f", R_ALPHA(plotParams->fill)/255.0);
+  }
+
 }
 
+static void TikZ_WriteLineStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo)
+{
 
-static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, 
-            tikzDevDesc *tikzInfo){
-  
-  switch (ljoin) {
+  /*
+   * Set the line width, 0.4pt is the TikZ default so scale lwd=1 relative to
+   * that
+   */
+  printOutput(tikzInfo,",line width=%4.1fpt", 0.4*plotParams->lwd);
+
+  if ( plotParams->lty > 1 ) {
+    char dashlist[8];
+    int i, nlty, lty = plotParams->lty;
+
+    /*
+     * From ?par :
+     *
+     * Line types can either be specified by giving an index into a small
+     * built-in table of line types (1 = solid, 2 = dashed, etc, see lty above)
+     * or directly as the lengths of on/off stretches of line. This is done
+     * with a string of an even number (up to eight) of characters, namely
+     * non-zero (hexadecimal) digits which give the lengths in consecutive
+     * positions in the string. For example, the string "33" specifies three
+     * units on followed by three off and "3313" specifies three units on
+     * followed by three off followed by one on and finally three off. The
+     * ‘units’ here are (on most devices) proportional to lwd, and with lwd = 1
+     * are in pixels or points or 1/96 inch.
+     *
+     * The five standard dash-dot line types (lty = 2:6) correspond to:
+     *  c("44", "13", "1343", "73", "2262")
+     *
+     * (0=blank, 1=solid (default), 2=dashed, 3=dotted, 4=dotdash, 5=longdash,
+     * 6=twodash)
+     */
+
+    /*Retrieve the line type pattern*/
+    for ( i = 0; i < 8 && lty & 15 ; i++ ) {
+      dashlist[i] = lty & 15;
+      lty = lty >> 4;
+    }
+    nlty = i; i = 0;
+
+    printOutput(tikzInfo, ",dash pattern=");
+
+    /*Set the dash pattern*/
+    while( i < nlty ){
+      if( (i % 2) == 0 ){
+        printOutput(tikzInfo, "on %dpt ", dashlist[i]);
+      }else{
+        printOutput(tikzInfo, "off %dpt ", dashlist[i]);
+      }
+      i++;
+    }
+  }
+
+  switch ( plotParams->ljoin ) {
     case GE_ROUND_JOIN:
-      printOutput(tikzInfo, "line join=round,");
+      printOutput(tikzInfo, ",line join=round");
       break;
     case GE_MITRE_JOIN:
-      /*Default if nothing is specified*/
-      SetMitreLimit(lmitre, tikzInfo);
+      /* Default if nothing is specified */
+      if(plotParams->lmitre != 10)
+        printOutput(tikzInfo, ",mitre limit=%4.2f",plotParams->lmitre);
       break;
     case GE_BEVEL_JOIN:
-      printOutput(tikzInfo, "line join=bevel,");
+      printOutput(tikzInfo, ",line join=bevel");
   }
-}
 
-static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo){
-  
-  if(lmitre != 10)
-    printOutput(tikzInfo, "mitre limit=%4.2f,",lmitre);
-  
-}
-
-static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo){
-  
-  
-  switch (lend) {
+  switch ( plotParams->lend ) {
     case GE_ROUND_CAP:
-      printOutput(tikzInfo, "line cap=round,");
+      printOutput(tikzInfo, ",line cap=round");
       break;
     case GE_BUTT_CAP:
-      /*Default if nothing is specified*/
+      /* Default if nothing is specified */
       break;
     case GE_SQUARE_CAP:
-      printOutput(tikzInfo, "line cap=rect,");
+      printOutput(tikzInfo, ",line cap=rect");
   }
-}
 
+}
 
 /*
  * This function calculates an appropriate scaling factor for text by
@@ -2048,3 +1941,68 @@ static double dim2dev( double length ){
   return length*72.27;
 }
 
+
+/*
+ * This function checks to see if a new page or clipping scope needs to be
+ * started and is called by every function that produces visible output. Having
+ * this function allows the creation of new pages or clipping scopes to be
+ * deferred until there is actually output to place in the environment.
+ */
+static void TikZ_CheckState(pDevDesc deviceInfo)
+{
+  tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+
+  if( tikzInfo->pageState == TIKZ_START_PAGE ) {
+
+    if ( tikzInfo->debug == TRUE )
+      printOutput(tikzInfo,
+        "%% Beginning new tikzpicture 'page'\n");
+
+    if ( tikzInfo->bareBones != TRUE )
+      printOutput(tikzInfo, "\\begin{tikzpicture}[x=1pt,y=1pt]\n");
+
+    /*
+     * Emit a path that encloses the entire canvas area in order to ensure that
+     * the final typeset plot is the size the user specified. Adding the `use as
+     * bounding box` key to the path options should save TikZ some work when it
+     * comes to calculating the bounding of the graphic from its contents.
+     */
+    int color = deviceInfo->startfill;
+    tikzInfo->oldFillColor = color;
+    printOutput(tikzInfo,
+      "\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+      R_RED(color)/255.0,
+      R_GREEN(color)/255.0,
+      R_BLUE(color)/255.0);
+
+    printOutput(tikzInfo, "\\path[use as bounding box");
+
+    /* TODO: Consider only filling when the color is not transparent. */
+    printOutput(tikzInfo, ",fill=fillColor");
+    if( !R_OPAQUE(color) )
+      printOutput(tikzInfo, ",fill opacity=%4.2f", R_ALPHA(color)/255.0);
+
+    printOutput(tikzInfo, "] (0,0) rectangle (%6.2f,%6.2f);\n",
+      deviceInfo->right,deviceInfo->top);
+
+    tikzInfo->pageState = TIKZ_FINISH_PAGE;
+  } /* End if pageState == TIKZ_START_PAGE */
+
+
+  if ( tikzInfo->clipState == TIKZ_START_CLIP ) {
+    printOutput(tikzInfo, "\\begin{scope}\n");
+    printOutput(tikzInfo,
+      "\\path[clip] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+      deviceInfo->clipLeft, deviceInfo->clipBottom,
+      deviceInfo->clipRight, deviceInfo->clipTop);
+
+    if ( tikzInfo->debug == TRUE )
+      printOutput(tikzInfo,
+        "\\path[draw=red,very thick,dashed] (%6.2f,%6.2f) rectangle (%6.2f,%6.2f);\n",
+        deviceInfo->clipLeft, deviceInfo->clipBottom,
+        deviceInfo->clipRight, deviceInfo->clipTop);
+
+    tikzInfo->clipState = TIKZ_FINISH_CLIP;
+  } /* End if clipState == TIKZ_START_CLIP */
+
+}

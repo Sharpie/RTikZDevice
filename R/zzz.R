@@ -150,8 +150,6 @@ function(libname, pkgname) {
       )
     }
 
-  library.dynam(pkgname, pkgname, libname)
-
     # Its not nice to leave things in the user's global environment
   rm(latexPath, xelatexPath, envir=.GlobalEnv)
 }

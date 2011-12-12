@@ -29,7 +29,7 @@ test_graphs <- list(
     graph_code = quote({
       plot(1, type='n')
       text(0.8,0.8,'red',col='red')
-      text(1.2,1.2,'blue',col='blue',cex=2)
+      text(1.2,1.2,'blue',col=rgb(0,0,1,0.5),cex=2)
     })
   ),
 

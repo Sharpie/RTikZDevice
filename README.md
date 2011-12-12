@@ -101,9 +101,31 @@ to the development of the package!
 
 #### Bug Fixes
 
+  - Colorized text now obeys transparency settings.
+
+  - The tikzDevice no longer produces output for plots that are completely
+    empty.
+
 #### Behind the Scenes
+
+  - Upgrade documentation generation from Roxygen to Roxygen2.
 
   - Some magic numbers that control the leading used in the margin text of base
     graphics were adjusted to values used by the PDF device. Hopefully this
     will make the spacing used by x axis labels and y axis labels a bit more
     symmetric.
+
+  - The tikzDevice now delays the creation of clipping scopes until a drawing
+    operation occurs that can be clipped. This prevents empty clipping scopes
+    from appearing in the output and can reduce the size of the output by ~3/4
+    in some cases.
+
+  - The code that handles line color and fill color has been completely
+    refactored to avoid useless operations such as 0 transparency fills and
+    draws.
+
+#### Contributors
+The following people contributed to this release of the tikzDevice:
+
+  - Zack Weinberg for suggestions and comments that led to optimizations in the
+    quality and quantity of TikZ output.

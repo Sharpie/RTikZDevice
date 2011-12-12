@@ -210,6 +210,7 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #' @S3method drawDetails tikz_annotation
 #' @S3method drawDetails tikz_node
 #' @S3method drawDetails tikz_coord
+#' @useDynLib tikzDevice TikZ_Annotate
 NULL
 
 #-------------------------------------------------------------------------------
@@ -223,8 +224,8 @@ function (annotation)
 		stop("The active device is not a tikz device, please start a tikz device to use this function. See ?tikz.")
   }
 
-	.C('TikZ_Annotate', as.character(annotation),
-		as.integer(length(annotation)), PACKAGE='tikzDevice')
+	.C(TikZ_Annotate, as.character(annotation),
+		as.integer(length(annotation)))
 
 	invisible()
 }

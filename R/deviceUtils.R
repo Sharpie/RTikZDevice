@@ -150,6 +150,7 @@ isTikzDevice <- function(which = dev.cur()){
 }
 
 
+#' @useDynLib tikzDevice TikZ_DeviceInfo
 getDeviceInfo <- function(dev_num = dev.cur()) {
   # This function recovers some information about a tikz() graphics device that
   # is stored at the C level in the tikzDevDesc struct.
@@ -161,9 +162,8 @@ getDeviceInfo <- function(dev_num = dev.cur()) {
     stop("The specified device is not a tikz device!")
   }
 
-  device_info <- .Call('TikZ_DeviceInfo', dev_num, PACKAGE = 'tikzDevice')
+  device_info <- .Call(TikZ_DeviceInfo, dev_num)
 
   return(device_info)
-
 }
 

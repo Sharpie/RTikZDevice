@@ -38,6 +38,18 @@ typedef enum {
   xetex = 2
 } tikz_engine;
 
+typedef enum {
+  TIKZ_START_PAGE = 1,
+  TIKZ_NO_PAGE = 0,
+  TIKZ_FINISH_PAGE = -1
+} TikZ_PageState;
+
+typedef enum {
+  TIKZ_START_CLIP = 1,
+  TIKZ_NO_CLIP = 0,
+  TIKZ_FINISH_CLIP = -1
+} TikZ_ClipState;
+
 
 /*
  * tikzDevDesc is a structure that is used to hold information
@@ -51,22 +63,19 @@ typedef struct {
   char *outFileName;
   tikz_engine engine;
   int rasterFileCount;
-	Rboolean firstPage;
 	Rboolean debug;
 	Rboolean standAlone;
 	Rboolean bareBones;
-	Rboolean firstClip;
 	int oldFillColor;
 	int oldDrawColor;
-	int oldLineType;
-	pGEcontext plotParams;
 	int stringWidthCalls;
 	const char *documentDeclaration;
 	const char *packages;
 	const char *footer;
-	Rboolean polyLine;
 	Rboolean console;
 	Rboolean sanitize;
+  TikZ_ClipState clipState;
+  TikZ_PageState pageState;
 } tikzDevDesc;
 
 
@@ -155,17 +164,25 @@ static void TikZ_Mode( int mode, pDevDesc deviceInfo );
 
 
 /*Internal style definition routines*/
-static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
-	pDevDesc deviceInfo);
-static void SetColor(int color, Rboolean def, tikzDevDesc *tikzInfo);
-static void SetFill(int color, Rboolean def, tikzDevDesc *tikzInfo);
-static void SetAlpha(int color, Rboolean fill, tikzDevDesc *tikzInfo);
-static void SetLineStyle(int lty, double lwd, tikzDevDesc *tikzInfo);
-static void SetDashPattern(int lty, tikzDevDesc *tikzInfo);
-static void SetLineWeight(double lwd, tikzDevDesc *tikzInfo);
-static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, tikzDevDesc *tikzInfo);
-static void SetLineEnd(R_GE_lineend lend, tikzDevDesc *tikzInfo);
-static void SetMitreLimit(double lmitre, tikzDevDesc *tikzInfo);
+
+/*
+ * This enumeration specifies the kinds of drawing operations that need to be
+ * performed, such as filling or drawing a path.
+ *
+ * When adding new members, use the next power of 2 as so that the presence or
+ * absance of an operation can be determined using bitwise operators.
+ */
+typedef enum {
+  DRAWOP_NOOP = 0,
+  DRAWOP_DRAW = 1,
+  DRAWOP_FILL = 2
+} TikZ_DrawOps;
+static TikZ_DrawOps TikZ_GetDrawOps(pGEcontext plotParams);
+
+static void TikZ_DefineColors(const pGEcontext plotParams, pDevDesc deviceInfo, TikZ_DrawOps ops);
+static void TikZ_WriteDrawOptions(const pGEcontext plotParams, pDevDesc deviceInfo, TikZ_DrawOps ops);
+static void TikZ_WriteLineStyle(pGEcontext plotParams, tikzDevDesc *tikzInfo);
+
 static double ScaleFont( const pGEcontext plotParams, pDevDesc deviceInfo );
 
 /* Utility Routines*/
@@ -174,5 +191,6 @@ static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 static char *Sanitize(const char *str);
 static Rboolean contains_multibyte_chars(const char *str);
 static double dim2dev( double length );
+static void TikZ_CheckState(pDevDesc deviceInfo);
 
 #endif // End of Once Only header
