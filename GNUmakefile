@@ -72,7 +72,7 @@ docs:
 	# Cripple the new folder so you don't get confused and start doing
 	# development in there.
 	cd ../$(PKGSRC).build;\
-		rm Makefile
+		rm GNUmakefile
 
 news:
 	rm -f NEWS.pdf
