@@ -262,9 +262,14 @@ static Rboolean TikZ_Setup(
   tikzInfo->oldFillColor = 0;
   tikzInfo->oldDrawColor = 0;
   tikzInfo->stringWidthCalls = 0;
-  tikzInfo->documentDeclaration = documentDeclaration;
-  tikzInfo->packages = packages;
-  tikzInfo->footer = footer;
+
+  tikzInfo->documentDeclaration = (char*) calloc(strlen(documentDeclaration) + 1, sizeof(char));
+  strcpy(tikzInfo->documentDeclaration, documentDeclaration);
+  tikzInfo->packages = (char*) calloc(strlen(packages) + 1, sizeof(char));
+  strcpy(tikzInfo->packages, packages);
+  tikzInfo->footer = (char*) calloc(strlen(footer) + 1, sizeof(char));
+  strcpy(tikzInfo->footer, footer);
+
   tikzInfo->console = console;
   tikzInfo->sanitize = sanitize;
   tikzInfo->clipState = TIKZ_NO_CLIP;
@@ -548,6 +553,9 @@ static void TikZ_Close( pDevDesc deviceInfo){
 
   /* Deallocate pointers */
   free(tikzInfo->outFileName);
+  free(tikzInfo->documentDeclaration);
+  free(tikzInfo->packages);
+  free(tikzInfo->footer);
   free(tikzInfo);
 
 }
