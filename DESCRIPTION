@@ -7,14 +7,15 @@ Author: Charlie Sharpsteen <chuck@sharpsteen.net> and Cameron Bracken <cameron.b
 Maintainer: The tikzDevice team <tikzdevice-bugs@lists.r-forge.r-project.org>
 URL: https://github.com/Sharpie/RTikZDevice
 BugReports: https://github.com/Sharpie/RTikZDevice/issues
-Description: The TikZ device enables LaTeX-ready output from R graphics
-        functions. This is done by producing code that can be understood by
-        the TikZ graphics language. All text in a graphic output with the
-        tikz() function will can be typeset by LaTeX and therefore will match
-        whatever fonts are currently used in the document. This also means
-        that LaTeX mathematics can be typeset directly into labels and
-        annotations!  Graphics produced this way can also be annotated with
-        custom TikZ commands.
+Description:
+  The tikzDevice package provides a graphics output device for R that records
+  plots in a LaTeX-friendly format. The device transforms plotting commands
+  issued by R functions into LaTeX code blocks. When included in a paper
+  typeset by LaTeX, these blocks are interpreted with the help of TikZ---a
+  graphics package for TeX and friends written by Till Tantau. Using the
+  tikzDevice, the text of R plots can contain LaTeX commands such as
+  mathematical formula. The device also allows arbitrary LaTeX code to be
+  inserted into the output stream.
 License: GPL (>= 3)
 Depends: R (>= 2.11.0), filehash
 Suggests: testthat (>= 0.4), evaluate, stringr, ggplot2, maps
