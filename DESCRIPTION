@@ -16,7 +16,7 @@ Description:
   tikzDevice, the text of R plots can contain LaTeX commands such as
   mathematical formula. The device also allows arbitrary LaTeX code to be
   inserted into the output stream.
-License: GPL (>= 3)
+License: GPL (>= 2)
 Depends: R (>= 2.11.0), filehash
 Suggests: testthat (>= 0.4), evaluate, stringr, ggplot2, maps
 SystemRequirements: pgf (>= 2.00)
