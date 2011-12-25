@@ -61,18 +61,14 @@ format.ENV_VAR <- function(x, ...) { sprintf('the environment variable: %s', att
 
 .onLoad <-
 function(libname, pkgname) {
+
+  # Print out version banner
+  pkgInfo <- read.dcf(file.path( libname, pkgname, "DESCRIPTION"))
+  packageStartupMessage(sprintf("%s: %s (v%s)",
+    pkgInfo[, "Package"], pkgInfo[, "Title"], getTikzDeviceVersion()))
+
   # Ensure options are set.
   setTikzDefaults( overwrite = FALSE )
-
-  versionInfo <- read.dcf(file.path( libname, pkgname, "DESCRIPTION"))
-
-  versionInfo <- gettextf( "%s: %s (v%s)", versionInfo[, "Package"], versionInfo[, "Title"],
-    getTikzDeviceVersion() )
-
-  versionInfo <- c( paste(strwrap(versionInfo),collapse='\n'), "Checking for a LaTeX compiler...\n")
-
-  packageStartupMessage( paste(versionInfo,collapse='\n') )
-
 
   # Perform a search for executable TeX compilers. R options, environment
   # variables and common paths will be checked. If PdfLaTeX can not be found,
@@ -125,11 +121,8 @@ function(libname, pkgname) {
     }
   }
 
-  if( foundLatex ){
-    packageStartupMessage( formatExecutable(latexPath) )
-    p <- pipe( paste( as.character(latexPath), '--version' ) )
-    packageStartupMessage( paste( utils:::head(readLines( p ), 2), '\n', sep='' ) , sep='\n' )
-    close(p)
+  if ( foundLatex ) {
+    packageStartupMessage(paste('  LaTeX found in', format(latexPath)))
   } else {
     stop("\n\nAn appropriate LaTeX compiler could not be found.\n",
       "Access to LaTeX is required in order for the TikZ device\n",
@@ -149,20 +142,10 @@ function(libname, pkgname) {
     )
   }
 
-  if( foundXelatex ){
-      packageStartupMessage( formatExecutable(xelatexPath) )
-      p <- pipe( paste( as.character(xelatexPath), '--version' ) )
-      packageStartupMessage( paste( utils:::head(readLines( p ), 2), '\n', sep='' ) , sep='\n' )
-      close(p)
-  } else {
-    packageStartupMessage(
-      "\n\nATTENTION: An appropriate XeLaTeX compiler could not be found.\n",
-      "Access to the `xelatex' command is required for the TikZ device \n",
-      "to produce output containing multibyte UTF-8 characters.\n\n",
-      "The following places were tested for a valid XeLaTeX compiler:\n\n\t",
-      paste( sapply(xelatexLocs, format),collapse='\n\t')
-    )
+  if ( foundXelatex ) {
+    packageStartupMessage(paste('  XeLaTeX found in', format(xelatexPath)))
   }
+
 }
 
 # Any variables defined in here will be hidden
