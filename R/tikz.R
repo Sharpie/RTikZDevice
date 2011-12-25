@@ -72,7 +72,7 @@
 #'   See the section ``Options That Affect Package Behavior'' for which
 #'   characters are replaced.
 #' @param engine a string specifying which TeX engine to use. Possible values
-#'   are 'pdftex' and 'xetex'. See the Unicode section of
+#'   are 'pdftex', 'xetex' and 'luatex'. See the Unicode section of
 #'   \link{tikzDevice-package} for details.
 #' @param documentDeclaration See the sections ``Options That Affect Package
 #'   Behavior'' and ``Font Size Calculations'' of \link{tikzDevice-package}
@@ -226,11 +226,16 @@ function (file = ifelse(onefile, "./Rplots.tex", "./Rplot%03d.tex"),
       engine <- 2L
       if (missing(packages)) {packages <- getOption('tikzXelatexPackages')}
     },
+    luatex = {
+      engine <- 3L
+      if (missing(packages)) {packages <- getOption('tikzLualatexPackages')}
+    },
     {#ELSE
       stop('Unsupported TeX engine: ', engine,
         '\nAvailable choices are:\n',
         '\tpdftex\n',
-        '\txetex\n')
+        '\txetex\n',
+        '\tluatex\n')
     })
 
   # Ensure the standAlone option will trump the bareBones option.
