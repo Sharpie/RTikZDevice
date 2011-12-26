@@ -229,3 +229,55 @@ format.OPTION <- function(x, ...) { sprintf('the global option: %s', attr(x, 'or
 #' @S3method format ENV_VAR
 format.ENV_VAR <- function(x, ...) { sprintf('the environment variable: %s', attr(x, 'origin')) }
 
+
+#' Print paths to TeX compilers.
+#'
+#' This function reports information concerning compilers that the \code{tikz}
+#' device will use to calculate character metrics. Information on LaTeX will
+#' always be available but information on XeLaTeX will only be printed if the
+#' compiler was found.
+#'
+#' @param verbose
+#'   If set to \code{FALSE}, calling this function will not cause any output to
+#'   be printed to the screen. Defaults to \code{TRUE}.
+#'
+#' @return
+#'   Invisibly returns a list containing paths to TeX compilers.
+#'
+#' @author
+#'   Charlie Sharpsteen \email{source@@sharpsteen.net}
+#'
+#' @seealso
+#'   \code{\link{tikz}}
+#'
+#' @export
+tikzCompilerInfo <-
+function(verbose = TRUE)
+{
+  latexCompiler <- getOption('tikzLatex')
+  xelatexCompiler <- getOption('tikzXelatex')
+
+  if ( verbose ) {
+    cat('\nLaTeX Compiler:\n\t')
+    cat(latexCompiler)
+    cat('\n\t')
+    p <- pipe(paste(latexCompiler, '--version'))
+    cat(utils:::head(readLines(p), 2), sep = '\n\t')
+    close(p)
+    cat('\n')
+
+    cat('\nXeLaTeX Compiler:\n\t')
+    if ( is.null(xelatexCompiler) ) {
+      cat('Not available.\n')
+    } else {
+      cat(xelatexCompiler)
+      cat('\n\t')
+      p <- pipe(paste(xelatexCompiler, '--version'))
+      cat(utils:::head(readLines(p), 2), sep = '\n\t')
+      close(p)
+      cat('\n')
+    }
+  } # End if(verbose)
+
+  invisible(list(latex = latexCompiler, xelatex = xelatexCompiler))
+}
