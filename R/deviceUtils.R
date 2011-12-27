@@ -167,3 +167,117 @@ getDeviceInfo <- function(dev_num = dev.cur()) {
   return(device_info)
 }
 
+# -----------------------------------------------------------------------------
+#                     Methods for locating TeX Compilers
+# -----------------------------------------------------------------------------
+
+# S3 classes to represent the various sources for the path to an exectuable.
+PATH <-
+function(origin)
+{
+  structure(Sys.which(origin), origin = origin, class = 'PATH')
+}
+
+OPTION <-
+function(origin)
+{
+  structure(ifelse(is.null(getOption(origin)), '', Sys.which(getOption(origin))),
+    origin = origin, class = 'OPTION')
+}
+
+ENV_VAR <-
+function(origin)
+{
+  structure(ifelse(is.null(Sys.getenv(origin)), '', Sys.which(Sys.getenv(origin))),
+    origin = origin, class = 'ENV_VAR')
+}
+
+
+isExecutable <-
+function(executable)
+{
+  path <- as.character(executable)
+
+  # file.access doesn't like non-zero lengths.
+  if ( nchar(path) == 0 ) { return(FALSE) }
+
+  if ( file.access(path, 1) == 0 ) {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+
+formatExecutable <-
+function(executable)
+{
+  desc <- 'path:\n\t'
+  desc <- paste(desc, as.character(executable), sep = '')
+  desc <- paste(desc, "\nObtained from ", sep = '')
+  desc <- paste(desc, format(executable), '\n', sep = '')
+
+  return(desc)
+}
+
+# S3 methods have to be exported to the NAMESPACE in order to be effective
+# during .onLoad...
+
+#' @S3method format PATH
+format.PATH <- function(x, ...) { sprintf('the PATH using the command: %s', attr(x, 'origin')) }
+#' @S3method format OPTION
+format.OPTION <- function(x, ...) { sprintf('the global option: %s', attr(x, 'origin')) }
+#' @S3method format ENV_VAR
+format.ENV_VAR <- function(x, ...) { sprintf('the environment variable: %s', attr(x, 'origin')) }
+
+
+#' Print paths to TeX compilers.
+#'
+#' This function reports information concerning compilers that the \code{tikz}
+#' device will use to calculate character metrics. Information on LaTeX will
+#' always be available but information on XeLaTeX will only be printed if the
+#' compiler was found.
+#'
+#' @param verbose
+#'   If set to \code{FALSE}, calling this function will not cause any output to
+#'   be printed to the screen. Defaults to \code{TRUE}.
+#'
+#' @return
+#'   Invisibly returns a list containing paths to TeX compilers.
+#'
+#' @author
+#'   Charlie Sharpsteen \email{source@@sharpsteen.net}
+#'
+#' @seealso
+#'   \code{\link{tikz}}
+#'
+#' @export
+tikzCompilerInfo <-
+function(verbose = TRUE)
+{
+  latexCompiler <- getOption('tikzLatex')
+  xelatexCompiler <- getOption('tikzXelatex')
+
+  if ( verbose ) {
+    cat('\nLaTeX Compiler:\n\t')
+    cat(latexCompiler)
+    cat('\n\t')
+    p <- pipe(paste(latexCompiler, '--version'))
+    cat(utils:::head(readLines(p), 2), sep = '\n\t')
+    close(p)
+    cat('\n')
+
+    cat('\nXeLaTeX Compiler:\n\t')
+    if ( is.null(xelatexCompiler) ) {
+      cat('Not available.\n')
+    } else {
+      cat(xelatexCompiler)
+      cat('\n\t')
+      p <- pipe(paste(xelatexCompiler, '--version'))
+      cat(utils:::head(readLines(p), 2), sep = '\n\t')
+      close(p)
+      cat('\n')
+    }
+  } # End if(verbose)
+
+  invisible(list(latex = latexCompiler, xelatex = xelatexCompiler))
+}
