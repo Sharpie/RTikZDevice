@@ -1,17 +1,19 @@
-# Requires functions from filehash
-#' @import filehash
-NULL
+# Filehash contains a function for generating a SHA1 hash from an R object, but
+# doesn't export it. The digest package also contains the exact same code made
+# publicly available but it seems redundant to add it to the dependency list.
+# This function simplifies access to filehash's unexported SHA1 function.
+sha1 <- filehash:::sha1
 
 
+# Since calling LaTeX to obtain string metrics is inefficient and expensive,
+# this function will search a string metrics dictionary to see if we have
+# already calculated metrics for this particular object. If so we return the
+# cached value.
+#
+#' @importFrom filehash dbExists dbFetch
 queryMetricsDictionary <-
-function( key ){
-
-	# Since calling LaTeX to obtain string metrics is inefficient
-	# and expensive, this function will search a string metrics 
-	# dictionary to see if we have allready calculated metrics
-	# for this particular object. If so we return the cached
-	# value.
-
+function( key )
+{
 	# Ensure the dictionary is available.
 	checkDictionaryStatus()
 
@@ -28,15 +30,17 @@ function( key ){
 		return( -1 )
 
   }
-
 }
 
-storeMetricsInDictionary <-
-function( key, metrics ){
 
-	# This function enters values into the metrics dictionary. The
-	# metrics are stored under a key which is a SHA1 hash created from
-	# the object they are associated with.
+# This function enters values into the metrics dictionary. The metrics are
+# stored under a key which is a SHA1 hash created from the object they are
+# associated with.
+#
+#' @importFrom filehash dbInsert
+storeMetricsInDictionary <-
+function( key, metrics )
+{
 
   dbInsert(.tikzInternal[['dictionary']], sha1(key), metrics)
 
@@ -46,13 +50,15 @@ function( key, metrics ){
 }
 
 
+# This function checks to see if our dictionary has been created as a variable
+# in our private .tikzInternal environment. If not, it either opens a user
+# specified dictionary or creates a new one in tempdir().
+#
+#' @importFrom filehash dbCreate dbInit
 checkDictionaryStatus <-
-function(){
+function()
+{
 
-	# This function checks to see if our dictionary has been
-	# created as a variable in our private .tikzInternal
-	# enviornment. If not, it either opens a user specified
-	# dictionary or creates a new one in tempdir().
 	if( !exists('dictionary', envir=.tikzInternal, inherits=F) ){
 
 		# Check for a user specified dictionary.
@@ -84,19 +90,5 @@ function(){
 
 	# Return nothing.
 	invisible()
-
-}
-
-
-sha1 <-
-function( robj ){
-	# Filehash contains a function for generating a SHA1 hash
-	# from an R object, but doesn't export it. The digest package
-	# also contains the exact same code made publicly avaiable
-	# but it seems redundant to add it to the dependency list.
-	# This function simplifies access to filehash's unexported SHA1 
-	# function.
-
-	return( filehash:::sha1( robj ) )
 
 }
