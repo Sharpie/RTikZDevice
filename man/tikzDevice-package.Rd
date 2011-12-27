@@ -12,7 +12,7 @@
     Type: \tab Package\cr
     Version: \tab 0.6.3\cr
     Date: \tab 2011-11-13\cr
-    License: \tab GPL 3.0 or greater\cr
+    License: \tab GPL 2 or greater\cr
     LazyLoad: \tab yes\cr
   }
 }
@@ -37,16 +37,16 @@
   \code{.Rprofile} file. All of the options can be set by using
   \code{options(<option> = <value>)}.  These options allow for the use of
   custom \code{documentclass} declarations, LaTeX packages, and typesetting
-  engines (e.g. XeLaTeX or LuaTeX). The defaults , if are any for a given
+  engines (e.g. XeLaTeX or LuaLaTeX). The defaults , if are any for a given
   option, are shown below the description. The global options are:
 
   \describe{
 
     \item{\code{tikzDefaultEngine}}{
       Specifies which typesetting engine functions in the tikzDevice package
-      will prefer. Current possible values are \code{pdftex} or \code{xetex}
-      which will respectively trigger the use of the \code{pdflatex} and
-      \code{xelatex} compilers.
+      will prefer. Current possible values are \code{pdftex}, \code{xetex} or
+      \code{luatex}. Respectively, these values trigger the use of the
+      \code{pdflatex}, \code{xelatex} and \code{lualatex} compilers.
     }
 
     \item{\code{tikzLatex}}{
@@ -60,6 +60,11 @@
     \item{\code{tikzXelatex}}{
       Functions similar to \code{tikzLatex}, except this option specifies the
       location of the XeLaTeX compiler.
+    }
+
+    \item{\code{tikzLualatex}}{
+      Functions similar to \code{tikzLatex}, except this option specifies the
+      location of the LuaLaTeX compiler.
     }
 
     \item{\code{tikzMetricsDictionary}}{
@@ -98,6 +103,11 @@
       the \code{xetex} engine is in use.
     }
 
+    \item{\code{tikzLualatexPackages}}{
+      This option works like \code{tikzXelatexPackages}, except is is used when
+      the \code{luatex} engine is in use.
+    }
+
     \item{\code{tikzFooter}}{
       A character vector. The footer to be used only when
       \code{standAlone==TRUE}.
@@ -120,8 +130,8 @@
 
     \item{\code{tikzUnicodeMetricPackages}}{
       This vector is used when font metric calculations are performed using the
-      \code{xetex} engine. It should have the same contents as
-      \code{tikzMetricPackages} with the addition of the \code{fontspec} and
+      \code{xetex} or \code{luatex} engines. It should have the same contents
+      as \code{tikzMetricPackages} with the addition of the \code{fontspec} and
       \code{xunicode} packages.
     }
 
@@ -212,23 +222,25 @@
     distributions since TeX Live 2007 and MiKTeX 2.7.
 
     \item The \code{luatex} engine which is a direct sucessor to \code{pdftex}.
-    LuaTeX is still considered `beta' software (as of spring 2011) but has been
-    included in standard TeX distributions since TeX Live 2008 and MiKTeX 2.9.
+    LuaTeX is still considered `beta' software (as of spring 2012) but is very
+    stable and has been included in standard TeX distributions since TeX Live
+    2008 and MiKTeX 2.9.
 
   }
 
   As of Version 0.6.0, the tikzDevice package includes support for the
   \code{xetex} engine provided a recent version of TeX Live or MiKTeX is
-  available.
+  available. Support for the \code{luatex} engine was added in Version 0.7.0.
 
   The tikzDevice defaults to using the \code{pdftex} engine, but this may be
   changed by setting an option: \code{option(tikzDefaultEngine = 'xetex')}.
   When working with text that contains Unicode characters, we strongly
-  reccomend switching to the \code{xetex} engine and the package will produce
-  warning messages when multibyte characters are sent to the \code{pdftex}
-  engine. Users who find these warnings annoying may disable them by setting
-  \code{options(tikzPdftexWarnUTF = FALSE)} as it is possible to send Unicode
-  information to the \code{pdftex} engine with the following caveats:
+  reccomend switching to the \code{xetex} or \code{luatex} engines. The package
+  will produce warning messages when multibyte characters are sent to the
+  \code{pdftex} engine. Users who find these warnings annoying may disable them
+  by setting \code{options(tikzPdftexWarnUTF = FALSE)} as it is possible to
+  send Unicode information to the \code{pdftex} engine with the following
+  caveats:
 
   \itemize{
 
@@ -242,10 +254,10 @@
     range 32--127 when using the \code{pdftex} engine.
   }
 
-  When using the \code{xetex} engine, Unicode support is enabled by loading the
-  LaTeX packages \code{fontspec} and \code{xunicode}. Using this setup, support
-  for Unicode characters should be limited only by the fonts used in the
-  document. The font selection may be adjusted using
+  When using the \code{xetex} or \code{luatex} engines, Unicode support is
+  enabled by loading the LaTeX packages \code{fontspec} and \code{xunicode}.
+  Using this setup, support for Unicode characters should be limited only by
+  the fonts used in the document. The font selection may be adjusted using
   \code{options(tikzXelatexPackages)}.
 }
 

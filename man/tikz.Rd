@@ -5,7 +5,8 @@
 TikZ graphics language. TikZ code may be included inside a LaTeX document by
 specifying \code{\\usepackage{tikz}} in the document header.}
 \usage{
-  tikz(file = "./Rplots.tex", width = 7, height = 7,
+  tikz(file = ifelse(onefile, "./Rplots.tex", "./Rplot\%03d.tex"),
+    width = 7, height = 7, onefile = TRUE,
     bg = "transparent", fg = "black", pointsize = 10,
     standAlone = FALSE, bareBones = FALSE, console = FALSE,
     sanitize = FALSE,
@@ -22,6 +23,12 @@ specifying \code{\\usepackage{tikz}} in the document header.}
 
   \item{height}{The height of the output figure, in
   \bold{inches}.}
+
+  \item{onefile}{Should output be directed to separate
+  environments in a single file (default \code{TRUE}). If
+  \code{FALSE} this option works exactly like the argument
+  of the same name to \code{\link{pdf}} (see there for more
+  details).}
 
   \item{bg}{The starting background color for the plot.}
 
@@ -47,11 +54,11 @@ specifying \code{\\usepackage{tikz}} in the document header.}
   output will be drawn on a single page.}
 
   \item{console}{Should the output of tikzDevice be
-  directed to the R console (default FALSE). This is useful
-  for dumping tikz output directly into a LaTeX document
-  via \code{\link{sink}}.  If TRUE, the \code{file}
-  argument is ignored. Setting \code{file=''} is equivalent
-  to setting \code{console=TRUE}.}
+  directed to the R console (default \code{FALSE}). This is
+  useful for dumping tikz output directly into a LaTeX
+  document via \code{\link{sink}}.  If TRUE, the
+  \code{file} argument is ignored. Setting \code{file=''}
+  is equivalent to setting \code{console=TRUE}.}
 
   \item{sanitize}{Should special latex characters be
   replaced (Default FALSE).  See the section ``Options That
@@ -59,8 +66,8 @@ specifying \code{\\usepackage{tikz}} in the document header.}
   replaced.}
 
   \item{engine}{a string specifying which TeX engine to
-  use. Possible values are 'pdftex' and 'xetex'. See the
-  Unicode section of \link{tikzDevice-package} for
+  use. Possible values are 'pdftex', 'xetex' and 'luatex'.
+  See the Unicode section of \link{tikzDevice-package} for
   details.}
 
   \item{documentDeclaration}{See the sections ``Options

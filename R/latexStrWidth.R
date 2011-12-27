@@ -20,7 +20,7 @@
 #' @param face an integer in the range [1-5] that specifies the font face to
 #'   use. See \link{par} for details.
 #' @param engine a string specifying which TeX engine to use. Possible values
-#'   are 'pdftex' and 'xetex'. See the Unicode section of \link{tikzDevice} for
+#'   are 'pdftex', 'xetex' and 'luatex'. See the Unicode section of \link{tikzDevice} for
 #'   details.
 #'
 #'
@@ -63,11 +63,22 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
       }
       packages <- getOption("tikzXelatexPackages")
     },
+
+    luatex = {
+      if (is.null(getOption('tikzLualatex'))) {
+        stop("Cannot find LuaLaTeX! Please check your system",
+            "configuration or manually provide a value for",
+            "options(tikzLualatex)")
+      }
+      packages <- getOption("tikzLualatexPackages")
+    },
+
     {#ELSE
       stop('Unsupported TeX engine: ', engine,
         '\nAvailable choices are:\n',
         '\tpdftex\n',
-        '\txetex\n')
+        '\txetex\n',
+        '\tluatex\n')
     }
   )
 
@@ -128,7 +139,7 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
 #' @param face an integer in the range [1-5] that specifies the font face to
 #'   use. See \link{par} for details.
 #' @param engine a string specifying which TeX engine to use. Possible values
-#'   are 'pdftex' and 'xetex'. See the Unicode section of \link{tikzDevice} for
+#'   are 'pdftex', 'xetex' and 'luatex'. See the Unicode section of \link{tikzDevice} for
 #'   details.
 #'
 #'
@@ -171,11 +182,22 @@ function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
       }
       packages <- getOption('tikzXelatexPackages')
     },
+
+    luatex = {
+      if (is.null(getOption('tikzLualatex'))) {
+        stop("Cannot find LuaLaTeX! Please check your system",
+            "configuration or manually provide a value for",
+            "options(tikzLualatex)")
+      }
+      packages <- getOption('tikzXelatexPackages')
+    },
+
     {#ELSE
       stop('Unsupported TeX engine: ', engine,
         '\nAvailable choices are:\n',
         '\tpdftex\n',
-        '\txetex\n')
+        '\txetex\n',
+        '\tluatex\n')
     }
   )
 
@@ -285,6 +307,9 @@ function( TeXMetrics ){
     },
     xetex = {
       writeLines(getOption('tikzUnicodeMetricPackages'), texIn)
+    },
+    luatex = {
+      writeLines(getOption('tikzUnicodeMetricPackages'), texIn)
     }
   )
 
@@ -393,7 +418,8 @@ function( TeXMetrics ){
 	# Recover the latex command. Use XeLaTeX if the character is not ASCII
 	latexCmd <- switch(TeXMetrics$engine,
     pdftex = getOption('tikzLatex'),
-    xetex  = getOption('tikzXelatex')
+    xetex  = getOption('tikzXelatex'),
+    luatex  = getOption('tikzLualatex'),
   )
 
 	# Append the batchmode flag to increase LaTeX 

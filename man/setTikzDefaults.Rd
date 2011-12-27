@@ -1,7 +1,6 @@
 \name{setTikzDefaults}
 \alias{setTikzDefaults}
-\title{Reset tikzDevice options.
-Reset all the \pkg{tikzDevice} options to their default values.}
+\title{Reset tikzDevice options to default values.}
 \usage{
   setTikzDefaults(overwrite = TRUE)
 }
@@ -13,11 +12,20 @@ Reset all the \pkg{tikzDevice} options to their default values.}
   Nothing returned.
 }
 \description{
-  Specifically resets the options \code{tikzLatex},
-  \code{tikzDocumentDeclaration}, \code{tikzLatexPackages},
-  \code{tikzMetricPackages}, \code{tikzFooter},
-  \code{tikzSanitizeCharacters} and
-  \code{tikzReplacementCharacters}.
+  This function resets the following options:
+}
+\details{
+  \itemize{ \item \code{tikzDefaultEngine} \item
+  \code{tikzLatex} \item \code{tikzDocumentDeclaration}
+  \item \code{tikzFooter} \item \code{tikzLatexPackages}
+  \item \code{tikzXelatexPackages} \item
+  \code{tikzLualatexPackages} \item
+  \code{tikzMetricPackages} \item
+  \code{tikzUnicodeMetricPackages} \item
+  \code{tikzSanitizeCharacters} \item
+  \code{tikzReplacementCharacters} \item
+  \code{tikzRasterResolution} \item
+  \code{tikzPdftexWarnUTF} }
 }
 \examples{
 print( options( 'tikzDocumentDeclaration' ) )

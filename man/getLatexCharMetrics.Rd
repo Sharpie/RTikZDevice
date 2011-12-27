@@ -21,8 +21,9 @@ character glyph as it would appear in output typeset by LaTeX.}
   the font face to use. See \link{par} for details.}
 
   \item{engine}{a string specifying which TeX engine to
-  use. Possible values are 'pdftex' and 'xetex'. See the
-  Unicode section of \link{tikzDevice} for details.}
+  use. Possible values are 'pdftex', 'xetex' and 'luatex'.
+  See the Unicode section of \link{tikzDevice} for
+  details.}
 }
 \value{
   \item{metrics}{A numeric vector holding ascent, descent,
