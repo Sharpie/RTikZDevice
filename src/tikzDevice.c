@@ -468,13 +468,7 @@ static Rboolean TikZ_Setup(
   deviceInfo->rect = TikZ_Rectangle;
   deviceInfo->polyline = TikZ_Polyline;
   deviceInfo->polygon = TikZ_Polygon;
-  /*
-   * The following function was added in R 2.12.0, Graphics Engine
-   * version 8. See tikzDevice.h for more details.
-  */
-#if R_GE_version >= 8
   deviceInfo->path = TikZ_Path;
-#endif
 
   /* 
    * Raster Routines.  Currently implemented as stub functions to
@@ -1270,8 +1264,6 @@ static void TikZ_Polygon( int n, double *x, double *y,
 }
 
 
-#if R_GE_version >= 8
-/* Added in R 2.12.0 */
 static void
 TikZ_Path( double *x, double *y,
   int npoly, int *nper,
@@ -1335,7 +1327,6 @@ TikZ_Path( double *x, double *y,
   printOutput(tikzInfo, ";\n");
 
 }
-#endif /* End code only for R Graphics v8 or newer (R 2.12.0 or newer) */
 
 
 /*

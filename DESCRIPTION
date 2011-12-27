@@ -17,7 +17,7 @@ Description:
   mathematical formula. The device also allows arbitrary LaTeX code to be
   inserted into the output stream.
 License: GPL (>= 2)
-Depends: R (>= 2.11.0), filehash
+Depends: R (>= 2.12.0), filehash
 Suggests: testthat (>= 0.4), evaluate, stringr, ggplot2, maps
 SystemRequirements: pgf (>= 2.00)
 LazyLoad: yes

@@ -128,6 +128,8 @@ Latest Changes
 
 #### Behind the Scenes
 
+  - The tikzDevice now requires R 2.12.0 or later.
+
   - Upgrade documentation generation from Roxygen to Roxygen2.
 
   - Some magic numbers that control the leading used in the margin text of base

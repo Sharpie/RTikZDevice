@@ -21,8 +21,8 @@
 #include <R_ext/GraphicsEngine.h>
 
 /* Check R Graphics Engine for minimum supported version */
-#if R_GE_version < 6
-#error "This version of the tikzDevice must be compiled against R 2.11.0 or newer!"
+#if R_GE_version < 8
+#error "This version of the tikzDevice must be compiled against R 2.12.0 or newer!"
 #endif
 
 /* Macro definitions */
@@ -132,19 +132,11 @@ static void TikZ_Polyline( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
-/*
- * Path routine, a polygon with "holes", was added in R 2.12.0,
- * Graphics Engine version 8.  No idea what happened to version 7,
- * guess it was internal
-*/
-#if R_GE_version >= 8
 static void
 TikZ_Path( double *x, double *y,
   int npoly, int *nper,
   Rboolean winding,
-  const pGEcontext plotParams, pDevDesc deviceInfo
-);
-#endif
+  const pGEcontext plotParams, pDevDesc deviceInfo );
 
 static void TikZ_Raster(
   unsigned int *raster,
