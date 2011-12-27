@@ -80,7 +80,7 @@ news:
 	# Use this instead of Rd2txt. Rd2txt *does not* produce plaintext. The output
 	# has a bunch of formatting junk for underlines and such.
 	"$(RBIN)/R" --vanilla --slave -e "require(tools);Rd2txt('NEWS.Rd', 'NEWS', options=list(underline_titles=FALSE))"
-	R CMD Rd2pdf NEWS.Rd
+	R CMD Rd2pdf --no-preview NEWS.Rd
 	# Move news into the inst directory so that it will be available to users
 	# after installing the package.
 	mv NEWS.Rd inst
@@ -116,9 +116,18 @@ valgrind: install
 # Packaging Tasks
 #------------------------------------------------------------------------------
 release:
-	cd ..;\
-		"$(RBIN)/R" --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)','$(PKGSRC)', copy.package=FALSE, use.Rd2=TRUE, overwrite=TRUE)"
-	./updateVersion.sh
-	cd inst/doc;\
-		"$(RBIN)/R" CMD Sweave $(PKGNAME).Rnw;\
-		texi2dvi --pdf $(PKGNAME).tex
+	@git checkout r-forge
+	@git clean -fdx
+	@git merge master -s recursive -Xtheirs
+	@cd ..;\
+		"$(RBIN)/R" --vanilla --slave -e "library(roxygen2); roxygenize('$(PKGSRC)','$(PKGSRC)', copy.package=FALSE, overwrite=TRUE)"
+	@echo "\nCreating Vignette..."
+	@make vignette >> build.log 2>&1
+	@echo "Creating NEWS...\n"
+	@make news >> build.log 2>&1
+	@./updateVersion.sh
+	@git commit --amend -m "Build `cat inst/GIT_VERSION`"
+	@echo "\nMaster branch merged. Documentation rebuilt. Version number updated."
+	@echo 'Perform final touchups and commit with `git commit --amend`.'
+	@echo 'Remember to run `git svn dcommit` before `git push` as synching with'
+	@echo 'R-Forge SVN will alter the SHA.'
