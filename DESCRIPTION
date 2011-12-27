@@ -2,7 +2,7 @@ Package: tikzDevice
 Type: Package
 Title: R Graphics Output in LaTeX Format
 Version: 0.6.3
-Date: 2011-11-13
+Date: 2011-12-27
 Author: Charlie Sharpsteen <chuck@sharpsteen.net> and Cameron Bracken <cameron.bracken@gmail.com>
 Maintainer: The tikzDevice team <tikzdevice-bugs@lists.r-forge.r-project.org>
 URL: https://github.com/Sharpie/RTikZDevice

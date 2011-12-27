@@ -36,13 +36,25 @@ getDocumentPointsize <- function( docString ){
 }
 
 
-#' Reset tikzDevice options.
-#' Reset all the \pkg{tikzDevice} options to their default values.
+#' Reset tikzDevice options to default values.
 #'
-#' Specifically resets the options \code{tikzLatex},
-#' \code{tikzDocumentDeclaration}, \code{tikzLatexPackages},
-#' \code{tikzMetricPackages}, \code{tikzFooter}, \code{tikzSanitizeCharacters}
-#' and \code{tikzReplacementCharacters}.
+#' This function resets the following options:
+#'
+#' \itemize{
+#'   \item \code{tikzDefaultEngine}
+#'   \item \code{tikzLatex}
+#'   \item \code{tikzDocumentDeclaration}
+#'   \item \code{tikzFooter}
+#'   \item \code{tikzLatexPackages}
+#'   \item \code{tikzXelatexPackages}
+#'   \item \code{tikzLualatexPackages}
+#'   \item \code{tikzMetricPackages}
+#'   \item \code{tikzUnicodeMetricPackages}
+#'   \item \code{tikzSanitizeCharacters}
+#'   \item \code{tikzReplacementCharacters}
+#'   \item \code{tikzRasterResolution}
+#'   \item \code{tikzPdftexWarnUTF}
+#' }
 #'
 #' @param overwrite Should values that are allready set in \code{options()} be
 #'   overwritten?
@@ -81,6 +93,14 @@ setTikzDefaults <- function( overwrite = TRUE ){
     tikzXelatexPackages = c(
       "\\usepackage{tikz}\n",
       "\\usepackage[active,tightpage,xetex]{preview}\n",
+      "\\usepackage{fontspec,xunicode}\n",
+      "\\PreviewEnvironment{pgfpicture}\n",
+      "\\setlength\\PreviewBorder{0pt}\n"
+    ),
+
+    tikzLualatexPackages = c(
+      "\\usepackage{tikz}\n",
+      "\\usepackage[active,tightpage,psfixbb]{preview}\n",
       "\\usepackage{fontspec,xunicode}\n",
       "\\PreviewEnvironment{pgfpicture}\n",
       "\\setlength\\PreviewBorder{0pt}\n"
@@ -234,8 +254,8 @@ format.ENV_VAR <- function(x, ...) { sprintf('the environment variable: %s', att
 #'
 #' This function reports information concerning compilers that the \code{tikz}
 #' device will use to calculate character metrics. Information on LaTeX will
-#' always be available but information on XeLaTeX will only be printed if the
-#' compiler was found.
+#' always be available but information on XeLaTeX and LuaLaTeX will only be
+#' reported if the compilers were found.
 #'
 #' @param verbose
 #'   If set to \code{FALSE}, calling this function will not cause any output to
@@ -256,6 +276,7 @@ function(verbose = TRUE)
 {
   latexCompiler <- getOption('tikzLatex')
   xelatexCompiler <- getOption('tikzXelatex')
+  lualatexCompiler <- getOption('tikzLualatex')
 
   if ( verbose ) {
     cat('\nLaTeX Compiler:\n\t')
@@ -277,7 +298,21 @@ function(verbose = TRUE)
       close(p)
       cat('\n')
     }
+
+    cat('\nLuaLaTeX Compiler:\n\t')
+    if ( is.null(lualatexCompiler) ) {
+      cat('Not available.\n')
+    } else {
+      cat(lualatexCompiler)
+      cat('\n\t')
+      p <- pipe(paste(lualatexCompiler, '--version'))
+      cat(utils:::head(readLines(p), 2), sep = '\n\t')
+      close(p)
+      cat('\n')
+    }
   } # End if(verbose)
 
-  invisible(list(latex = latexCompiler, xelatex = xelatexCompiler))
+  invisible(list(
+    latex = latexCompiler, xelatex = xelatexCompiler, lualatex = lualatexCompiler
+  ))
 }

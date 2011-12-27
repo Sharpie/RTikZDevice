@@ -116,6 +116,9 @@ Latest Changes
   - The `tikz` function now has a `onefile` argument that behaves similar to
     the `onefile` argument of the `pdf` device.
 
+  - LuaLaTeX is now supported directly and can be selected by passing
+    `engine = 'luatex'` to `tikz`.
+
 #### Bug Fixes
 
   - Colorized text now obeys transparency settings.

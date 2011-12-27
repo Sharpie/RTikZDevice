@@ -380,6 +380,7 @@ static Rboolean TikZ_Setup(
       deviceInfo->wantSymbolUTF8 = FALSE;
       break;
     case xetex:
+    case luatex:
       deviceInfo->wantSymbolUTF8 = TRUE;
       break;
   }
@@ -746,6 +747,9 @@ static void TikZ_MetricInfo(int c, const pGEcontext plotParams,
     case xetex:
       SETCAD4R(RCallBack, mkString("xetex"));
       break;
+    case luatex:
+      SETCAD4R(RCallBack, mkString("luatex"));
+      break;
   }
   SET_TAG(CDDR(CDDR(RCallBack)), install("engine"));
 
@@ -896,6 +900,9 @@ static double TikZ_StrWidth( const char *str,
       break;
     case xetex:
       SETCAD4R(RCallBack, mkString("xetex"));
+      break;
+    case luatex:
+      SETCAD4R(RCallBack, mkString("luatex"));
       break;
   }
   SET_TAG(CDDR(CDDR(RCallBack)), install("engine"));
@@ -1810,6 +1817,9 @@ SEXP TikZ_DeviceInfo(SEXP device_num){
       break;
     case xetex:
       SET_VECTOR_ELT(info, 1, mkString("xetex"));
+      break;
+    case luatex:
+      SET_VECTOR_ELT(info, 1, mkString("luatex"));
       break;
   }
   SET_STRING_ELT(names, 1, mkChar("engine"));

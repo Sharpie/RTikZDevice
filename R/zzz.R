@@ -16,6 +16,7 @@ function(libname, pkgname) {
   # optional.
   foundLatex <- FALSE
   foundXelatex <- FALSE
+  foundLualatex <- FALSE
 
   latexLocs <- list(
     OPTION('tikzLatex'),
@@ -26,11 +27,16 @@ function(libname, pkgname) {
     PATH('latex')
   )
 
-  # Only check for xelatex in the options and the PATH variable since there are
-  # no environment variables for xelatex.
+  # Only check for xelatex and lualatex in the options and the PATH variable
+  # since there are no R environment variables for these compilers.
   xelatexLocs <- list(
     OPTION('tikzXelatex'),
     PATH('xelatex')
+  )
+
+  lualatexLocs <- list(
+    OPTION('tikzLualatex'),
+    PATH('lualatex')
   )
 
   # Non-Windows users are likely to use some derivative of TeX Live. This next
@@ -42,6 +48,7 @@ function(libname, pkgname) {
     # OBJECT and ENV_VAR is just overkill.
     latexLocs[[length(latexLocs) + 1]] <- PATH('/usr/texbin/pdflatex')
     xelatexLocs[[length(xelatexLocs) + 1]] <- PATH('/usr/texbin/xelatex')
+    lualatexLocs[[length(lualatexLocs) + 1]] <- PATH('/usr/texbin/lualatex')
   }
 
   for ( latexPath in latexLocs ) {
@@ -56,6 +63,14 @@ function(libname, pkgname) {
     if( isExecutable(xelatexPath) ) {
       foundXelatex <- TRUE
       options(tikzXelatex = as.character(xelatexPath), tikzXelatexDefault = as.character(xelatexPath))
+      break
+    }
+  }
+
+  for( lualatexPath in lualatexLocs ) {
+    if( isExecutable(lualatexPath) ) {
+      foundLualatex <- TRUE
+      options(tikzLualatex = as.character(lualatexPath), tikzLualatexDefault = as.character(lualatexPath))
       break
     }
   }
@@ -83,6 +98,10 @@ function(libname, pkgname) {
 
   if ( foundXelatex ) {
     packageStartupMessage(paste('  XeLaTeX found in', format(xelatexPath)))
+  }
+
+  if ( foundLualatex ) {
+    packageStartupMessage(paste('  LuaLaTeX found in', format(lualatexPath)))
   }
 
 }
