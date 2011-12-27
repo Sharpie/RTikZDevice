@@ -15,32 +15,19 @@ function( key ){
 	# Ensure the dictionary is available.
 	checkDictionaryStatus()
 
-	# For some reson texString is not considered a part of this
-	# function's environment. Therefore it can not be accessed
-	# from within .tikzInternal. So we'll export it into 
-	# tikzInternal as a quick fix.
-	#
-	# Something seems dirty about this... I guess we will remove
-	# the variable before we exit in order to keep .tikzInternal
-	# clean.
-	.tikzInternal[['key']] <- key
-	
-	# Check for the string.
-	if( evalq( dbExists(dictionary, sha1(key) ), .tikzInternal) ){
-		
-		# Yay! The width exists! Recover and return it.
-		metrics <- evalq( dictionary[[ sha1(key) ]], .tikzInternal)
-		# Clean up .tikzInternal.
-		remove('key', envir=.tikzInternal, inherits=F)
-		return( metrics )
+  # Check for the string.
+  if ( dbExists(.tikzInternal[['dictionary']], sha1(key)) ) {
 
-	}else{
+    # Yay! The width exists! Recover and return it.
+    metrics <- dbFetch(.tikzInternal[['dictionary']], sha1(key))
+
+  } else {
 
 		# No dice. Return -1 to indicate that metrics for this string
 		# are not present in the dictionary.
 		return( -1 )
 
-	} 
+  }
 
 }
 
@@ -51,15 +38,7 @@ function( key, metrics ){
 	# metrics are stored under a key which is a SHA1 hash created from
 	# the object they are associated with.
 
-	# See comment in queryMetricsDictionary on why these assign
-	# statments are here and why they give me a bad feeling.
-	.tikzInternal[['key']] <- key
-	.tikzInternal[['metrics']] <- metrics
-
-	evalq( dictionary[[ sha1(key) ]] <- metrics, .tikzInternal)
-
-	# Clean up .tikzInternal.
-	remove(list=c('key','metrics'), envir= .tikzInternal, inherits=F)
+  dbInsert(.tikzInternal[['dictionary']], sha1(key), metrics)
 
 	# Return nothing.
 	invisible()
