@@ -457,7 +457,7 @@ test_graphs <- list(
     short_name = 'utf8_characters',
     description = 'Test of UTF8 characters',
     tags = c('base', 'xetex', 'utf8'),
-    uses_xetex = TRUE,
+    engine = 'xetex',
     graph_code =  quote({
       n <- 10
       chars <- matrix(intToUtf8(seq(161,,1,10*n),multiple=T),n)
@@ -474,7 +474,7 @@ test_graphs <- list(
     short_name = 'xetex_variants',
     description = 'Test of XeLaTeX font variants',
     tags = c('xetex', 'utf8'),
-    uses_xetex = TRUE,
+    engine = 'xetex',
     # Only OS X is likely to have the required fonts installed
     skip_if = function(){Sys.info()['sysname'] != 'Darwin'},
     graph_options = list(
@@ -532,10 +532,26 @@ test_graphs <- list(
       for(i in 1:length(label))
         text(i,i,label[i])
     })
+  ),
+
+  ### LuaLaTeX Tests
+  list(
+    short_name = 'luatex_utf8_characters',
+    description = 'Test of UTF8 characters w/ LuaTeX',
+    tags = c('base', 'luatex', 'utf8'),
+    engine = 'luatex',
+    graph_code =  quote({
+      n <- 10
+      chars <- matrix(intToUtf8(seq(161,,1,10*n),multiple=T),n)
+
+      plot(1:n,type='n',xlab='',ylab='',axes=FALSE, main="UTF-8 Characters with LuaLaTeX")
+        for(i in 1:n)
+          for(j in 1:n)
+            text(i,j,chars[i,j])
+    })
   )
 
-
-  # New UTF8/XeLaTeX tests go here
+  # New UTF8/XeLaTeX/LuaLatex tests go here
   #list(
   #  short_name = 'something_suitable_as_a_filename',
   #  description = 'Longer description of what the test does',

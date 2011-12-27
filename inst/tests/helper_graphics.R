@@ -2,7 +2,7 @@
 # test graphs.
 
 do_graphics_test <- function(short_name, description, graph_code,
-  uses_xetex = FALSE, graph_options = NULL, skip_if = NULL, ...) {
+  engine = 'pdftex', graph_options = NULL, skip_if = NULL, ...) {
 
   context(description)
 
@@ -38,7 +38,7 @@ do_graphics_test <- function(short_name, description, graph_code,
     set.seed(4) # As specified by RFC 1149.5 ;)
 
     expect_that(
-      create_graph(graph_code, graph_file, uses_xetex),
+      create_graph(graph_code, graph_file, engine),
       runs_cleanly()
     )
 
@@ -46,7 +46,7 @@ do_graphics_test <- function(short_name, description, graph_code,
 
   test_that('Graph compiles cleanly',{
 
-    expect_that(graph_created <<- compile_graph(graph_file, uses_xetex), runs_cleanly())
+    expect_that(graph_created <<- compile_graph(graph_file, engine), runs_cleanly())
 
   })
 
@@ -67,9 +67,7 @@ do_graphics_test <- function(short_name, description, graph_code,
 
 }
 
-create_graph <- function(graph_code, graph_file, uses_xetex){
-
-    engine = ifelse(uses_xetex, 'xetex', 'pdftex')
+create_graph <- function(graph_code, graph_file, engine){
 
     tikz(file = graph_file, standAlone = TRUE, engine = engine)
     on.exit(dev.off())
@@ -80,13 +78,18 @@ create_graph <- function(graph_code, graph_file, uses_xetex){
 
 }
 
-compile_graph <- function(graph_file, uses_xetex){
+compile_graph <- function(graph_file, engine){
   # Have to compile in the same directory as the .tex file so that things like
   # raster images can be found.
   oldwd <- getwd()
   setwd(test_work_dir); on.exit(setwd(oldwd))
 
-  tex_cmd <- ifelse(uses_xetex, getOption('tikzXelatex'), getOption('tikzLatex'))
+  tex_cmd <- switch(engine,
+    pdftex = getOption('tikzLatex'),
+    xetex = getOption('tikzXelatex'),
+    luatex = getOption('tikzLualatex')
+  )
+
   silence <- system(paste(shQuote(tex_cmd), '-interaction=batchmode',
     '-output-directory', test_work_dir,
     graph_file ), intern = TRUE)
