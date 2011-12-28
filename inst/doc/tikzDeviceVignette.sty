@@ -23,8 +23,6 @@
 \usetikzlibrary{decorations.shapes,decorations.text,decorations.pathreplacing}
 
 % Page layout
-\RequirePackage[parfill]{parskip}
-\RequirePackage[letterpaper,margin=1in]{geometry}
 \RequirePackage{epigraph}
 \RequirePackage{multicol}
 \RequirePackage{pdflscape}
@@ -41,6 +39,24 @@
 % Extra pretty pretty printing.
 \RequirePackage{tikzCodeBlock}
 \RequirePackage{sweavetolst}
+
+
+% -----------------------------------------------------------------------------
+%                                 Page Setup
+% -----------------------------------------------------------------------------
+
+% Text Block and Margins
+% ======================
+% See page p. 72 of the memoir manual
+% Define text width by setting right and left margins
+\setlrmarginsandblock{0.75in}{0.75in}{*}
+% Define text height by setting upper and lower margins
+\setulmarginsandblock{0.75in}{1.25in}{*}
+% These define the distance from the type block of the header and footer
+\setheadfoot{\baselineskip}{0.25in}
+\setheaderspaces{*}{0.25in}{*}
+\checkandfixthelayout
+
 
 % Font macros
 \newcommand{\lang}{\textsf}

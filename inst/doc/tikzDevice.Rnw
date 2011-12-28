@@ -5,7 +5,7 @@
 % This comment prevents R from adding its own "\usepackage{Sweave}". I
 % seriously hate overly helpful computer systems.
 
-\documentclass{article}
+\documentclass[10pt,oneside,letterpaper,article]{memoir}
 
 \usepackage{tikzDeviceVignette}
 
