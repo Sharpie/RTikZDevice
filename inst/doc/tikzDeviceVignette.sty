@@ -40,6 +40,9 @@
 \RequirePackage{tikzCodeBlock}
 \RequirePackage{sweavetolst}
 
+% Text macros
+\newcommand{\TikZ}{Ti\textit{k}Z}
+
 
 % -----------------------------------------------------------------------------
 %                                 Page Setup
@@ -57,6 +60,29 @@
 \setheaderspaces{*}{0.25in}{*}
 \checkandfixthelayout
 
+% Header and Footer
+% =================
+\makepagestyle{tikzDevice}
+  \makeevenhead{tikzDevice}{\leftmark}{}{\thepage}
+  \makeoddhead{tikzDevice}{\rightmark}{}{\thepage}
+  \makeheadrule{tikzDevice}{\textwidth}{\normalrulethickness}
+  \makepsmarks{tikzDevice}{%
+    \nouppercaseheads
+    \createmark{chapter}{both}{nonumber}{}{}
+    \createplainmark{toc}{both}{\contentsname}
+    \createplainmark{lof}{both}{\listfigurename}
+    \createplainmark{lot}{both}{\listtablename}
+    \createplainmark{bib}{both}{\bibname}
+    \createplainmark{index}{both}{\indexname}
+    \createplainmark{glossary}{both}{\glossaryname}
+  }
+  \makeevenfoot{tikzDevice}{{\footnotesize\TikZ}Device}{}{\LaTeX\ Graphics for R}
+  \makeoddfoot{tikzDevice}{{\footnotesize\TikZ}Device}{}{\LaTeX\ Graphics for R}
+  \makefootrule{tikzDevice}{\textwidth}{\normalrulethickness}{\footruleskip}
+
+\pagestyle{tikzDevice}
+
+
 
 % Font macros
 \newcommand{\lang}{\textsf}
@@ -68,8 +94,6 @@
 \renewcommand{\sectionautorefname}{Section}
 \renewcommand{\subsectionautorefname}{Subsection}
 
-% Text macros
-\newcommand{\TikZ}{Ti\textit{k}Z}
 
 % Source code formatting macros
 \lstset{basicstyle = \ttfamily}
