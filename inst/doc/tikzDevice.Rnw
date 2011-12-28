@@ -1,50 +1,13 @@
 % !TEX TS-program = Sweave
 
-\documentclass{article}
-
 % \VignetteIndexEntry{The tikzDevice Package}
 % \VignetteDepends{tikzDevice}
-% \usepackage{Sweave}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
-\usepackage[scaled=.85]{inconsolata}
-\usepackage[colorlinks]{hyperref}
+% This comment prevents R from adding its own "\usepackage{Sweave}". I
+% seriously hate overly helpful computer systems.
 
-% Extra text effects (strikethrough)
-\usepackage{ulem}
+\documentclass{article}
 
-% Various TeX logos---included in the Oberdiek bundle which contains hyperref,
-% so there is a good chance it will be installed.
-\usepackage{hologo}
-
-% Sexyness
-\usepackage{tikz}
-\usetikzlibrary{calc,positioning}
-\usetikzlibrary{shapes.multipart,shapes.geometric,shapes.symbols,shapes.arrows}
-\usetikzlibrary{decorations.shapes,decorations.text,decorations.pathreplacing}
-
-% Page layout
-\usepackage[parfill]{parskip}
-\usepackage[letterpaper,margin=1in]{geometry}
-\usepackage{epigraph}
-\usepackage{multicol}
-\usepackage{pdflscape}
-
-% Graphics control.
-\usepackage{graphicx}
-\usepackage{float}
-
-% Bibliography
-\usepackage{natbib}
-\bibliographystyle{agufull04}
-
-\usepackage[nogin,noae]{Sweave}
-% Extra pretty pretty printing.
-\usepackage{tikzCodeBlock}
-\usepackage{sweavetolst}
-% Macros created for this document. Make sure tikzCodeBlock is loaded first.
-% For now.
-\input{tikzDeviceMacros}
+\usepackage{tikzDeviceVignette}
 
 
 <<setup,echo=F,results=hide>>=

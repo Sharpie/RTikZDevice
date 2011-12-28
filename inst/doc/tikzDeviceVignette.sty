@@ -1,0 +1,124 @@
+% !TEX TS-program = Sweave
+% !TEX root = tikzDevice.Rnw
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tikzDeviceVignette}
+
+\RequirePackage[T1]{fontenc}
+\RequirePackage{lmodern}
+\RequirePackage[scaled=.85]{inconsolata}
+\RequirePackage[colorlinks]{hyperref}
+
+% Extra text effects (strikethrough)
+\RequirePackage{ulem}
+
+% Various TeX logos---included in the Oberdiek bundle which contains hyperref,
+% so there is a good chance it will be installed.
+\RequirePackage{hologo}
+
+% Sexyness
+\RequirePackage{tikz}
+\usetikzlibrary{calc,positioning}
+\usetikzlibrary{shapes.multipart,shapes.geometric,shapes.symbols,shapes.arrows}
+\usetikzlibrary{decorations.shapes,decorations.text,decorations.pathreplacing}
+
+% Page layout
+\RequirePackage[parfill]{parskip}
+\RequirePackage[letterpaper,margin=1in]{geometry}
+\RequirePackage{epigraph}
+\RequirePackage{multicol}
+\RequirePackage{pdflscape}
+
+% Graphics control.
+\RequirePackage{graphicx}
+\RequirePackage{float}
+
+% Bibliography
+\RequirePackage{natbib}
+\bibliographystyle{agufull04}
+
+\RequirePackage[nogin,noae]{Sweave}
+% Extra pretty pretty printing.
+\RequirePackage{tikzCodeBlock}
+\RequirePackage{sweavetolst}
+
+% Font macros
+\newcommand{\lang}{\textsf}
+% Mbox it to prevent hyphenation of code
+\newcommand{\code}[1]{\mbox{\ttfamily #1}}
+\newcommand{\pkg}{\textbf}
+
+% Other LaTeX macros
+\renewcommand{\sectionautorefname}{Section}
+\renewcommand{\subsectionautorefname}{Subsection}
+
+% Text macros
+\newcommand{\TikZ}{Ti\textit{k}Z}
+
+% Source code formatting macros
+\lstset{basicstyle = \ttfamily}
+
+\lstdefinestyle{latexsource}{
+  language = [LaTeX]TeX,
+  showstringspaces = false,
+  upquote = false,
+  commentstyle = {\color{red!80}\itshape}
+}
+
+\lstdefinestyle{latexexample}{
+  language = [LaTeX]TeX,
+  showstringspaces = false,
+  upquote = false,
+  commentstyle = {\color{red!80}\itshape},
+  moredelim=[is][\color{red}]{XX}{XX}
+}
+
+\lstdefinestyle{bashsource}{
+  language = bash,
+  % literate={~}{{$\sim$}}1,
+  moredelim=[is][\color{gray}]
+    {!out}
+    {!/out},
+  showstringspaces = false,
+  upquote = false,
+  commentstyle = {\color{blue!80}\itshape}
+}
+
+
+% TikZ Style definitions.
+\tikzset{
+  % Taken from one of the first examples in the PGF manuel.
+  package warning/.style={
+    rectangle split,
+    rectangle split parts = 2,
+    rounded corners,
+    draw = red!50,
+    thick,
+    fill = red!10,
+    inner sep = 1ex,
+    text width = \textwidth
+  }
+}
+
+
+% TikZ Macros.
+
+\newcommand{\tikzDocDisclaim}[2]{
+
+  \begin{tikzpicture}
+
+    \node[package warning]{
+      \begin{center}
+        \large\bfseries
+        #1
+      \end{center}
+      \nodepart{second}
+        #2
+    };
+
+  \end{tikzpicture}
+
+}
+
+\endinput
+
