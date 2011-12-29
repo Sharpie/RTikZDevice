@@ -82,6 +82,86 @@
 
 \pagestyle{tikzDevice}
 
+% Styles for Document Divisions
+% =============================
+
+% TODO:
+% Style `\part` divisions.
+
+% Inspired by Alain Matthes' tkz-doc class which uses `\titleformat[frame]`
+% from the `titlesec` package. A similar result is produced here using TikZ
+% nodes. Helpful tips for handling numberd/non-numbered chapters taken from the
+% documentation of the `memoirchapterstyles` package by Lars Madsen.
+\makechapterstyle{tkzframed}{%
+  % Inherit most attributes, such as spacing, from Memoir's article chapter
+  % style.
+  \chapterstyle{article}
+
+  % The chapter number has to be set after the title since it is positioned
+  % relative to a node containing the title. A boolean is used to control the
+  % appearance of the node containing the chapter numbers.
+  \newif\ifnumberedchap
+  \numberedchaptrue
+  \renewcommand{\printchapternum}{\global\numberedchaptrue}
+  \renewcommand{\printchapternonum}{\global\numberedchapfalse}
+  \renewcommand{\chapnumfont}{\footnotesize\scshape}
+
+  \renewcommand{\printchaptertitle}[1]{%
+    \begin{tikzpicture}
+      % Print text inside a block containing the font commands so that
+      % parameters such as `\baselineskip` and sizes such as `em` and `ex` are
+      % sized relative to the font size.
+      {\chapnamefont
+        \node[draw,
+          line width = \fboxrule,
+          outer sep = 0pt,
+          inner xsep = 0pt,
+          inner ysep = \baselineskip,
+          text width = \linewidth,
+          align = center
+        ]
+          (title)
+          % Double the hash symbol, #, because this macro definition is inside
+          % another macro definition.
+          {##1};
+      }
+      \ifnumberedchap
+        {\chapnumfont
+          \node[
+            fill = white,
+            anchor = west,
+            right = 1ex of title.north west,
+            outer sep = 0pt,
+            inner xsep = 0.5em,
+            inner ysep = 0pt
+          ]
+            % Set the chapter number using old-style lower case numerals, if
+            % available.
+            {Chapter \oldstylenums{\thechapter}};
+        }
+      \fi
+    \end{tikzpicture}%
+  }
+}
+
+\chapterstyle{tkzframed}
+
+% The style of sectional divisions is also cribbed from tkz-doc. Here we define
+% a hook function that gets called before setting section titles. The hook
+% function causes the section number to be placed within a `\fbox` and tosses
+% in a following quad (1em) space. During typesetting, the macro
+% `\setsecnumformat` is passed a single parameter, represented by `##1`, that
+% contains the division level---in this case: section. This is transformed into
+% `\thesection` by `\csname` and `\endcsname` which is the name of the counter
+% storing the section number.
+\setsecheadstyle{\large\bfseries}
+\setsechook{\setsecnumformat{\fbox{\csname the##1\endcsname}\quad}}
+
+% TODO:
+% Style subsections and below (if used).
+
+% Don't number any division below section level.
+\setsecnumdepth{section}
 
 
 % Font macros
