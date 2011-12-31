@@ -6,141 +6,186 @@
 % seriously hate overly helpful computer systems.
 
 \documentclass[10pt,oneside,letterpaper,article]{memoir}
-
 \usepackage{tikzDeviceVignette}
 
 
-<<setup,echo=F,results=hide>>=
-
-	if( !file.exists( 'figs' ) ) dir.create( 'figs' )
+<<setup,echo=FALSE,results=hide>>=
 	require(tikzDevice)
+  if( !file.exists('figs') ){dir.create( 'figs' )}
 
+  # So that prompts and continuation prompts don't show up in the output.
   options(prompt = ' ', continue = ' ')
-
 @
-
-
-\title{The \pkg{tikzDevice} Package\\
-	{\large\url{http://r-forge.r-project.org/projects/tikzdevice}}
-}
-\author{Charlie Sharpsteen and Cameron Bracken}
-\date{Version
-\Sexpr{tikzDevice:::getTikzDeviceVersion()}-{\bfseries\color{red}Beta}\qquad November, 2011}
-
-\begin{document}
-	
 \SweaveOpts{echo=F,prefix.string=figs/fig}
 
 
-%----------------------------  Cover Page -----------------------------------------------------------
+\title{TikZDevice: LaTeX Graphics for R}
+\author{Charlie Sharpsteen and Cameron Bracken}
+\date{\Sexpr{strftime(read.dcf(system.file('DESCRIPTION', package = 'tikzDevice'), fields = 'Date'), format = '%B %d, %Y')}}
+\gdef\packageURL{\url{http://r-forge.r-project.org/projects/tikzdevice}}
+\gdef\packageVersion{\Sexpr{tikzDevice:::getTikzDeviceVersion()}}
 
-\thispagestyle{empty}
-
-% A more complex title page
-
-% HAH! God bless the pgf manual- I've been trying to solve this for
-% ever- \vfill has no effect unless you bracket your contents in empty
-% \vboxes.
-\vbox{}
-\vspace{0.5\textheight}
-\begin{tikzpicture}[remember picture,overlay]
-
-	\node[anchor=west,scale=2, inner sep=0pt, outer sep=0pt] (title) at (-1cm,0) 
-		{\LARGE\bfseries{\color{red}\TikZ}\thinspace\Huge Device};
-	
-	\draw[line width=5pt] ([yshift=-5pt]title.base west) -- ([yshift=-5pt]title.base east);	
+% Use the hyperref package to fill in PDF metadata.
+\hypersetup{
+  pdftitle=\thetitle,
+  pdfauthor=\theauthor,
+  pdfsubject={Manual for Version: \packageVersion, \thedate}
+}
 
 
-	\coordinate (titleOut) at ($(title.north east) + (24pt,0pt)$);
-	\coordinate (titleIn) at ($(title.base west) - (6pt,24pt)$);
-		
-	\node[color=black!80,below=24pt of title.base east,anchor=east] (sub)
-		{\bfseries\itshape\Large \LaTeX{} Graphics for R};
-
-\end{tikzpicture}
-\vfill	
-\vbox{}
-
-\begin{tikzpicture}[remember picture,overlay,>=stealth]
-
-	\node (R) at ($(current page.south west) + (18cm,2cm)$)
-		{\scalebox{0.85}{\includegraphics[width=0.8\textwidth]{img/Rlogo}}};
-
-	\tikzset{
-		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
-		decoration={shape backgrounds,
-			shape sep={.25cm, between borders},shape scaled,shape=circle}
-	}
-			
-	\fill[decorate,bigger, blue!25] (R) to[out=190,in=240] (titleIn);	
-	
-\end{tikzpicture}
-
-\begin{tikzpicture}[overlay,remember picture]
-
-	% Low-level PGF voodoo
-	% Something is seriously borked with current page.north east,
-	% it's not where you would expect it to be :P
-	\newdimen\overlayXoff
-	\newdimen\overlayYoff
-	\pgfextracty{\overlayXoff}{\pgfpointanchor{current page}{north east}}
-	\pgfextracty{\overlayYoff}{\pgfpointanchor{current page}{north east}}
-	
-	\pgfmathparse{\overlayYoff - 4.5in}
-	\overlayYoff = \pgfmathresult pt
-	
-	\pgfmathparse{\overlayXoff - 7in}
-	\overlayXoff = \pgfmathresult pt
-	
-	
-	\begin{scope}[x=1pt,y=1pt,yshift=\overlayYoff,xshift=\overlayXoff]
-
+\begin{document}
+% -----------------------------------------------------------------------------
+%                                 Cover Page
+% -----------------------------------------------------------------------------
 <<tikzTitlePlot,results=hide>>=
+  tikz('figs/titlePlot.tex',width=4,height=4)
 
-	tikz('figs/titlePlot.tex',bareBones=T,width=4,height=4)
+  x <- seq(-4.5,4.5,length.out=100)
+  y <- dnorm(x)
 
-	x <- seq(-4.5,4.5,length.out=100)
-	y <- dnorm(x)
+  xi <- seq(-2,2,length.out=30)
+  yi <- dnorm(xi)
 
-	xi <- seq(-2,2,length.out=30)
-	yi <- dnorm(xi)
+  plot(x,y,type='l',col='blue',ylab='$p(x)$',xlab='$x$')
+  lines(xi,yi,type='s')
+  lines(range(xi),c(0,0))
+  lines(xi,yi,type='h')
+  title(main="$p(x)=\\frac{1}{\\sqrt{2\\pi}}e^{-\\frac{x^2}{2}}$")
+  int <- integrate(dnorm,min(xi),max(xi),subdivisions=length(xi))
+  text(2.8,0.3,paste(
+    "\\small$\\displaystyle\\int_{",min(xi),"}^{",max(xi),"}p(x)dx",
+    "\\approx",round(int[['value']],3),'$',sep=''))
 
-	plot(x,y,type='l',col='blue',ylab='$p(x)$',xlab='$x$')
-	lines(xi,yi,type='s')
-	lines(range(xi),c(0,0))
-	lines(xi,yi,type='h')
-	title(main="$p(x)=\\frac{1}{\\sqrt{2\\pi}}e^{-\\frac{x^2}{2}}$")
-	int <- integrate(dnorm,min(xi),max(xi),subdivisions=length(xi))
-	text(2.8,0.3,paste("\\small$\\displaystyle\\int_{",min(xi),"}^{",max(xi),"}p(x)dx\\approx",round(int[['value']],3),'$',sep=''))
-
-
-	dev.off()
+  dev.off()
 @
 
-		\input{figs/titlePlot.tex}
-		
-		\coordinate (plotIn) at (2in,0.5in);
+\begin{titlingpage}
+  % NOTE:
+  % Most dimensions and positions in this cover page were optimized for US
+  % Letter stock size and so are given in inches. It may be useful to revise
+  % this one day so that the layout is a bit more scalable.
+  %
+  % Use remember picture and overlay so that `current page` coordinates can be
+  % accessed.
+  \begin{tikzpicture}[remember picture, overlay]
+    % Title and Info
+    % --------------
+    {\fontsize{60}{36}
+    \node[below right = 0.5em of current page.north west,
+      anchor = north east,
+      rotate = 90,
+      outer sep = 0pt,
+      inner sep = 0pt
+    ]
+      (title)
+      {\bfseries{\fontsize{36}{36}\selectfont\color{red}\TikZ}Device};
+    }
+
+    \draw[line width = 5pt] ([xshift = 7.5pt]title.base west) -- ([xshift = 7.5pt]title.base east);
+
+    % Have to split subtitle, authors, etc. into several nodes because
+    % apparently TikZ can't deal with font change commands and line breaks
+    % existing in the same node. A bit of a pain because the value of
+    % \baselineskip has to be twaddled by wrapping some \nodes in font
+    % size descriptors.
+    \node[right = 12.5pt of title.base east,
+      anchor = north west,
+      align = left,
+      font = {\huge\bfseries}
+    ]
+      (subtitle)
+      {\LaTeX\ Graphics for R};
+
+    {\huge
+    \node[below = \baselineskip of subtitle.base west,
+      anchor = north west,
+      align = left,
+      font = {\LARGE}
+    ]
+      (authors)
+      {%
+        Charlie Sharpsteen\\
+        Cameron Bracken%
+      };
+    }
+
+    \node[right = 12.5pt of title.base west,
+      anchor = base west,
+      align = left
+    ]
+      (packageInfo)
+      {%
+        \thedate\\
+        \packageURL%
+      };
+
+    {\LARGE
+    \node[above = \baselineskip of packageInfo.north west,
+      anchor = base west,
+      align = left,
+      font = {\LARGE\bfseries}
+    ]
+      (version)
+      {Version: \packageVersion};
+    }
 
 
-	\end{scope}
+    % Logo and Plot
+    % -------------
 
-	\tikzset{
-		bigger/.style={decoration={shape start size=.125cm, shape end size=.5cm}},
-		decoration={shape backgrounds,
-			shape sep={.25cm, between borders},shape scaled,shape=dart}
-	}
+    % Scaling the R logo to a width of 4.75 in was determed through trial and
+    % error. The center of the image is shifted relative to the bottom right
+    % corner of the page such that the point where the right leg of the "R"
+    % glyph intersects the inside of the halo is sitting over the corner of the
+    % page.
+    \node[inner sep = 0pt,
+      above left = 0.78in and 1.48in of current page.south east,
+      anchor = center
+    ]
+      (Rlogo)
+      {\includegraphics[width=4.75in]{img/Rlogo}};
 
-	\fill[decorate,thick,bigger,color=black!25]
-		(titleOut) to[out=20,in=260] (plotIn);
+    % This node contains an embedded `tikzpicture` environment produced by the
+    % tikzTitlePlot code block.
+    \node[anchor = north east,
+      inner sep = 0pt
+    ]
+      (titlePlot) at (current page.north east)
+      {\input{figs/titlePlot.tex}};
 
-\end{tikzpicture}
 
-\newpage
+    % Connect Logo and Plot
+    % ---------------------
+    \node[below left = 0.325\stockheight and 0.325\stockwidth of current page.center]
+      (midPointA) {};
 
-%----------------------------  Table of Contents -----------------------------------------------------------
+    \node[below right = 0.125\stockheight and 0.125\stockwidth of current page.center]
+      (midPointB) {};
+
+    \tikzset{
+      grow bigger/.style={decoration = {
+        shape backgrounds,
+        shape = dart,
+        shape scaled,
+        shape start size = 0.125cm,
+        shape end size = 0.5cm,
+        shape sep = {.25cm, between borders}
+      }}
+    }
+
+    \path[decorate, grow bigger, fill = black!25]
+      plot[smooth, tension = 1]
+        coordinates{(Rlogo.190) (midPointA) (midPointB) (titlePlot.south)};
+
+  \end{tikzpicture}
+\end{titlingpage}
+
+
+% -----------------------------------------------------------------------------
+%                              Table of Contents
+% -----------------------------------------------------------------------------
 \frontmatter
-  \maketitle
-  \tableofcontents
+  \tableofcontents*
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
