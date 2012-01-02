@@ -557,9 +557,11 @@ static void TikZ_Close( pDevDesc deviceInfo){
   }
 
   /* Close off the standalone document*/
-  if(tikzInfo->standAlone == TRUE)
+  if ( tikzInfo->standAlone == TRUE ) {
+    printOutput(tikzInfo, tikzInfo->footer);
     printOutput(tikzInfo,"\n\\end{document}\n");
-  
+  }
+
   if(tikzInfo->debug == TRUE) 
     printOutput(tikzInfo,
       "%% Calculated string width %d times\n",
