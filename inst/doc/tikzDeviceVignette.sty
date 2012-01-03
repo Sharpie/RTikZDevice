@@ -225,8 +225,7 @@
 % TikZ Macros.
 
 \newcommand{\tikzDocDisclaim}[2]{
-
-  \begin{tikzpicture}
+  \noindent\begin{tikzpicture}
 
     \node[package warning]{
       \begin{center}
@@ -237,8 +236,7 @@
         #2
     };
 
-  \end{tikzpicture}
-
+  \end{tikzpicture}%
 }
 
 \endinput
