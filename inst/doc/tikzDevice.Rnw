@@ -331,134 +331,200 @@ list.\\[\baselineskip]
 \part{Usage and Examples}
 \label{part:usage}
 
-%----------------------------  Package Loading -----------------------------------------------------------
 
+% -----------------------------------------------------------------------------
+%                         Chapter 2: Package Loading
+% -----------------------------------------------------------------------------
 \chapter{Loading the Package}
 
-The functions in the \pkg{tikzDevice} package are made accessible in the \lang{R} environment by using either the \code{library()} or \code{require()} functions like so:
+The functions in the \pkg{tikzDevice} package are made accessible in the
+\pkg{R} environment by using either the \code{library()} or \code{require()}
+functions like so:
 
 \begin{Verbatim}[frame=single]
 require(tikzDevice)
 \end{Verbatim}
 
-Upon loading, the package will search for a usable \LaTeX{} compiler. Access to \LaTeX{} is essential for the device to produce correct output as the compiler is queried for font metrics several times during device output. For more information on why communication between the device and \LaTeX{} is necessary, see \autoref{part:implementation}. If the search for a compiler is successful the package startup message should look similar to the following:
+\noindent Upon loading, the package will search for the following \LaTeX\ compilers:
+
+\begin{itemize}
+  \item{\hologo{pdfLaTeX}}
+  \item{\hologo{XeLaTeX}}
+  \item{\hologo{LuaLaTeX}}
+\end{itemize}
+
+Access to \LaTeX\ is essential for the device to produce output as the compiler
+is queried for font metrics when constructing plots that contain text. For more
+information on why communication between the device and \LaTeX\ is necessary,
+see \autoref{part:implementation}. The package will fail to load if
+\hologo{pdfLaTeX} cannot be located. The presence of the \hologo{XeLaTeX} and
+\hologo{LuaLaTeX} compilers is optional. When the package loads successfully,
+a startup message will be printed that looks similar to the following:
 
 \begin{Verbatim}[frame=single]
-filehash: Simple key-value database (2.0-1 2008-12-19)
-tikzDevice: A Device for R Graphics Output in PGF/TikZ Format (v0.3.5)
-Checking for a LaTeX compiler...
-
-pdfTeX 3.1415926-1.40.9-2.2 (Web2C 7.5.7)
-kpathsea version 3.5.7
-...
-
-A working LaTeX compiler was found in:
-	The R environment variable R_LATEXCMD
-
-Global option tikzLatex set to:
-	/usr/texbin/latex
+Loading required package: filehash
+filehash: Simple key-value database (2.2 2011-07-21)
+tikzDevice: R Graphics Output in LaTeX Format (v0.7)
+  LaTeX found in the PATH using the command: pdflatex
+  XeLaTeX found in the PATH using the command: xelatex
+  LuaLaTeX found in the PATH using the command: lualatex
 \end{Verbatim}
 
-If a working \LaTeX{} compiler cannot be found, the \pkg{tikzDevice} package will fail to load and a warning message will be displayed:
+If a working \hologo{pdfLaTeX} compiler cannot be found, the \pkg{tikzDevice} package
+will fail to load and a warning message will be displayed:
 
 \begin{Verbatim}[frame=single]
+Error : .onLoad failed in loadNamespace() for 'tikzDevice', details:
+  call: fun(libname, pkgname)
+  error:
+
 An appropriate LaTeX compiler could not be found.
-Access to LaTeX is currently required in order for the
-TikZ device to produce output.
+Access to LaTeX is required in order for the TikZ device
+to produce output.
 
 The following places were tested for a valid LaTeX compiler:
 
-	A pre-existing value of the global option tikzLatex
-	The R environment variable R_LATEXCMD
-	The R environment variable R_PDFLATEXCMD
-	The global option latexcmd
-	The PATH using the command latex
-	The PATH using the command pdflatex
+	the global option: tikzLatex
+	the environment variable: R_LATEXCMD
+	the environment variable: R_PDFLATEXCMD
+	the global option: latexcmd
+	the PATH using the command: pdflatex
+	the PATH using the command: latex
+	the PATH using the command: /usr/texbin/pdflatex
+
 ...
 
-Error : .onLoad failed in 'loadNamespace' for 'tikzDevice'
-Error: package/namespace load failed for 'tikzDevice'
+Error: loading failed
 \end{Verbatim}
 
 In this case, \pkg{tikzDevice} has done it's very best to locate a working
-compiler and came up empty.  If you have a working \LaTeX{} compiler, the next
+compiler and came up empty.  If you have a working \LaTeX\ compiler, the next
 section describes how to inform the \pkg{tikzDevice} package of its location.
-For suggestions on how to obtain a \LaTeX{} compiler, see
+For suggestions on how to obtain a \LaTeX\ compiler, see
 \autoref{part:installation}.
 
 
-\subsection{\lang{R} Options That Affect Package Behavior}\label{sec:options}
-The \pkg{tikzDevice} package is  influenced by a number of options that may be set locally in your \lang{R} scripts or in the \lang{R} console or globally in a \code{.Rprofile} file.  All of the options can be set by using \code{options(<option> = <value>)}.  These options allow for the use of custom \code{documentclass} declarations, \LaTeX{} packages, and typesetting engines (e.g. XeLaTeX). The defaults , if are any for a given option, are shown below the description.   The global options are:
+\section{R Options That Affect Package Behavior}
+  \label{sec:options}
+
+The \pkg{tikzDevice} package is influenced by a number of options that may be
+set locally in your \pkg{R} scripts or in the \pkg{R} console or globally in
+a \code{.Rprofile} file. All of the options can be set by using
+\code{options(<option> = <value>)}. These options allow for the use of custom
+\code{documentclass} declarations, \LaTeX\ packages, and typesetting engines
+(e.g. \hologo{XeLaTeX} or \hologo{LuaLaTeX}).
+
+For convenience the function \code{setTikzDefaults()} is provided which sets
+all the global options back to their original values.
+
+The proper placement of a \code{.Rprofile} file is explained in the \pkg{R}
+manual page \code{?Startup}. For the details of why calling the \LaTeX\ compiler is
+necessary, see \autoref{part:implementation}.
 
 
-\begin{description}
+\subsection{A Word of Caution About Setting Options}
 
-% The additional indent added by the description will be picked up by the listings
-% package and inserted into the code blocks. It is hard to detect in general when this
-% happens- so we'll just temporarily shift the listing margin and shorten the max
-% width of tikzCodeBlock node bodies. Since this is all done inside the description
-% environment, the changes will disappear when the environment ends.
-\lstset{xleftmargin=-\leftmargini}
-\newlength\tikzShortenLine
-\setlength\tikzShortenLine{\textwidth}
-\addtolength\tikzShortenLine{-\leftmargini}
-\tikzset{/tikzCode/defaults/code body/.append style={text width=\tikzShortenLine}}
+A lot of power is given to you through these global options, and with great
+power comes great responsibility.  For example, if you do not include the
+\TikZ\ package in the \code{tikzLatexPackages} option then all of the string
+metric calculations will fail. Or if you use a different font when compiling
+than you used for calculating metrics, strings may be placed incorrectly.
+There are innumerable ways for packages to clash in \LaTeX\ so be aware.
 
-  \item[\code{tikzDefaultEngine}] {
-    Specifies which typesetting engine functions in the \pkg{tikzDevice}
-    package will prefer. Current possible values are \hologo{pdfTeX} or
-    \hologo{XeTeX} which will respectively trigger the use of the
-    \hologo{pdfLaTeX} and \hologo{XeLaTeX} compilers.
+
+\subsection{\code{tikzDefaultEngine}}
+
+This option specifies which typesetting engine functions in the
+\pkg{tikzDevice} package will prefer. Current possible values are
+\code{pdftex}, \code{xetex} or \code{luatex} which will respectively trigger
+the use of the \hologo{pdfLaTeX}, \hologo{XeLaTeX} or \hologo{LuaLaTeX}
+compilers.
+
+\begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
+options(tikzDefaultEngine = 'pdftex')
+\end{tikzCodeBlock}
 
 \begin{tikzCodeBlock}[title={Choosing the \TeX\ engine},listing style=sweavechunk]
-options(tikzDefaultEngine = 'pdftex')
-# Or..
 options(tikzDefaultEngine = 'xetex')
+options(tikzDefaultEngine = 'luatex')
 \end{tikzCodeBlock}
-  }
 
-  \item[\code{tikzLatex} and \code{tikzXelatex}] {
-    Specifies the location of the \LaTeX{} and \hologo{XeLaTeX} compilers to be
-    used by \pkg{tikzDevice}. Setting a default for this this option may help
-    the package locate a missing compiler:
+
+\subsection{\code{tikzLatex}, \code{tikzXelatex} and \code{tikzLualatex}}
+
+Specifies the location of the \LaTeX{}, \hologo{XeLaTeX} and \hologo{LuaLaTeX}
+compilers to be used by \pkg{tikzDevice}. Setting a default for this option may
+help the package locate a missing compiler:
 
 \begin{tikzCodeBlock}[title={Setting default compilers in \code{.Rprofile}},listing style=sweavechunk]
-options(tikzLatex = '/path/to/latex/compiler')
-options(tikzXelatex = '/path/to/xelatex/compiler')
+options(tikzLatex = '/path/to/pdflatex')
+options(tikzXelatex = '/path/to/xelatex')
+options(tikzLualatex = '/path/to/lualatex')
 \end{tikzCodeBlock}
-  }
 
-\item[\code{tikzMetricsDictionary}]{ When using the graphics device provided by \pkg{tikzDevice}, you may notice that \lang{R} appears to ``lag" or ``hang" when commands such as \code{plot()} are executed. This is because the device must query the \LaTeX{} compiler for string widths and font metrics. For a normal plot, this may happen dozens or hundreds of times- hence \lang{R} becomes unresponsive for a while. The good news is that the \code{tikz()} code is designed to cache the results of these computations so they need only be performed once for each string or character. By default, these values are stored in a temporary cache file which is deleted when \lang{R} is shut down. A location for a permanent cache file may be specified:
+
+\subsection{\code{tikzMetricsDictionary}}
+
+When using the graphics device provided by \pkg{tikzDevice}, you may notice
+that \pkg{R} appears to ``lag" or ``hang" when commands such as \code{plot()}
+are executed. This is because the device must query the \LaTeX\ compiler for
+string widths and font metrics. For a normal plot, this may happen dozens or
+hundreds of times---hence \pkg{R} becomes unresponsive for a while. The good
+news is that the \code{tikz()} code is designed to cache the results of these
+computations so they need only be performed once for each string or character.
+By default, these values are stored in a temporary cache file which is deleted
+when \code{R} is shut down. Using the option \code{tikzMetricsDictionary}, a
+permanent cache file may be specified:
 
 \begin{tikzCodeBlock}[title={Setting a location in \code{.Rprofile} for a permanent metrics dictionary},listing style=sweavechunk]
-options( tikzMetricsDictionary = '/path/to/dictionary/location' )
-\end{tikzCodeBlock}
-}
-
-\item[\code{tikzDocumentDeclaration}]{A string. The documentclass declaration when \code{standAlone == TRUE} as well as when font metrics are calculated}
-
-\begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
-options( tikzDocumentDeclaration = "\\documentclass{article}" )
+options(tikzMetricsDictionary = '/path/to/dictionary/location')
 \end{tikzCodeBlock}
 
-\item[\code{tikzFooter}]{A character vector. The footer to be used only when \code{standAlone==TRUE} }
+
+\subsection{\code{tikzDocumentDeclaration}}
+
+\code{standAlone == TRUE}. \code{tikzDocumentDeclaration} also influences the
+calculation of font metrics. If a base font size is specified as an option to
+the document class, the \pkg{tikzDevice} will use this value as the base font
+size for graphics.
 
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
-options( tikzFooter = c( "\\end{document}" ) )
-\end{tikzCodeBlock} 
+options(tikzDocumentDeclaration = "\\documentclass[10pt]{article}")
+\end{tikzCodeBlock}
 
-  \item[\code{tikzLatexPackages} and \code{tikzXelatexPackages}]{
-    Character vectors. These are the packages which are included when using the
-    \code{standAlone} option as well as when font metrics are calculated.  If you
-    use additional packages that affect fonts, such as mathpazo which provides a
-    Palatino-style font, these packages should be added to this list.
+
+\subsection{\code{tikzLatexPackages}, \code{tikzXelatexPackages} and \code{tikzLualatexPackages}}
+
+Character vectors. These are the packages which are included when using the
+\code{standAlone} option as well as when font metrics are calculated. If you
+use additional packages that affect fonts, such as \code{mathpazo}, or
+additional \LaTeX\ macros, such as \code{amsmath}, these packages should be
+added to this list.
 
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
-options( tikzLatexPackages = c(
-  "\\usepackage{tikz}",
-  "\\usepackage[active,tightpage]{preview}",
-  "\\PreviewEnvironment{pgfpicture}",
-  "\\setlength\\PreviewBorder{0pt}")
+options(
+  tikzLatexPackages = c(
+    "\\usepackage{tikz}",
+    "\\usepackage[active,tightpage]{preview}",
+    "\\PreviewEnvironment{pgfpicture}",
+    "\\setlength\\PreviewBorder{0pt}")
+  ),
+
+  tikzXelatexPackages = c(
+    "\\usepackage{tikz}\n",
+    "\\usepackage[active,tightpage,xetex]{preview}\n",
+    "\\usepackage{fontspec,xunicode}\n",
+    "\\PreviewEnvironment{pgfpicture}\n",
+    "\\setlength\\PreviewBorder{0pt}\n"
+  ),
+
+  tikzLualatexPackages = c(
+    "\\usepackage{tikz}\n",
+    "\\usepackage[active,tightpage,psfixbb]{preview}\n",
+    "\\usepackage{fontspec,xunicode}\n",
+    "\\PreviewEnvironment{pgfpicture}\n",
+    "\\setlength\\PreviewBorder{0pt}\n"
+  )
 )
 \end{tikzCodeBlock}
 
@@ -468,64 +534,73 @@ options( tikzLatexPackages = c(
   "\\usepackage{mathpazo}"
 ))
 \end{tikzCodeBlock}
-  }
 
-\item[\code{tikzMetricPackages} and \code{tikzUnicodeMetricPackages}] {
-    Character vectors. These are the extra packages which are additionally
-    loaded when doing font metric calculations.  As you see below, the font
-    encoding is set to Type 1. This is very important so that character codes
-    of \LaTeX{} and \lang{R} match up. The Unicode metric packages are used
-    when a \hologo{XeTeX} engine is in use.
+
+\subsection{\code{tikzMetricPackages} and \code{tikzUnicodeMetricPackages}}
+
+Character vectors. These are the extra packages which are additionally loaded
+when doing font metric calculations.  As you see below, the font encoding is
+set to Type 1. This is very important so that character codes of \LaTeX\ and
+\lang{R} match up. The Unicode metric packages are used when the \hologo{XeTeX}
+or \hologo{LuaTeX} engines are in use.
 
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
-options( tikzMetricPackages = c(
-  "\\usepackage[utf8]{inputenc}",
-  "\\usepackage[T1]{fontenc}",
-  "\\usetikzlibrary{calc}")
+options(
+  tikzMetricPackages = c(
+    "\\usepackage[T1]{fontenc}\n",
+    "\\usetikzlibrary{calc}\n"
+  ),
+
+  tikzUnicodeMetricPackages = c(
+    "\\usepackage[T1]{fontenc}\n",
+    "\\usetikzlibrary{calc}\n",
+    "\\usepackage{fontspec,xunicode}\n"
+  )
 )
 \end{tikzCodeBlock}
-  }
 
 
-\item[\code{tikzSanitizeCharacters}]{A character vector of special latex characters to replace. These values should correspond to the replacement values from the \code{tikzReplacementCharacters} option.}
+\subsection{\code{tikzFooter}}
 
-\begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
-options( tikzSanitizeCharacters = c('%','$','}','{','^') )
-\end{tikzCodeBlock}
-
-\item[\code{tikzReplacementCharacters}]{A character vector of replacements for special latex characters. These values should correspond to the values from the \code{tikzSanitizeCharacters} option.}
+A character vector. This footer is appended to the end of the figure when
+\code{standAlone==TRUE} before the \verb|\end{document}| statement.
 
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
-options( tikzReplacementCharacters = c('\\%','\\$','\\','\\','\\^'))
+options(tikzFooter = "")
 \end{tikzCodeBlock}
 
-  \item[\code{tikzRasterResolution}] {
-    When \code{tikz} is requested to add a raster to a graphic, the
-    raster is written to a PNG file which is then included into the LaTeX
-    code. This option controls the resolution (dpi) at which the PNG files
-    are created.
+
+\subsection{\code{tikzSanitizeCharacters} and \code{tikzReplacementCharacters}}
+
+\code{tikzSanitizeCharacters} is a character vector of special \LaTeX
+characters to replace while \code{tikzReplacementCharacters} is a character
+vector containing the corresponding replacements.
+
+\begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
+options(
+  tikzSanitizeCharacters = c('%','$','}','{','^','_','#','&','~'),
+  tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}','\\_{}',
+    '\\#','\\&','\\char`\\~')
+)
+\end{tikzCodeBlock}
+
+
+\subsection{\code{tikzRasterResolution}}
+
+When \code{tikz} is requested to add a raster to a graphic, the raster is
+written to a PNG file which is then included into the \LaTeX\ code. This option
+controls the resolution (dpi) at which the PNG files are created.
 
 \begin{tikzCodeBlock}[title={Default},listing style=sweavechunk]
 options(tikzRasterResolution = 300)
 \end{tikzCodeBlock}
-  }
-
-  \item[\code{tikzPdftexWarnUTF}] {
-    A \code{TRUE/FALSE} value that controls whether warnings are printed if
-    Unicode characters are sent to a device using the \hologo{pdfTeX} engine.
-  }
-\end{description}
-
-For convenience the function \code{setTikzDefaults()} is provided which sets all the global options back to their original values.
-
-The proper placement of a \code{.Rprofile} file is explained in \code{?Startup}. For the details of why calling the \LaTeX{} compiler is necessary, see \autoref{part:implementation}.
-
-\tikzDocDisclaim{A Word of Caution About Setting Options.}
-{A lot of power is given to you through these global options, and with great power comes great responsibility.  For example, if you do not include the \TikZ{} package in the \code{tikzLatexPackages} option then all of the string metric calculations will fail. Or if you use a different font when compiling than you used for calculating metrics, strings may be placed incorrectly.  There are innumerable ways for packages to clash in \LaTeX{} so be aware. 
-}
 
 
-\label{cache:user}
+\subsection{\code{tikzPdftexWarnUTF}}
+
+A \code{TRUE/FALSE} value that controls whether warnings are printed if
+Unicode characters are sent to a device using the \hologo{pdfTeX} engine.
+
 
 %----------------------------  tikz() function documentation -------------------------------------------------
 
