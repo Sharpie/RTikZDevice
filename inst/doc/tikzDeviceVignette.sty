@@ -162,6 +162,7 @@
 % Style subsections and below (if used).
 
 % Don't number any division below section level.
+\maxtocdepth{subsection}
 \setsecnumdepth{section}
 
 
@@ -170,6 +171,7 @@
 % Mbox it to prevent hyphenation of code
 \newcommand{\code}[1]{\mbox{\ttfamily #1}}
 \newcommand{\pkg}{\textbf}
+\newcommand{\pkgopt}[1]{{\color{red}#1}}
 
 % Other LaTeX macros
 \renewcommand{\sectionautorefname}{Section}
