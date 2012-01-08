@@ -106,7 +106,7 @@ setTikzDefaults <- function( overwrite = TRUE ){
       "\\setlength\\PreviewBorder{0pt}\n"
     ),
 
-    tikzFooter = "\\end{document}\n",
+    tikzFooter = "",
 
     tikzMetricPackages = c(
       # The fontenc package is very important here! 
