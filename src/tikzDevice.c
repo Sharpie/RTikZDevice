@@ -1412,20 +1412,51 @@ static void TikZ_Raster(
    *
    * NOTE:
    *
-   * There is some funny business that happens below. In the definition of
-   * device_Raster from GraphicsDevice.h, the byte order of the colors entering
-   * this routine in the `raster` argument are specified to be ABGR. The color
-   * extraction macros assume the order is RGBA.
+   * There is some funny business that happens below.
+   *
+   * In the definition of device_Raster from GraphicsDevice.h, the byte order
+   * of the colors entering this routine in the `raster` argument are specified
+   * to be ABGR. The color extraction macros assume the order is RGBA.
    *
    * In practice, it appears the byte order in `raster` is RBGA--hence the use
    * of R_GREEN and R_BLUE are swapped below.
-  */
-  int i;
-  for( i = 0; i < h * w; i ++ ){
-    INTEGER(red_vec)[i] = R_RED(raster[i]);
-    INTEGER(green_vec)[i] = R_BLUE(raster[i]);
-    INTEGER(blue_vec)[i] = R_GREEN(raster[i]);
-    INTEGER(alpha_vec)[i] = R_ALPHA(raster[i]);
+   *
+   * If the width or height arguments to this function are negative, we
+   * interpret this as a sign that the raster should be flipped along the x or
+   * y matrix. For efficiency, these transformations are done in the extraction
+   * loop so that the data only has to be transformed once.
+   */
+  int i, j, index, target, row_offset = 0, col_offset = 0, row_trans = 1, col_trans = 1;
+  if ( height < 0 ) {
+    /* Using these parameters, one can cause a loop to "count backwards" */
+    row_trans = -1;
+    row_offset = h - 1;
+    /*
+     * If a dimension is negative, the (x,y) coordinate no longer references
+     * the lower left corner of the image. We correct for this and then make
+     * sure the dimension is positive.
+     */
+    y += height;
+    height = fabs(height);
+  }
+
+  if ( width < 0 ) {
+    col_trans = -1;
+    col_offset = w - 1;
+    x += width;
+    width = fabs(width);
+  }
+
+  for ( i = 0; i < h; ++i ) {
+    for ( j = 0; j < w; ++j ) {
+      target = i*w + j;
+      index = (row_trans*i + row_offset)*w + (col_trans*j + col_offset);
+
+      INTEGER(red_vec)[target] = R_RED(raster[index]);
+      INTEGER(green_vec)[target] = R_BLUE(raster[index]);
+      INTEGER(blue_vec)[target] = R_GREEN(raster[index]);
+      INTEGER(alpha_vec)[target] = R_ALPHA(raster[index]);
+    }
   }
 
   /*
