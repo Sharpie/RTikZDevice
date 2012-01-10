@@ -126,7 +126,16 @@ Latest Changes
   - The tikzDevice no longer produces output for plots that are completely
     empty.
 
+  - The `tikz` option `footer` now works as described by the documentation.
+    Previously, it had no effect.
+
+  - The `tikz` device can now handle raster images with negative widths or
+    heights that arise from calling a raster plotting function using reversed
+    axes.
+
 #### Behind the Scenes
+
+  - The tikzDevice now requires R 2.12.0 or later.
 
   - Upgrade documentation generation from Roxygen to Roxygen2.
 

@@ -18,7 +18,7 @@ Description: The tikzDevice package provides a graphics output device for R
     LaTeX code to be inserted into the output stream.
 License: GPL (>= 2)
 Depends:
-    R (>= 2.11.0),
+    R (>= 2.12.0),
     filehash
 Suggests:
     testthat (>= 0.4),
@@ -29,7 +29,6 @@ Suggests:
 SystemRequirements: pgf (>= 2.00)
 LazyLoad: yes
 Collate:
-    'anyMultibyteUTF8Characters.R'
     'cacheMetrics.R'
     'deviceUtils.R'
     'latexStrWidth.R'
