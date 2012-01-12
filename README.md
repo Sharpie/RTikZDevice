@@ -133,6 +133,9 @@ Latest Changes
     heights that arise from calling a raster plotting function using reversed
     axes.
 
+  - Creating raster output with the tikzDevice could mess with the behavior of
+    some graphical paramaters such as par('mfrow'). This has been fixed.
+
 #### Behind the Scenes
 
   - The tikzDevice now requires R 2.12.0 or later.
@@ -158,3 +161,6 @@ The following people contributed to this release of the tikzDevice:
 
   - Zack Weinberg for suggestions and comments that led to optimizations in the
     quality and quantity of TikZ output.
+
+  - Romain Franconville for bugreports that led to the discovery of two bugs in
+    the raster routines.

@@ -425,6 +425,21 @@ test_graphs <- list(
   ),
 
   list(
+    short_name = 'raster_reflection',
+    description = 'Test raster handling in graphics with reflected axes',
+    tags = c('base', 'raster'),
+    graph_code = quote({
+
+      par(mfrow = c(2,2))
+      image(volcano, useRaster = TRUE)
+      image(volcano, xlim = c(1,0), useRaster = TRUE)
+      image(volcano, ylim = c(1,0), useRaster = TRUE)
+      image(volcano, xlim = c(1,0), ylim = c(1,0), useRaster = TRUE)
+
+    })
+  ),
+
+  list(
     short_name = 'grid_raster',
     description = 'Test raster support in grid graphics',
     tags = c('grid', 'raster'),

@@ -51,7 +51,6 @@ function(
     matrix( rasterData, nrow = nrows, ncol = ncols, byrow = TRUE ) )
 
   # Write the image to a PNG file.
-  savePar = par(no.readonly=TRUE); on.exit(par(savePar))
 
   # On OS X there is a problem with png() not respecting antialiasing options.
   # So, we have to use quartz instead.  Also, we cannot count on X11 or Cairo
