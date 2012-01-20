@@ -218,9 +218,7 @@ and \autoref{fig:tikz-example}.
 
 	\begin{minipage}[t]{0.4\linewidth}
     \begin{tikzCodeBlock}[listing style=sweavechunk,
-      code body/.append style={codebody color=white},
-      no break=true
-    ]
+      code body/.append style={codebody color=white}]
 pdf('pdf-example.pdf',
   width = 3.25, height = 3.25)
 plot(1, 1, main = 'Hello!')
@@ -239,9 +237,7 @@ dev.off()
   \hspace{0.1\linewidth}
 	\begin{minipage}[t]{0.4\linewidth}
     \begin{tikzCodeBlock}[listing style=sweavechunk,
-      code body/.append style={codebody color=white},
-      no break=true
-    ]
+      code body/.append style={codebody color=white}]
 tikz('tikz-example.tex',
   width = 3.25, height = 3.25)
 plot(1, 1, main = 'Hello \\TeX !')
@@ -776,7 +772,7 @@ A simple \LaTeX{} document is then required to display the output of the basic \
 
 	\begin{minipage}{0.5\textwidth}
 
-\begin{tikzCodeBlock}[title={Example \LaTeX{} Document},listing style=latexsource,code body/.append style={codebody color=white},no break=true]
+\begin{tikzCodeBlock}[title={Example \LaTeX{} Document},listing style=latexsource,code body/.append style={codebody color=white}]
 \documentclass{article}
 
 % All LaTeX documents including 
@@ -807,10 +803,6 @@ A simple \LaTeX{} document is then required to display the output of the basic \
 
 One of the most exciting aspects of the \code{tikz()} function is that it allows the inclusion of arbitrary \LaTeX{} code in plotting commands. An important issue to note is that many \LaTeX{} commands pare prefixed by the backaslash, \textbackslash, character. This character has a special meaning as an escape charcter in many computing applications, including \lang{R}. Therefore, it is necessary to place two backslashes, \textbackslash\textbackslash, in the input to \lang{R} commands in order to cause one to appear in the output.  The next example demonstrates how to use \LaTeX{} commands in plot annotation.
 
-% Disable chunk page breaking so the following code doesn't get mangled.
-\makeatletter
-\tikzCode@breakPagesfalse
-\makeatother
 
 \begin{figure}[H]
 	\centering
@@ -849,10 +841,6 @@ dev.off()
 	\caption{A more complicated example of \code{tikz()} usage incorporating natively rendered \LaTeX{} commands.}
 \end{figure}
 
-% Reinstate tikzCodeBlock defaults.
-\makeatletter
-\tikzCode@breakPagestrue
-\makeatother
 
 \subsubsection{\code{bareBones} Mode}
 
@@ -1647,7 +1635,7 @@ The last portion of the code chunk is responsible for loading the function name 
 
 When dealing with a vector \code{SEXP} such as \code{RCallBack}, which has 2 slots, we need to use a different function to access the second slot. The \code{CDR} function will allow us to move to the second slot in \code{RCallBack} where we may perform a \code{SETCAR} to specify a value. In the example code, these operations were combined by using the \code{SETCADR} function which has the same effect as:
 
-\begin{tikzCodeBlock}[no break=true,listing style=sweavechunk]
+\begin{tikzCodeBlock}[listing style=sweavechunk]
 SETCAR( CDR(RCallBack), ScalarInteger( c ) );
 \end{tikzCodeBlock}
 
