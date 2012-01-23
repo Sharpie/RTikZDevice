@@ -187,6 +187,18 @@ getDeviceInfo <- function(dev_num = dev.cur()) {
   return(device_info)
 }
 
+# This function allows an R expression to be evaluated in a context where it
+# will be protected from user interrupts (use of CTRL-C for example).
+#
+#' @useDynLib tikzDevice TikZ_EvalWithoutInterrupts
+evalWithoutInterrupts <- function(expr, envir = parent.frame())
+{
+  # Wrap the expression in a call to `substitute` so that it gets passed
+  # directly to the C code instead of being evaluated before being passed to
+  # the C code.
+  .Call(TikZ_EvalWithoutInterrupts, substitute(expr), envir)
+}
+
 
 #' Check If a String Contains Multibyte UTF-8 characters
 #' This function is used by tikzDevice to check if an incoming string contains
