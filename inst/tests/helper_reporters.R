@@ -1,219 +1,236 @@
 # This file contains custom test reporters.
 
-DetailedReporter <- testthat:::Reporter$clone()
-DetailedReporter$do({
-  self$width <- getOption('width')
-  self$n_tests <- 0
-  self$n_failed <- 0
-  self$failures <- list()
-  self$start_time <- NULL
+DetailedReporter <- setRefClass('DetailedReporter', contains = 'Reporter',
+  fields = list(
+    'width' = 'integer',
+    'n_tests' = 'integer',
+    'n_failed' = 'integer',
+    'failures' = 'list',
+    'start_time' = 'ANY'
+  ),
+  methods = list(
 
-  self$start_reporter <- function() {
-    self$failed <- FALSE
-    cat(str_c(rep('=', self$width), collapse=''), '\n')
-  }
+    start_reporter = function() {
+      failed <<- FALSE
 
-  self$start_context <- function(desc) {
-    cat(str_c('\n', desc, '\n'))
-    cat(str_c(rep('-', nchar(desc)), collapse=''), '\n')
-    self$context <- desc
-    self$n_tests <- 0
-    self$n_failed <- 0
-    self$failures <- list()
-  }
+      width <<- getOption('width')
+      n_tests <<- 0L
+      n_failed <<- 0L
+      failures <<- list()
+      start_time <<- NULL
 
-  self$start_test <- function(desc){
-    cat(desc)
-    self$test <- desc
-    self$start_time <- Sys.time()
-  }
+      cat(str_c(rep('=', width), collapse=''), '\n')
+    },
 
-  self$add_result <- function(result) {
-    spacer <- paste(rep(' ',self$width - nchar(self$test) - 5),
-      collapse = '')
-    if (result$passed) {
-      cat(spacer, colourise("PASS\n", fg = "light green"))
-    } else {
-      self$failed <- TRUE
-      self$n_failed <- self$n_failed + 1
-      result$test <- self$test
-      self$failures[[self$n_failed]] <- result
+    start_context = function(desc) {
+      cat(str_c('\n', desc, '\n'))
+      cat(str_c(rep('-', nchar(desc)), collapse=''), '\n')
 
-      cat(spacer, colourise("FAIL\n", fg = "red"))
-    }
-  }
+      context <<- desc
+      n_tests <<- 0L
+      n_failed <<- 0L
+      failures <<- list()
+    },
 
-  self$end_test <- function(){
-    elapsed_time <- as.numeric(difftime(Sys.time(), self$start_time,
-      units='secs'))
-    cat('  Elapsed Time: ', sprintf("%6.2f", elapsed_time), ' seconds\n')
-    self$test <- NULL
-    self$start_time <- NULL
-    self$n_tests <- self$n_tests + 1
-  }
+    start_test = function(desc){
+      cat(desc)
+      test <<- desc
+      start_time <<- Sys.time()
+    },
 
-  self$end_context <- function() {
-    cat(paste(rep('-', self$width), collapse=''), '\n')
-    n_success <- self$n_tests - self$n_failed
-    success_per <- round( n_success / self$n_tests * 100, 2 )
+    add_result = function(result) {
+      spacer <- paste(rep(' ',width - nchar(test) - 5),
+        collapse = '')
+      if (result$passed) {
+        cat(spacer, colourise("PASS\n", fg = "light green"))
+      } else {
+        failed <<- TRUE
+        n_failed <<- n_failed + 1L
+        result$test <- test
+        failures[[n_failed]] <<- result
 
-    test_status <- paste(n_success, '/', self$n_tests,
-      ' (', success_per, '%)', sep = '')
-    test_status <- ifelse(self$n_failed == 0,
-      colourise(test_status, 'light green'),
-      colourise(test_status, 'red')
-    )
-
-    cat(test_status, 'tests sucessfully executed in this context.\n' )
-
-    if( self$n_failed > 0 ){
-      cat('\nOutput from failed tests:\n\n')
-
-      charrep <- function(char, times) {
-        sapply(times, function(i) str_c(rep.int(char, i), collapse = ""))
+        cat(spacer, colourise("FAIL\n", fg = "red"))
       }
+    },
 
-      type <- ifelse(sapply(self$failures, "[[", "error"), "Error", "Failure")
-      tests <- sapply(self$failures, "[[", "test")
-      header <- str_c(type, ": ", tests, " ")
-      linewidth <- ifelse(nchar(header) > getOption("width"),
-        0, getOption("width") - nchar(header))
-      line <- charrep("-", linewidth )
+    end_test = function(){
+      elapsed_time <- as.numeric(difftime(Sys.time(), start_time,
+        units='secs'))
+      cat('  Elapsed Time: ', sprintf("%6.2f", elapsed_time), ' seconds\n')
+      test <<- NULL
+      start_time <<- NULL
+      n_tests <<- n_tests + 1L
+    },
 
-      message <- sapply(self$failures, "[[", "message")
+    end_context = function() {
+      cat(paste(rep('-', width), collapse=''), '\n')
+      n_success <- n_tests - n_failed
+      success_per <- round( n_success / n_tests * 100, 2 )
 
-      cat(str_c(
-        colourise(header, "red"), line, "\n",
-        message, "\n", collapse = "\n"))
+      test_status <- paste(n_success, '/', n_tests,
+        ' (', success_per, '%)', sep = '')
+      test_status <- ifelse(n_failed == 0L,
+        colourise(test_status, 'light green'),
+        colourise(test_status, 'red')
+      )
 
+      cat(test_status, 'tests sucessfully executed in this context.\n' )
+
+      if( n_failed > 0L ){
+        cat('\nOutput from failed tests:\n\n')
+
+        charrep <- function(char, times) {
+          sapply(times, function(i) str_c(rep.int(char, i), collapse = ""))
+        }
+
+        type <- ifelse(sapply(failures, "[[", "error"), "Error", "Failure")
+        tests <- sapply(failures, "[[", "test")
+        header <- str_c(type, ": ", tests, " ")
+        linewidth <- ifelse(nchar(header) > getOption("width"),
+          0, getOption("width") - nchar(header))
+        line <- charrep("-", linewidth )
+
+        message <- sapply(failures, "[[", "message")
+
+        cat(str_c(
+          colourise(header, "red"), line, "\n",
+          message, "\n", collapse = "\n"))
+
+      }
+    },
+
+    end_reporter = function() {
+      cat(str_c(rep('=', width), collapse=''), '\n\n')
     }
-  }
-
-
-  self$end_reporter <- function() {
-    cat(str_c(rep('=', self$width), collapse=''), '\n\n')
-  }
-
-})
-
+  ) # End methods list
+) # End DetailedReporter class
 
 # This reporter is used by the graphics tests. It is very similar to the
 # DetailedReporter, but contains specialized functionality for displaying the
 # results of graphics tests.
-GraphicsReporter <- DetailedReporter$clone()
-GraphicsReporter$do({
+GraphicsReporter <- setRefClass('GraphicsReporter', contains = 'DetailedReporter',
+  fields = list(
+    'ran_vis_diff' = 'logical',
+    'pixel_error' = 'ANY',
+    'n_ctx_failed' = 'integer'
+  ),
+  methods = list(
 
-  self$start_reporter <- function() {
-    self$ran_vis_diff <- FALSE
-    self$pixel_error <- 'SKIP'
-    self$n_tests <- 0
-    self$n_failed <- 0
-    self$n_ctx_failed <- 0
-    cat(str_c(rep('=', self$width), collapse=''), '\n')
-    cat('Graphics Tests', '\n')
-    cat(str_c(rep('~', self$width), collapse=''), '\n')
-  }
+    start_reporter = function() {
+      width <<- getOption('width')
 
-  self$start_context <- function(desc) {
-    cat(str_c('\n', desc, '\n'))
-    self$failed <- FALSE
-  }
+      ran_vis_diff <<- FALSE
+      pixel_error <<- 'SKIP'
+      n_tests <<- 0L
+      n_failed <<- 0L
+      n_ctx_failed <<- 0L
 
-  self$start_test <- function(desc){
-    cat('  ', desc)
-    self$test <- desc
-    self$start_time <- Sys.time()
-  }
+      cat(str_c(rep('=', width), collapse=''), '\n')
+      cat('Graphics Tests', '\n')
+      cat(str_c(rep('~', width), collapse=''), '\n')
+    },
 
-  self$vis_result <- function(pixel_error) {
-    self$ran_vis_diff <- TRUE
-    self$pixel_error <- pixel_error
-  }
+    start_context = function(desc) {
+      cat(str_c('\n', desc, '\n'))
+      failed <<- FALSE
+    },
 
-  self$add_result <- function(result) {
-    if ( self$ran_vis_diff ) {
-      if ( self$pixel_error == 'SKIP' ) {
-        spacer <- paste(rep(' ',self$width - nchar(self$test) - 19),
-          collapse = '')
-        cat(spacer, colourise("SKIP", fg = "yellow"), "\n")
+    start_test = function(desc){
+      cat('  ', desc)
+      test <<- desc
+      start_time <<- Sys.time()
+    },
+
+    vis_result = function(the_error) {
+      ran_vis_diff <<- TRUE
+      pixel_error <<- the_error
+    },
+
+    add_result = function(result) {
+      if ( ran_vis_diff ) {
+        if ( pixel_error == 'SKIP' ) {
+          spacer <- paste(rep(' ', width - nchar(test) - 19),
+            collapse = '')
+          cat(spacer, colourise("SKIP", fg = "yellow"), "\n")
+        } else {
+          spacer <- paste(rep(' ', width - nchar(test) - 29),
+            collapse = '')
+          cat(spacer, 'Error of:',
+            colourise(sprintf("%8.2g pixels", pixel_error), fg = "yellow"),
+            "\n"
+          )
+        }
       } else {
-        spacer <- paste(rep(' ',self$width - nchar(self$test) - 29),
+        spacer <- paste(rep(' ', width - nchar(test) - 19),
           collapse = '')
-        cat(spacer, 'Error of:',
-          colourise(sprintf("%8.2g pixels", self$pixel_error), fg = "yellow"),
-          "\n"
-        )
+        if (result$passed) {
+          cat(spacer, colourise("PASS", fg = "light green"))
+        } else {
+          failed <<- TRUE
+          n_failed <<- n_failed + 1L
+          result$test <- test
+          failures[[n_failed]] <<- result
+
+          cat(spacer, colourise("FAIL", fg = "red"))
+        }
       }
-    } else {
-      spacer <- paste(rep(' ',self$width - nchar(self$test) - 19),
-        collapse = '')
-      if (result$passed) {
-        cat(spacer, colourise("PASS", fg = "light green"))
+    },
+
+    end_test = function(){
+      if( ran_vis_diff ) {
+        ran_vis_diff <<- FALSE
       } else {
-        self$failed <- TRUE
-        self$n_failed <- self$n_failed + 1
-        result$test <- self$test
-        self$failures[[self$n_failed]] <- result
-
-        cat(spacer, colourise("FAIL", fg = "red"))
+        elapsed_time <- as.numeric(difftime(Sys.time(), start_time,
+          units='secs'))
+        cat(sprintf(" %6.2f sec\n", elapsed_time))
       }
-    }
-  }
+    },
 
-  self$end_test <- function(){
-    if( self$ran_vis_diff ) {
-      self$ran_vis_diff <- FALSE
-    } else {
-      elapsed_time <- as.numeric(difftime(Sys.time(), self$start_time,
-        units='secs'))
-      cat(sprintf(" %6.2f sec\n", elapsed_time))
-    }
-  }
-
-  self$end_context <- function() {
-    if ( self$failed ) {
-      self$n_ctx_failed <- self$n_ctx_failed + 1
-    }
-    self$n_tests <- self$n_tests + 1
-  }
-
-  self$end_reporter <- function() {
-    cat(paste(rep('-', self$width), collapse=''), '\n')
-    n_success <- self$n_tests - self$n_ctx_failed
-    success_per <- round( n_success / self$n_tests * 100, 2 )
-
-    test_status <- paste(n_success, '/', self$n_tests,
-      ' (', success_per, '%)', sep = '')
-    test_status <- ifelse(self$n_ctx_failed == 0,
-      colourise(test_status, 'light green'),
-      colourise(test_status, 'red')
-    )
-
-    cat(test_status, 'tests sucessfully executed.\n' )
-
-    if( self$n_failed > 0 ){
-      cat('\nOutput from failed tests:\n\n')
-
-      charrep <- function(char, times) {
-        sapply(times, function(i) str_c(rep.int(char, i), collapse = ""))
+    end_context = function() {
+      if ( failed ) {
+        n_ctx_failed <<- n_ctx_failed + 1L
       }
+      n_tests <<- n_tests + 1L
+    },
 
-      type <- ifelse(sapply(self$failures, "[[", "error"), "Error", "Failure")
-      tests <- sapply(self$failures, "[[", "test")
-      header <- str_c(type, ": ", tests, " ")
-      linewidth <- ifelse(nchar(header) > getOption("width"),
-        0, getOption("width") - nchar(header))
-      line <- charrep("-", linewidth )
+    end_reporter = function() {
+      cat(paste(rep('-', width), collapse=''), '\n')
+      n_success <- n_tests - n_ctx_failed
+      success_per <- round( n_success / n_tests * 100, 2 )
 
-      message <- sapply(self$failures, "[[", "message")
+      test_status <- paste(n_success, '/', n_tests,
+        ' (', success_per, '%)', sep = '')
+      test_status <- ifelse(n_ctx_failed == 0L,
+        colourise(test_status, 'light green'),
+        colourise(test_status, 'red')
+      )
 
-      cat(str_c(
-        colourise(header, "red"), line, "\n",
-        message, "\n", collapse = "\n"))
+      cat(test_status, 'tests sucessfully executed.\n' )
 
+      if( n_failed > 0L ){
+        cat('\nOutput from failed tests:\n\n')
+
+        charrep <- function(char, times) {
+          sapply(times, function(i) str_c(rep.int(char, i), collapse = ""))
+        }
+
+        type <- ifelse(sapply(failures, "[[", "error"), "Error", "Failure")
+        tests <- sapply(failures, "[[", "test")
+        header <- str_c(type, ": ", tests, " ")
+        linewidth <- ifelse(nchar(header) > getOption("width"),
+          0, getOption("width") - nchar(header))
+        line <- charrep("-", linewidth )
+
+        message <- sapply(failures, "[[", "message")
+
+        cat(str_c(
+          colourise(header, "red"), line, "\n",
+          message, "\n", collapse = "\n"))
+
+      }
+      cat(str_c(rep('=', width), collapse=''), '\n\n')
     }
-    cat(str_c(rep('=', self$width), collapse=''), '\n\n')
-  }
 
-})
+  ) # End methods list
+) # End GraphicsReporter
 
