@@ -355,8 +355,23 @@ test_graphs <- list(
         .Names = c("Grain Diameter", "Percent Finer"), row.names = c(NA, 9L),
         class = "data.frame")
 
-      testPlot <- qplot( `Grain Diameter`, `Percent Finer`, data = soilSample) +
-        scale_x_log10() + scale_y_probit() + theme_bw()
+      # R 2.12.x and 2.13.x have to test with ggplot2 v0.8.9 which is very
+      # different from 0.9.0.
+      #
+      # FIXME: Remove this once we drop support for 2.13.x
+      if( exists('scale_y_probit') ){
+        # We are using a ggplot2 version that is earlier than 0.9.0
+        testPlot <- qplot( `Grain Diameter`, `Percent Finer`, data = soilSample) +
+          scale_x_log10() + scale_y_probit() + theme_bw()
+      } else {
+        sink(tempfile())
+        suppressPackageStartupMessages(require(scales))
+        sink()
+        testPlot <- qplot(log10(`Grain Diameter`), `Percent Finer`, data = soilSample) +
+          scale_x_continuous(labels = math_format(10^.x)) +
+          scale_y_continuous(trans = 'probit') +
+          theme_bw()
+      }
 
       print( testPlot )
     })

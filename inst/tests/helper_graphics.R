@@ -2,7 +2,7 @@
 # test graphs.
 
 do_graphics_test <- function(short_name, description, graph_code,
-  engine = 'pdftex', graph_options = NULL, skip_if = NULL, ...) {
+  engine = 'pdftex', graph_options = NULL, skip_if = NULL, tags = NULL, ...) {
 
   context(description)
 
@@ -58,7 +58,7 @@ do_graphics_test <- function(short_name, description, graph_code,
     # This test always "passes" as the real result is the number of pixels that
     # were found to be different between the test graph and the standard graph.
     # Such a result must be interpreted by a human.
-    expect_that(compare_graph(short_name), is_true())
+    expect_that(compare_graph(short_name, tags), is_true())
 
   })
 
@@ -106,7 +106,7 @@ compile_graph <- function(graph_file, engine){
 
 }
 
-compare_graph <- function(graph_name){
+compare_graph <- function(graph_name, tags){
 
   if ( is.null(compare_cmd) ) {
     testthat:::test_reporter()$vis_result('SKIP')
@@ -114,7 +114,14 @@ compare_graph <- function(graph_name){
   }
 
   test_output <- file.path(test_output_dir, str_c(graph_name, '.pdf'))
-  standard_graph <- file.path(test_standard_dir, str_c(graph_name, '.pdf'))
+  if( 'ggplot2' %in% tags && exists('scale_y_probit') ) {
+    # We are using a version of ggplot2 that predates 0.9.
+    #
+    # FIXME: Remove this once we drop support for 2.13.x.
+    standard_graph <- file.path(test_standard_dir, 'ggplot_old', str_c(graph_name, '.pdf'))
+  } else {
+    standard_graph <- file.path(test_standard_dir, str_c(graph_name, '.pdf'))
+  }
 
   if ( !file.exists(test_output) || !file.exists(standard_graph) ) {
     testthat:::test_reporter()$vis_result('SKIP')
