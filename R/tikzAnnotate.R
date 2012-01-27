@@ -26,7 +26,7 @@
 #'
 #'
 #' @export
-#' @importFrom grid convertX convertY current.transform
+#' @importFrom grid convertX convertY current.transform unit
 gridToDevice <- function(x = 0, y = 0, units = 'native') {
   # Converts a coordinate pair from the current viewport to an "absolute
   # location" measured in device units from the lower left corner. This is done
@@ -206,7 +206,7 @@ gridToDevice <- function(x = 0, y = 0, units = 'native') {
 #'   tikzAnnotate tikzNode tikzCoord
 #'   tikzAnnotateGrob tikzNodeGrob tikzCoordGrob
 #'   grid.tikzAnnotate grid.tikzNode grid.tikzCoord
-#' @importFrom grid grob drawDetails
+#' @importFrom grid grob drawDetails grid.draw
 #' @S3method drawDetails tikz_annotation
 #' @S3method drawDetails tikz_node
 #' @S3method drawDetails tikz_coord
