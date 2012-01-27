@@ -136,6 +136,9 @@ Latest Changes
   - Creating raster output with the tikzDevice could mess with the behavior of
     some graphical paramaters such as par('mfrow'). This has been fixed.
 
+  - Calls to the Filehash package have been protected from user interruptions.
+    This should prevent rogue lockfiles and corrupted metrics dictionaries.
+
 #### Behind the Scenes
 
   - The tikzDevice now requires R 2.12.0 or later.

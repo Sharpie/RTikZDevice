@@ -1857,6 +1857,18 @@ SEXP TikZ_DeviceInfo(SEXP device_num){
 }
 
 
+/* Run R evaluations inside a context protected from things like CTRL-C */
+SEXP TikZ_EvalWithoutInterrupts(SEXP expr, SEXP envir){
+  SEXP result;
+
+  BEGIN_SUSPEND_INTERRUPTS{
+    result = eval(expr, envir);
+  }END_SUSPEND_INTERRUPTS;
+
+  return result;
+}
+
+
 /*==============================================================================
 
                                Utility Routines
