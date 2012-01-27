@@ -136,11 +136,18 @@ Latest Changes
   - Creating raster output with the tikzDevice could mess with the behavior of
     some graphical paramaters such as par('mfrow'). This has been fixed.
 
+  - Calls to the Filehash package have been protected from user interruptions.
+    This should prevent rogue lockfiles and corrupted metrics dictionaries.
+
 #### Behind the Scenes
 
   - The tikzDevice now requires R 2.12.0 or later.
 
   - Upgrade documentation generation from Roxygen to Roxygen2.
+
+  - Testing framework updated to use testthat 0.6. Earlier versions of testthat
+    are no longer supported due to a switch from Mutatr classes to standard R
+    Reference Classes.
 
   - Some magic numbers that control the leading used in the margin text of base
     graphics were adjusted to values used by the PDF device. Hopefully this

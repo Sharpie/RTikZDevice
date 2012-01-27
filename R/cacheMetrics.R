@@ -18,10 +18,11 @@ function( key )
 	checkDictionaryStatus()
 
   # Check for the string.
-  if ( dbExists(.tikzInternal[['dictionary']], sha1(key)) ) {
+  haveMetrics <- evalWithoutInterrupts(dbExists(.tikzInternal[['dictionary']], sha1(key)))
+  if ( haveMetrics ) {
 
     # Yay! The width exists! Recover and return it.
-    metrics <- dbFetch(.tikzInternal[['dictionary']], sha1(key))
+    metrics <- evalWithoutInterrupts(dbFetch(.tikzInternal[['dictionary']], sha1(key)))
 
   } else {
 
@@ -41,12 +42,10 @@ function( key )
 storeMetricsInDictionary <-
 function( key, metrics )
 {
-
-  dbInsert(.tikzInternal[['dictionary']], sha1(key), metrics)
+  evalWithoutInterrupts(dbInsert(.tikzInternal[['dictionary']], sha1(key), metrics))
 
 	# Return nothing.
 	invisible()
-
 }
 
 
