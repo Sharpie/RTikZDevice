@@ -25,13 +25,25 @@ if (nchar(Sys.getenv('R_TESTS')) == 0){
   setTikzDefaults(overwrite = TRUE)
   options(tikzMetricsDictionary = NULL)
 
+  expand_test_path <- function(path) {
+    call_args = list(path = path)
+    if( version$minor >= '13.0' ) {
+      # After R 2.13.0, normalizePath bitches and moans if the path does not
+      # exist. Squelch this warning.
+      #
+      # FIXME: Remove this once we drop support for R 2.12.x
+      call_args[['mustWork']] = FALSE
+    }
+
+    do.call(normalizePath, call_args)
+  }
 
   # Set up directories for test output.
-  test_output_dir <- normalizePath(file.path(getwd(), 'test_output'))
-  if( !file.exists(test_output_dir) ){ dir.create(test_output_dir) }
+  test_output_dir <- expand_test_path(file.path(getwd(), 'test_output'))
+  if( !file.exists(test_output_dir) ) dir.create(test_output_dir)
+  test_work_dir <- expand_test_path(file.path(getwd(), 'test_work'))
+  if( !file.exists(test_work_dir) ) dir.create(test_work_dir)
 
-  test_work_dir <- normalizePath(file.path(getwd(), 'test_work'))
-  if( !file.exists(test_work_dir) ){ dir.create(test_work_dir) }
   test_standard_dir <- normalizePath(file.path(getwd(), '..', 'inst', 'tests', 'standard_graphs'))
 
   # Locate required external programs
