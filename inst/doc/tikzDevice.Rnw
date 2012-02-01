@@ -470,13 +470,13 @@ tikz(file = "Rplots.tex", width = 7, height = 7,
 \item[\code{height}]{ The height of the output figure, in {\bfseries inches}. }
 \item[\code{bg}]{ The starting background color for the plot. }
 \item[\code{fg}]{ The starting foreground color for the plot. }
-\item[\code{pointsize}]{ Base pointsize used in the LaTeX document.  This option is only referenced if a valid pointsize cannot be extracted from the value of \code{getOption("tikzDocumentDeclaration")}.  See \autoref{subsec:fontCalc} for more details.}
+\item[\code{pointsize}]{ Base pointsize used in the \LaTeX{} document.  This option is only referenced if a valid pointsize cannot be extracted from the value of \code{getOption("tikzDocumentDeclaration")}.  See \autoref{subsec:fontCalc} for more details.}
 \item[\code{standAlone}]{ A logical value indicating whether the resulting file should be suitable for direct processing by \LaTeX .}
 \item[\code{bareBones}]{ A logical value indicating whether the resulting \TikZ{} code produced without being placed within a \LaTeX{} \code{tikzpicture} environment.}
 \item[\code{console}]{Should the output of \code{tikz} be directed to the \lang{R} console (default FALSE). This is useful for dumping tikz output directly into a \LaTeX{} document via sink. If \code{TRUE}, the file argument is ignored. Setting \code{file=''} is equivalent to setting \code{console=TRUE}.}
 \item[\code{sanitize}]{Should special latex characters be replaced (Default \code{FALSE}). See the section ``Options That Affect Package Behavior'' for which characters are replaced.}
 \item[\code{engine}] {
-  A string specifying which TeX engine to use. Possible values are 'pdftex' and
+  A string specifying which \TeX\ engine to use. Possible values are 'pdftex' and
   'xetex'.
 }
 \item[\code{documentDeclaration}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
@@ -505,10 +505,10 @@ graphics device and affect the structure the output file. Using these options
 \subsection{Font Size Calculations}
 \label{subsec:fontCalc}
 The overarching goal of the `tikzDevice' is to provide seamless integration
-between text in R graphics and the text of LaTeX documents that contain those
+between text in R graphics and the text of \LaTeX{} documents that contain those
 graphics.  In order to achieve this integration the device must translate font
-sizes specified in R to corresponding font sizes in LaTeX.  The issue is that
-font sizes in LaTeX are controlled by a ``base font size'' that is specified at
+sizes specified in R to corresponding font sizes in \LaTeX{}.  The issue is that
+font sizes in \LaTeX{} are controlled by a ``base font size'' that is specified at
 the beginning of the document- typically 10pt.  There is no easy way in LaTeX
 to change the font size to a new numerical value, such as 16pt for a plot
 title.  Fortunately, the TikZ graphics system allows text to be resized using a
@@ -1152,8 +1152,23 @@ Adam R. Maxwell has created a very nice graphical interface to \code{tlmgr} for 
 \section{Installing \TikZ{} and Other Packages}
 \label{tikz:required}
 
-Unsurprisingly, \pkg{tikzDevice} requires the \TikZ{} package to be installed and available in order to function properly. \TikZ{} is an abstraction of a lower-level graphics language called \lang{PGF} and both are distributed as the the \code{pgf} package. 
+Unsurprisingly, \pkg{tikzDevice} requires the \TikZ{} package to be installed and available in order to function properly. \TikZ{} is an abstraction of a lower-level graphics language called \lang{PGF} and both are distributed as the the \code{pgf} package. If you do not have a full \TeX\ installation, you may also encounter a few other packages that you need to install. Here is a list of the packages we know we need, roughly in the order in which their absence is detected:
 
+\begin{description}
+
+    \item[\code{pgf}]{ As mentioned, provides \TikZ{}. }
+    \item[\code{preview}]{ Crop standalone pictures to size. }
+    \item[\code{ms}]{ Some internally-used utility functions. Provides \code{everyshi.sty}.}
+    \item[\code{ec}]{ (Font metrics for) the default font, European Computer Modern. }
+    \item[\code{xcolor}]{ Color specification. }
+    \item[\code{fontenc}]{ Specify the font encoding --- \lang{R} uses Type 1, but \hologo{LaTeX}'s default is \code{OT1}.}
+    \item[\code{xetex}]{ Not required, but needed if you want to use UTF-8 characters. Alternatively, use \hologo{LuaLaTeX}. }
+    \item[\code{fontspec}]{ If you use \hologo{LuaLaTeX}, needed for UTF-8 characters. }
+    \item[\code{xunicode}]{ If you use \hologo{LuaLaTeX}, needed for UTF-8 characters. }
+
+\end{description}
+
+To learn how to install them, read on.
 
 \subsection{Using a \LaTeX{} Package Manager}
 
@@ -1175,7 +1190,7 @@ Sometimes an automated package manager cannot be used. Common reasons may be tha
 
 Generally, the best place to find \LaTeX{} packages is the Comprehensive TeX Archive Network, or \lang{CTAN} located at \url{http://www.ctan.org}. In the case of the PGF/\TikZ{} package, the project homepage at \url{http://www.sourceforge.net/projects/pgf} is also a good place to obtain the package- especially if you would like to play with the bleeding-edge development version.
 
-Generally speaking, all \LaTeX{} packages are stored in a specially directory called a \code{texmf} folder. Most \TeX{} distributions allow for each user to have their own personal  \code{texmf} folder somewhere in their home path. The most usual locations, and here {\bfseries\itshape usual} is and unfortunately loose term, are as follows:
+Generally speaking, all \LaTeX{} packages are stored in a specially directory called a \code{texmf} folder. Most \TeX{} distributions allow for each user to have their own personal  \code{texmf} folder somewhere in their home path. The most usual locations, and here {\bfseries\itshape usual} is an unfortunately loose term, are as follows:
 
 \begin{tikzCodeBlock}[title={For UNIX/Linux},listing style=bashsource,code body/.append style={codebody color=white}]
 ~/texmf
