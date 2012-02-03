@@ -1391,11 +1391,6 @@ kpsewhich tikz.sty
 
 \chapter{Introduction and Background}
 
-% A friendly reminder that this portion of the documen-scratch that, ravings may be more % incoherent and crazy than the preceding sections..
-\tikzDocDisclaim{Caveat Lector}
-{
-The following introduction currently presents a \sout{vision}(delusion?) of what this section of the documentation could be. Currently the only portion of the inner workings of this package that we attempt to explain and document are those related to using the \LaTeX{} compiler to obtain font metrics.
-}
 
 We learn best through working with examples. When it comes to programming languages this involves taking working code that someone else has written, breaking it in as many places at it can possibly be broken, and then trying to build something out of the wreckage. Open source software facilitates this process wonderfully by ensuring the source code of a project is always available for inspection and experimentation. The \pkg{tikzDevice} its self was created by disassembling and then rebuilding Valerio Aimale's Pic\TeX{} device driver which is a part of the \lang{R} core codebase.
 
