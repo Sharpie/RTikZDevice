@@ -171,3 +171,6 @@ The following people contributed to this release of the tikzDevice:
 
   - Romain Franconville for bugreports that led to the discovery of two bugs in
     the raster routines.
+
+  - Sietse Brouwer for enumerating the exact list of LaTeX packages
+    `tikzDevice` requires and for vignette spelling/style corrections.

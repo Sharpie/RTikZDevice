@@ -1296,10 +1296,25 @@ For users running Apple's OS X, we recommend the Mac TeX package available at \u
 Adam R. Maxwell has created a very nice graphical interface to \code{tlmgr} for OS X called the TeX Live Utility. It may be obtained from \url{http://code.google.com/p/mactlmgr/} and we highly recommend it.
 
 
-\section{Installing \TikZ{} and Other Packages}
-\label{tikz:required}
+\section{Installing \TikZ\ and Other Packages}
+  \label{tikz:required}
 
-Unsurprisingly, \pkg{tikzDevice} requires the \TikZ{} package to be installed and available in order to function properly. \TikZ{} is an abstraction of a lower-level graphics language called \lang{PGF} and both are distributed as the the \code{pgf} package. 
+Unsurprisingly, \pkg{tikzDevice} requires the \TikZ\ package to be installed
+and available in order to function properly. \TikZ\ is an abstraction of a
+lower-level graphics language called \lang{PGF} and both are distributed as the
+the \code{pgf} package. Users who do no have a full \TeX\ installation will
+also need to install a few more required packages:
+
+\begin{flexlabelled}{pkg}{0pt}{0.5em}{0.5em}{*}{\leftmargin}
+
+    \item[pgf]{As mentioned, provides \TikZ.}
+    \item[preview]{Used to crop documents in order to produce standalone figures.}
+    \item[ms]{A bundle of internally-used utility functions. Provides \code{everyshi.sty}.}
+    \item[xcolor]{Used by \TikZ\ to specify colors.}
+    \item[fontspec]{Used by \hologo{LuaTeX} and \hologo{XeTeX} to select fonts.}
+    \item[xunicode]{Assists \hologo{LuaTeX} and \hologo{XeTeX} with UTF-8 characters.}
+
+\end{flexlabelled}
 
 
 \subsection{Using a \LaTeX{} Package Manager}
@@ -1322,7 +1337,7 @@ Sometimes an automated package manager cannot be used. Common reasons may be tha
 
 Generally, the best place to find \LaTeX{} packages is the Comprehensive TeX Archive Network, or \lang{CTAN} located at \url{http://www.ctan.org}. In the case of the PGF/\TikZ{} package, the project homepage at \url{http://www.sourceforge.net/projects/pgf} is also a good place to obtain the package- especially if you would like to play with the bleeding-edge development version.
 
-Generally speaking, all \LaTeX{} packages are stored in a specially directory called a \code{texmf} folder. Most \TeX{} distributions allow for each user to have their own personal  \code{texmf} folder somewhere in their home path. The most usual locations, and here {\bfseries\itshape usual} is and unfortunately loose term, are as follows:
+Generally speaking, all \LaTeX{} packages are stored in a specially directory called a \code{texmf} folder. Most \TeX{} distributions allow for each user to have their own personal  \code{texmf} folder somewhere in their home path. The most usual locations, and here {\bfseries\itshape usual} is an unfortunately loose term, are as follows:
 
 \begin{tikzCodeBlock}[title={For UNIX/Linux},listing style=bashsource,code body/.append style={codebody color=white}]
 ~/texmf
