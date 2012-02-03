@@ -598,216 +598,291 @@ options(tikzPdftexWarnUTF = TRUE)
 \end{tikzCodeBlock}
 
 
-%----------------------------  tikz() function documentation -------------------------------------------------
-
-\chapter{The \code{tikz()} Function}
+% -----------------------------------------------------------------------------
+%                       Chapter 3: The tikz Function
+% -----------------------------------------------------------------------------
+\chapter{The \code{tikz} Function}
 
 \section{Description}
-The \code{tikz()} function provides most of the functionality of the \pkg{tikzDevice} package. This function is responsible for creating new \lang{R} graphics devices that translate the output of graphics functions to the \TikZ{} format. The device supports many levels of output that range from stand-alone \LaTeX{} documents that may be compiled directly to code chunks that must be incorporated into existing \LaTeX{} documents using the \verb`\include{}` function.
+
+The \code{tikz} function provides most of the functionality of the
+\pkg{tikzDevice} package. This function opens an \pkg{R} graphics device that
+records plots as a series of \TikZ\ commands. The device supports many levels
+of output that range from stand-alone \LaTeX\ documents that may be compiled
+into figures to code chunks that must be incorporated into existing \LaTeX\
+documents using the \verb`\include{}` macro.
+
 
 \section{Usage}
 
-The \code{tikz()} function opens a new graphics device and may be called with the following arguments:
+The \code{tikz} function opens a new graphics device and may be called with
+the following arguments:
 
 \begin{Verbatim}[frame=single]
-tikz(file = "Rplots.tex", width = 7, height = 7,
+function (file = ifelse(onefile, "./Rplots.tex", "./Rplot%03d.tex"),
+  width = 7, height = 7, onefile = TRUE,
   bg="transparent", fg="black", pointsize = 10, standAlone = FALSE,
   bareBones = FALSE, console = FALSE, sanitize = FALSE,
-  engine = getOption("tikzDefaultEngine'),
+  engine = getOption("tikzDefaultEngine"),
   documentDeclaration = getOption("tikzDocumentDeclaration"),
-  packages = getOption("tikzLatexPackages"),
-  footer = getOption("tikzFooter"))
+  packages,
+  footer = getOption("tikzFooter")
 \end{Verbatim}
 
-\begin{description}
-\item[\code{file}]{ A character string indicating the desired path to the output file. It is recommended, but not required, that the filename end in \code{.tex}.}
-\item[\code{width}]{ The width of the output figure, in {\bfseries inches}. }
-\item[\code{height}]{ The height of the output figure, in {\bfseries inches}. }
-\item[\code{bg}]{ The starting background color for the plot. }
-\item[\code{fg}]{ The starting foreground color for the plot. }
-\item[\code{pointsize}]{ Base pointsize used in the LaTeX document.  This option is only referenced if a valid pointsize cannot be extracted from the value of \code{getOption("tikzDocumentDeclaration")}.  See \autoref{subsec:fontCalc} for more details.}
-\item[\code{standAlone}]{ A logical value indicating whether the resulting file should be suitable for direct processing by \LaTeX .}
-\item[\code{bareBones}]{ A logical value indicating whether the resulting \TikZ{} code produced without being placed within a \LaTeX{} \code{tikzpicture} environment.}
-\item[\code{console}]{Should the output of \code{tikz} be directed to the \lang{R} console (default FALSE). This is useful for dumping tikz output directly into a \LaTeX{} document via sink. If \code{TRUE}, the file argument is ignored. Setting \code{file=''} is equivalent to setting \code{console=TRUE}.}
-\item[\code{sanitize}]{Should special latex characters be replaced (Default \code{FALSE}). See the section ``Options That Affect Package Behavior'' for which characters are replaced.}
-\item[\code{engine}] {
-  A string specifying which TeX engine to use. Possible values are 'pdftex' and
-  'xetex'.
-}
-\item[\code{documentDeclaration}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
-\item[\code{packages}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
-\item[\code{footer}]{See Section \ref{sec:options}, ``Options That Affect Package Behavior.''}
-\end{description}
+\begin{flexlabelled}{code}{*}{0.5em}{0.5em}{*}{\leftmargin}
+  \item[file]
+    A character string indicating the desired path to the output file. It is
+    recommended, but not required, that the filename end in \code{.tex}.
 
-The first five options should be familiar to anyone who has used the default
-graphics devices shipped with \lang{R}. The options \code{file}, \code{width},
-\code{height}, \code{bg} and \code{fg} represent the standard graphics
-parameters currently implemented by \pkg{tikzDevice}. The last two options,
-\code{standAlone} and \code{bareBones}, are specific to the \code{tikz()}
-graphics device and affect the structure the output file. Using these options
-\code{tikz()} supports three modes of output:
+  \item[width]
+    The width of the output figure, in \emph{inches}.
+
+  \item[height]
+    The height of the output figure, in \emph{inches}.
+
+  \item[onefile]
+    Controls whether output should be directed to a single file containing one
+    \code{tikzpicture} environment per plot or split into multiple files each
+    containing a single \code{tikzpicture} environment.
+
+  \item[bg]
+    The starting background color for the plot.
+
+  \item[fg]
+    The starting foreground color for the plot.
+
+  \item[pointsize]
+    Base pointsize used in the LaTeX document.  This option is only referenced
+    if a valid pointsize cannot be extracted from the value of
+    \code{getOption("tikzDocumentDeclaration")}.  See \autoref{subsec:fontCalc}
+    for more details.
+
+  \item[standAlone]
+    A logical value indicating whether the resulting file should be suitable
+    for direct processing by \LaTeX.
+
+  \item[bareBones]
+    A logical value indicating whether \TikZ\ code is produced without being
+    placed within a \code{tikzpicture} environment.
+
+  \item[console]
+    Controls whether output is directed to the \pkg{R} console. This is useful
+    for dumping \TikZ\ output directly into a \LaTeX\ document via sink. If
+    \code{TRUE}, the \code{file} argument is ignored. Setting \code{file=''} is
+    equivalent to setting \code{console=TRUE}.
+
+  \item[sanitize]
+    Should special latex characters be replaced (Default \code{FALSE}). See the
+    section ``Options That Affect Package Behavior'' for which characters are
+    replaced.
+
+  \item[engine]
+    A string specifying which TeX engine to use. Possible values are
+    \code{'pdftex'}, \code{'xetex'} and \code{'luatex'}.
+
+  \item[documentDeclaration]
+    See Section \ref{sec:options}, ``Options That Affect Package Behavior.''
+
+  \item[packages]
+    See Section \ref{sec:options}, ``Options That Affect Package Behavior.''
+
+  \item[footer]
+    See Section \ref{sec:options}, ``Options That Affect Package Behavior.''
+\end{flexlabelled}
+
+The first six options should be familiar to anyone who has used the default
+graphics devices shipped with \lang{R}. The options \code{standAlone}
+and \code{bareBones} are specific to the \code{tikz()} graphics device and
+affect the structure the output file. Using these options \code{tikz}
+supports three modes of output:
 
 \begin{itemize}
+  \item
+    Graphics production as complete \LaTeX\ files suitable for compilation.
 
-	\item{Graphics production as complete \LaTeX{} files suitable for compilation.}
-	
-	\item{Graphics production as complete figures suitable for inclusion in \LaTeX{} files.}
-	
-	\item{Graphics production as raw figure code suitable for inclusion in an enclosing \code{tikzpicture} environment in a \LaTeX{} file.}
+  \item
+    Graphics production as complete figures suitable for inclusion in \LaTeX\
+    files.
 
+  \item
+    Graphics production as raw figure code suitable for inclusion in an
+    enclosing \code{tikzpicture} environment in a \LaTeX\ file.
 \end{itemize}
 
+
 \section{Font Size Calculations}
-\label{subsec:fontCalc}
-The overarching goal of the `tikzDevice' is to provide seamless integration
-between text in R graphics and the text of LaTeX documents that contain those
-graphics.  In order to achieve this integration the device must translate font
-sizes specified in R to corresponding font sizes in LaTeX.  The issue is that
-font sizes in LaTeX are controlled by a ``base font size'' that is specified at
-the beginning of the document- typically 10pt.  There is no easy way in LaTeX
-to change the font size to a new numerical value, such as 16pt for a plot
-title.  Fortunately, the TikZ graphics system allows text to be resized using a
-scaling factor.  The \code{tikzDevice} calculates a scaling factor used to
-approximate other font sizes using the following three inputs:
+  \label{subsec:fontCalc}
+
+The overarching goal of the \pkg{tikzDevice} is to provide seamless integration
+between text in R graphics and the text of \LaTeX\ documents that contain those
+graphics. In order to achieve this integration the device must translate font
+sizes specified in \pkg{R} to corresponding font sizes in \LaTeX. The issue is
+that font sizes in \LaTeX\ are controlled by a ``base font size'' that is
+specified at the beginning of the document---typically 10pt. There is no easy
+way in \LaTeX\ to change the font size to a new numerical value, such as 16pt
+for a plot title. Fortunately, the \TikZ\ graphics system allows text to be
+resized using a scaling factor. The \pkg{tikzDevice} calculates a scaling
+factor used to approximate other font sizes using the following three inputs:
 
 \begin{itemize}
+  \item
+    The ``base font size'' specified when the graphics device is created.
 
-  \item{The ``base font size'' specified when the graphics device is
-          created.}
+  \item
+    The ``character expansion factor'' parameter, specified using the `cex'
+    argument to functions such as described in the documentation of the \pkg{R}
+    function \code{par}.
 
-  \item{The ``character expansion factor'' parameter, specified using the `cex'
-    argument to functions such as described in the documentation of the
-    \lang{R} function \code{par()}.}
-  
-  \item{The ``font size'' parameter, specified using the `ps' argument to
-    functions such as \code{par()} or the `fontsize' argument to functions such
-    as \code{gpar()}.}
-
+  \item
+    The ``font size'' parameter, specified using the `ps' argument to functions
+    such as \code{par} or the `fontsize' argument to functions such as
+    \code{gpar}.
 \end{itemize}
 
 The calculation used is:
 
 \[
-\mbox{Scaling Factor} = \mbox{cex} \cdot \frac{\mbox{ps}}{\mbox{base font size}}
+  \mbox{Scaling Factor} = \mbox{cex} \cdot \frac{\mbox{ps}}{\mbox{base font size}}
 \]
 
-The tricky bit is the specification of the ``base font size''.  By default the tikzDevice will attempt to determine this parameter by scanning the value of \code{options( "tikzDocumentDeclaration" )} using the regular expression \code{\textbackslash d+[pt]}.  With the default header:
+The tricky bit is the specification of the ``base font size''. By default the
+\pkg{tikzDevice} will attempt to determine this parameter by scanning the value of
+\code{options( "tikzDocumentDeclaration" )} using the regular expression
+\code{\textbackslash d+[pt]}. With the default header:
 
+\[
+  \mbox{\code{\textbackslash documentclass[10pt]{article}}}
+\]
 
-\quad\code{\textbackslash documentclass[10pt]{article}}
-
-
-This regular expression will return 10 as the base pointsize to be used by the device.  If the regular expression fails to produce a match, the value of the \code{pointsize} argument to the \code{tikz()} function will be used.
+This regular expression will return 10 as the base pointsize to be used by the
+device. If the regular expression fails to produce a match, the value of the
+\code{pointsize} argument to the \code{tikz} function will be used.
 
 
 \subsection{UTF-8 Output}
 
-Version 0.6.0 introduced support for (multibyte) Unicode characters in the text
-of graphics.  There are a few important implications/limitations of this
-feature:
+Version 0.6.0 of the \pkg{tikzDevice} introduced support for (multibyte)
+Unicode characters in the text of graphics through support for \hologo{XeTeX}.
+Version 0.7.0 extended multilingual typesetting further by adding support for
+the \hologo{LuaTeX} compiler. Unicode support in \pkg{tikzDevice} is subject to
+a few important caveats:
 
 \begin{description}
+  \item[System Requirements:]
+    A working version of \hologo{XeLaTeX} or \hologo{LuaLaTeX}  along with the
+    packages \code{fontspec} and \code{xunicode} are required for direct
+    processing of Unicode input. If \pkg{tikzDevice} cannot find unicode-aware
+    compiler, then Unicode support cannot be guaranteed.
 
-\item[System Requirements:]
-  A working version of \hologo{XeLaTeX} along with the packages \code{fontspec}
-  and \code{xunicode} are required for direct processing of Unicode input.  If
-  \code{tikzDevice} cannot find \hologo{XeLaTeX} then Unicode support cannot be
-  guaranteed.
+  \item[Encoding:]
+    \pkg{tikzDevice} will try its best to convert characters from other
+    encodings but do not count on it converting things correctly, best to do
+    the conversion yourself beforehand to avoid unexpected output.
 
-\item[Encoding:] \code{tikzDevice} will try its best to convert characters from
-  other encodings but do not count on it converting things correctly, best to
-  do the conversion yourself beforehand to avoid unexpected output.
+  \item[Fonts:]
+    Having a Unicode character actually show up in your \LaTeX\ document relies
+    on the font you use having the glyph available. We leave it up to the user
+    to know for themselves what is available.  Otherwise you will likely just
+    get no output in place of where the character should be.
 
-\item[Fonts:] Having a Unicode character actually show up in your \LaTeX{}
-  document relies on the font you use having the glyph available. We leave it
-  up to the user to know for themselves what is available.  Otherwise you will
-  likely just get no output in place of where the character should be.
+  \item[Plotmath:]
+    There is specifically no support for input of plotmath characters as
+    unicode since the user can simply input \LaTeX\ math directly. We strongly
+    encourage the use of \LaTeX\ math over plotmath for style and consistency's
+    sake.  A consequence of this is that most of the \pkg{R} examples and demos
+    of plotmath won't work without significant manipulation (your mileage may
+    vary but you may get anything from errors to warnings to documents that
+    mysteriously won't compile). That is not to say that the output could not
+    be duplicated with \pkg{tikzDevice} but the examples will not work out of
+    the box.
 
-\item[plotmath:] There is specifically no support for input of plotmath
-  characters as unicode since the user can simply input \LaTeX{} math directly.
-  We strongly encourage the use of \LaTeX{} math over plotmath for style and
-  consistency's sake.  A consequence of this is that most of the \lang{R}
-  examples and demos of plotmath won't work without significant manipulation
-  (your milage may vary but you may get anything from errors to warnings to
-  documents that mysteriously won't compile).  That is not to say that the
-  output could not be duplicated with \code{tikzDevice} but the examples will
-  not work out of the box.
+  \item[Compiling:]
+    A graphic that contains UTF-8 characters should be compiled with
+    \hologo{XeLaTeX} or \hologo{LuaLaTeX} with the \code{xunicode} and
+    \code{fontspec} packages enabled.
 
-\item[Compiling:]
-  A graphic that contains UTF-8 characters should be compiled with
-  \hologo{XeLaTeX} (or possibly \hologo{LuaLaTeX}) with the \code{xunicode} and
-  \code{fontspec} packages enabled.
-
-\item[ASCII only:]
-  Everything should be exactly the same as previous versions if only ASCII
-  (single byte) characters are used (i.e. character codes less than 132).
-
+  \item[ASCII only:]
+    Everything should be exactly the same as previous versions if only ASCII
+    (single byte) characters are used (i.e. character codes less than 132).
 \end{description}
 
 
 
 \section{Examples}
-
-% We will shift into the figs directory here so that we don't have
-% to have separate Sweave code chunks with the 'figs/' path in
-% them.
 <<pathStepIn,results=hide>>=
+  # Shift into the `figs` directory so that examples do not have to include
+  # `figs` in the output file path.
 	setwd('figs')
 @
-\subsubsection{Default Mode}
 
-The most common use of the \code{tikz()} function is to produce a plot that will be included in another \LaTeX{} document, such as a report. Running the following example in \lang{R} will produce a very simple graphic using the \code{plot()} function.
+\subsection{Default Mode}
 
-<<simpleEx,echo=T,results=hide>>=
+The most common use of the \code{tikz} function is to produce a plot that
+will be included in another \LaTeX\ document, such as a report. Running the
+following example in \pkg{R} will produce a very simple graphic using the
+\code{plot} function:
+
+<<simpleEx,echo=TRUE,results=hide>>=
 require(tikzDevice)
 tikz('simpleEx.tex',width=3.5,height=3.5)
 plot(1,main='Hello World!')
 dev.off()
 @
 
-A simple \LaTeX{} document is then required to display the output of the basic \code{tikz()} command. This document must include the \TikZ{} as one of the packages that it loads. The \TikZ{} package provides several optional libraries that provide additional functionality, however none of these libraries are currently required to use the output of \code{tikz()}. Inside the \LaTeX{} document, the contents of the file \code{simpleEx.tex} are imported using the \verb`\include{}` command.
+A \LaTeX\ document is then required to display the figure.  This document must
+include \TikZ\ as one of the packages that it loads. \TikZ\ provides several
+libraries that enable additional functionality, however none of these libraries
+are currently required to use the output of \code{tikz}. Inside the \LaTeX\
+document, the contents of the file \code{simpleEx.tex} are imported using the
+\verb|\include| command.
 
 \begin{figure}[H]
 	\centering
 
 	\begin{minipage}{0.5\textwidth}
-
-\begin{tikzCodeBlock}[title={Example \LaTeX{} Document},listing style=latexsource,code body/.append style={codebody color=white}]
+    \begin{tikzCodeBlock}[title={Example \LaTeX{} Document},listing style=latexsource,code body/.append style={codebody color=white}]
 \documentclass{article}
 
-% All LaTeX documents including 
-% tikz() output must use this 
+% All LaTeX documents including
+% tikz() output must use this
 % package!
 \usepackage{tikz}
 
 \begin{document}
   \begin{figure}[!h]
     \centering
-   
+
     % The output from tikz()
     % is imported here.
     \input{simpleEx.tex}
-      
+
     \caption{Simple Example}
   \end{figure}
 \end{document}
-\end{tikzCodeBlock}
-
-	\end{minipage}
+    \end{tikzCodeBlock}
+  \end{minipage}
 	\hfill
 	\begin{minipage}{0.45\textwidth}
 		\input{figs/simpleEx.tex}
 	\end{minipage}
-	\caption{Example of simple \code{tikz()} usage.}
+	\caption{Example of simple \code{tikz} usage.}
 \end{figure}
 
-One of the most exciting aspects of the \code{tikz()} function is that it allows the inclusion of arbitrary \LaTeX{} code in plotting commands. An important issue to note is that many \LaTeX{} commands pare prefixed by the backaslash, \textbackslash, character. This character has a special meaning as an escape charcter in many computing applications, including \lang{R}. Therefore, it is necessary to place two backslashes, \textbackslash\textbackslash, in the input to \lang{R} commands in order to cause one to appear in the output.  The next example demonstrates how to use \LaTeX{} commands in plot annotation.
+One of the most exciting aspects of the \code{tikz} function is that the
+inclusion of arbitrary \LaTeX\ code is allowed in strings passed to  plotting
+commands. An important issue to note is that many \LaTeX\ commands are prefixed
+by the backaslash character: \textbackslash. Unfortunately, in many programming
+languages, the backslash character is also given a special status when it
+appears in strings. Therefore, it is necessary to place two backslashes,
+\textbackslash\textbackslash, in \pkg{R} strings in order to cause backslash to
+appear in the output for \LaTeX. The next example demonstrates how to use
+\LaTeX\ commands in plot annotation.
 
 
 \begin{figure}[H]
 	\centering
 	\begin{minipage}{0.5\textwidth}
-<<latexEx,echo=T,results=hide,keep.source=T>>=
+<<latexEx,echo=TRUE,results=hide,keep.source=TRUE>>=
 require(tikzDevice)
 tikz('latexEx.tex',
   width=3.5,height=3.5)
@@ -819,17 +894,17 @@ model <- lm(y ~ x)
 rsq <- summary( model )$r.squared
 rsq <- signif(rsq,4)
 
-plot(x,y,main='Hello \\LaTeX!')
-abline(model,col='red')
+plot(x, y, main='Hello \\LaTeX!')
+abline(model, col='red')
 
 mtext(paste("Linear model: $R^{2}=",
-  rsq,"$" ),line=0.5)
-  
-legend('bottomright', legend = 
+  rsq, "$"), line=0.5)
+
+legend('bottomright', legend =
   paste("$y = ",
     round(coef(model)[2],3), 'x +',
     round(coef(model)[1],3), '$',
-    sep=''), bty= 'n')
+    sep = ''), bty = 'n')
 
 dev.off()
 @
@@ -838,21 +913,20 @@ dev.off()
 	\begin{minipage}{0.45\textwidth}
 		\input{figs/latexEx.tex}
 	\end{minipage}
-	\caption{A more complicated example of \code{tikz()} usage incorporating natively rendered \LaTeX{} commands.}
+	\caption{A more complicated example of \code{tikz} usage incorporating
+    natively rendered \LaTeX\ commands.}
 \end{figure}
 
 
-\subsubsection{\code{bareBones} Mode}
+\subsection{\pkgopt{bareBones} Mode}
 
-\code{barBones} output is designed to facilitate inclusion of code generated by
-\code{tikz()} into a larger \TikZ\ graphic. Normally \code{tikz()} packages the
-commands it produces as a self-contained figure. This is done by placing the
-\verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` commands at the
-beginning and end of the output file. When \code{bareBones} is invoked, the
-\code{tikzpicture} environment is omitted which allows the output to be
+\code{bareBones} output is designed to facilitate inclusion of code generated
+by \code{tikz} into a larger \TikZ\ graphic. Normally \code{tikz} wraps output
+as a self-contained \code{tikzpicture} environment. When \code{bareBones} is
+invoked, the wrapping environment is omitted. This option allows output to be
 embedded inside another \code{tikzpicture} of the users own construction.
 
-<<bareBonesExample,echo=T,results=hide,keep.source=T>>=
+<<bareBonesExample,echo=TRUE,results=hide,keep.source=TRUE>>=
 require(tikzDevice)
 require(maps)
 
@@ -887,10 +961,10 @@ tikzAnnotate(paste('\\coordinate (sfBay) at (',
 dev.off()
 @
 
-The \verb`\include{}` command may now be used to import the device output into
+The \verb|\include| command may now be used to import the device output into
 another \code{tikzpicture}. The included code must be wrapped in a \code{scope}
 environment that contains the options \code{x=1pt} and \code{y=1pt}. This
-informs \TikZ{} of the units being used in the coordinates of the plot output.
+informs \TikZ\ of the units being used in the coordinates of the plot output.
 The options \code{xshift} and \code{yshift} may also be applied to the
 \code{scope} in order to position the plot. The following code demonstrates how
 to embed \code{bareBones} output in a \code{tikzpicture}:
@@ -926,7 +1000,6 @@ to embed \code{bareBones} output in a \code{tikzpicture}:
 \end{tikzCodeBlock}
 
 
-
 \begin{figure}[H]
 
 	\centering
@@ -954,30 +1027,37 @@ to embed \code{bareBones} output in a \code{tikzpicture}:
 
 	\end{tikzpicture}
 
-	\caption{A \TikZ{} drawing with embedded output from \code{tikz(bareBones=TRUE)}.}
+	\caption{A \TikZ\ drawing with embedded output from \code{tikz(bareBones=TRUE)}.}
 \end{figure}
 
-\subsubsection{\code{standAlone} Mode}
+\subsection{\pkgopt{standAlone} Mode}
 
-When the \code{standAlone} option is passed to \code{tikz()}, the resulting \code{.tex} file will be a complete \LaTeX{} document designed to be compiled on its own.  This means that in addition to \verb`\begin{tikzpicture}` and \verb`\end{tikzpicture}` the file will also contain \verb`\begin{document}`, \verb`\end{document}` and a \LaTeX{} preamble.  The \code{preview} package is also used in files produced by \code{standAlone} and is used to crop the pages in the resulting document to the bounding boxes of the figures that it contains.  Stand-alone output may be produced in the following manner:
+When the \code{standAlone} option is passed to \code{tikz}, the resulting
+\code{.tex} file will be a complete \LaTeX\ document that can be compiled into
+a stand-alone figure. This means that in addition to \verb|\begin{tikzpicture}|
+and \verb|\end{tikzpicture}| the file will also contain \verb|\begin{document}|,
+\verb|\end{document}| and a \LaTeX\ preamble. The \code{preview} package is also
+used in files produced by \code{standAlone} to crop the pages in the resulting
+document to the bounding boxes of the plots.  Stand-alone output may be
+produced in the following manner:
 
-<<standAloneExample,echo=T,results=hide,keep.source=T>>=
+<<standAloneExample,echo=TRUE,results=hide,keep.source=TRUE>>=
 require(tikzDevice)
-tikz('standAloneExample.tex',standAlone=T)
+tikz('standAloneExample.tex',standAlone=TRUE)
 plot(sin,-pi,2*pi,main="A Stand Alone TikZ Plot")
 dev.off()
 @
 
 
-<<standAloneCompileExample, results=hide, eval=F>>=
+<<standAloneCompileExample, results=hide, eval=FALSE>>=
 
 	require(tools)
-	
+
 	catch <- system(paste(Sys.which('pdflatex'),
 		'-interaction=batchmode -output-directory figs/ figs/standAloneExample.tex'),
 		ignore.stderr=T)
-	
-	# If compiling the example failed, we don't want to include a broken link.	
+
+	# If compiling the example failed, we don't want to include a broken link.
 	if( catch == 0 ){
 		pdfLink <- "The file \\\\code{standAloneExample.tex} may then be compiled to produce
 			\\\\href{./figs/standAloneExample.pdf}{standAloneExample.pdf}. "
@@ -987,41 +1067,51 @@ dev.off()
     #%\Sexpr{print(pdfLink)}
 @
 
-Note that files produced using the \code{standAlone} option should not be included in \LaTeX{} documents using the \verb`\input{}` command! Use \verb`\includegraphics{}` or load the \code{pdfpages} package and use \verb`\includepdf{}`.
+Note that files produced using the \code{standAlone} option should not be
+included in \LaTeX\ documents using the \verb|\input| command! Use
+\verb|\includegraphics| or load the \code{pdfpages} package and use
+\verb|\includepdf|.
 
-\subsubsection{\code{console} output Mode}
 
-Version 0.5.0 of \pkg{tikzDevice} introduced the \code{console} option.  Instead of sending its output to a file \code{tikz} will send it output to \code{stdout}. This kind of output can be redirected to a file with \code{sink()} or spit out directly into a \TeX{} document from a \lang{Sweave} file so that the \TeX{} file is self contained.  
+\subsection{\pkgopt{console} output Mode}
 
-\begin{tikzCodeBlock}[title={consoleExample.Rnw},listing style=sweavechunk]
+Version 0.5.0 of \pkg{tikzDevice} introduced the \code{console} option. With
+this option, \code{tikz} will send output to \code{stdout} instead of a file.
+This kind of output can be redirected to a file with \code{sink} or spit out
+directly into a \TeX\ document from a \pkg{Sweave} file so that the \TeX\ file
+is self contained and does not include other files via \verb|\input|.
+
+\begin{tikzCodeBlock}[title={Catching \code{tikz} output inside Sweave},listing style=sweavechunk]
  \documentclass{article}
- \usepackage{tikz}
- \usepackage[nogin]{Sweave}
+   \usepackage{tikz}
+   \usepackage[nogin]{Sweave}
+
  \begin{document}
- \begin{figure}[ht]
- \centering
- <<inline,echo=F,results=tex>>=
+   \begin{figure}[ht]
+     \centering
+ <<inline,echo=FALSE,results=tex>>=
 
  require(tikzDevice)
- tikz(console=T,width=5,height=5)
-   x <- rnorm(100)
-   plot(x)
+ tikz(console=TRUE,width=5,height=5)
+  x <- rnorm(100)
+  plot(x)
  dummy <- dev.off()
-
  @
- \caption{caption}
- \label{fig:inline}
- \end{figure}
+     \caption{caption}
+     \label{fig:inline}
+   \end{figure}
  \end{document}
 \end{tikzCodeBlock}
 
-\subsection{Getting around special \LaTeX{} characters}
 
-\subsubsection{Using the Global Options: An Xe\LaTeX{} example}
+\subsection{Using \hologo{XeLaTeX}}
 
-It is also possible to use other typesetting engines like Xe\LaTeX{} by using the global options provided by \pkg{tikzDevice}.  The following example was inspired by Dario Taraborelli and his article \href{http://nitens.org/taraborelli/latex}{The Beauty of LaTeX}.
+It is also possible to use other typesetting engines like \hologo{XeLaTeX} by
+using the global options provided by \pkg{tikzDevice}. The following example
+was inspired by Dario Taraborelli and his article
+\href{http://nitens.org/taraborelli/latex}{The Beauty of LaTeX}.
 
-\begin{tikzCodeBlock}[title={Xe\LaTeX{} Example},listing style=sweavechunk]
+\begin{tikzCodeBlock}[title={\hologo{XeLaTeX} Example},listing style=sweavechunk]
 #Set options for using XeLaTeX
 options(tikzLatex = 'xelatex')
 options(tikzDocumentDeclaration = '\\documentclass{article}')
@@ -1092,26 +1182,26 @@ for(i in 1:length(label))
 dev.off()
 \end{tikzCodeBlock}
 
-Compiling the resulting file \code{xelatexEx.tex} like so:
-
-\begin{tikzCodeBlock}[title={Compiling with Xe\LaTeX{}},listing style=bashsource]
-xelatex xelatexEx.tex
-\end{tikzCodeBlock}
-
-will produce the output in \autoref{fig:xelatex}!  Please note some of the fonts used in the example may not be available on your system. 
+Compiling the resulting file with \hologo{XeLaTeX} will produce the output in
+\autoref{fig:xelatex}. Please note some of the fonts used in the example may
+not be available on every system.
 
 \begin{figure}[!h]
 \centering
 \includegraphics{img/testXeLaTeX.pdf}
-\caption{Result of Xe\LaTeX{} example}\label{fig:xelatex}
+\caption{Result of \hologo{XeLaTeX} example}\label{fig:xelatex}
 \end{figure}
 
-\newpage
-\subsection{Annotating Graphics with \TikZ{} Commands}
 
-The function \code{tikzAnnotate} provides the ability to annotate you graphics with \TikZ{} commands.  There are a lot of exciting possibilities with this feature; It basically opens up the door for you to draw anything on your plot that can be drawn with \TikZ{}. Check out the results in \autoref{fig:annotation}.
+\subsection{Annotating Graphics with \TikZ\ Commands}
 
-<<annotation,echo=T,results=hide,keep.source=T>>=
+The function \code{tikzAnnotate} provides the ability to annotate you graphics
+with \TikZ\ commands.  There are a lot of exciting possibilities with this
+feature---it basically opens up the door for you to draw anything on your plot
+that can be drawn with \TikZ. Check out the results in
+\autoref{fig:annotation}.
+
+<<annotation,echo=TRUE,results=hide,keep.source=TRUE>>=
 require(tikzDevice)
 
 # Load some additional TikZ libraries
@@ -1155,15 +1245,15 @@ dev.off()
 \begin{figure}[!h]
 \centering
 \input{figs/annotation.tex}
-\caption{An example using \TikZ{} annotation.}\label{fig:annotation}
+\caption{An example using \TikZ\ annotation.}\label{fig:annotation}
 \end{figure}
 
 \begin{landscape}
 
-\subsection{\code{tikz()} vs. \code{pdf()} for \code{plotmath} symbols and Unicode characters}
+\subsection{\pkgopt{tikz} vs. \pkgopt{pdf} for \pkgopt{plotmath} symbols and Unicode characters}
 
 This is a side-by-side example showing how \code{tikz(..., engine = 'xetex')} handles UTF-8
-characters and plotmath symbols compared to the standard R \code{pdf()} device.
+characters and plotmath symbols compared to the standard R \code{pdf} device.
 
 \begin{figure}[!h]
 \centering
@@ -1180,10 +1270,11 @@ characters and plotmath symbols compared to the standard R \code{pdf()} device.
 
 \end{landscape}
 
-% Return to the normal working directory
 <<pathStepOut,results=hide>>=
+  # Return to the normal working directory.
 	setwd('../')
 @
+
 
 %----------------------------  text metrics function documentation ---------------------------------------
 
