@@ -22,6 +22,11 @@
 #' @param engine a string specifying which TeX engine to use. Possible values
 #'   are 'pdftex', 'xetex' and 'luatex'. See the Unicode section of \link{tikzDevice} for
 #'   details.
+#' @param documentDeclaration See the sections ``Options That Affect Package
+#'   Behavior'' and ``Font Size Calculations'' of \link{tikzDevice-package}
+#'   for more details.
+#' @param packages See the section ``Options That Affect Package Behavior'' of
+#'   \link{tikzDevice-package}.
 #'
 #'
 #' @return \item{width}{The width of \code{texString} in point size.}
@@ -43,7 +48,9 @@
 #'
 #' @export
 getLatexStrWidth <-
-function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
+function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine'),
+   documentDeclaration = getOption("tikzDocumentDeclaration"), packages)
+{
 
   switch(engine,
     pdftex = {
@@ -52,7 +59,7 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
             "using the pdftex engine. This may fail! See the Unicode",
             "section of ?tikzDevice for more information.")
       }
-      packages <- getOption("tikzLatexPackages")
+      if (missing(packages)) {packages <- getOption('tikzLatexPackages')}
     },
 
     xetex = {
@@ -61,7 +68,7 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
             "configuration or manually provide a value for",
             "options(tikzXelatex)")
       }
-      packages <- getOption("tikzXelatexPackages")
+      if (missing(packages)) {packages <- getOption('tikzXelatexPackages')}
     },
 
     luatex = {
@@ -70,7 +77,7 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
             "configuration or manually provide a value for",
             "options(tikzLualatex)")
       }
-      packages <- getOption("tikzLualatexPackages")
+      if (missing(packages)) {packages <- getOption('tikzLualatexPackages')}
     },
 
     {#ELSE
@@ -85,7 +92,7 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
 	# Create an object that contains the string and it's
 	# properties.
 	TeXMetrics <- list( type='string', scale=cex, face=face, value=texString,
-	 	documentDeclaration = getOption("tikzDocumentDeclaration"),
+    documentDeclaration = documentDeclaration,
 		packages = packages, engine = engine)
 
 
@@ -165,13 +172,15 @@ function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
 #'
 #' @export
 getLatexCharMetrics <-
-function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
+function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine'),
+  documentDeclaration = getOption("tikzDocumentDeclaration"), packages)
+{
 
   # This function is pretty much an exact duplicate of getLatexStrWidth, these
   # two functions should be generalized and combined.
   switch(engine,
     pdftex = {
-      packages <- getOption('tikzLatexPackages')
+      if (missing(packages)) {packages <- getOption('tikzLatexPackages')}
     },
 
     xetex = {
@@ -180,7 +189,7 @@ function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
             "configuration or manually provide a value for",
             "options(tikzXelatex)")
       }
-      packages <- getOption('tikzXelatexPackages')
+      if (missing(packages)) {packages <- getOption('tikzXelatexPackages')}
     },
 
     luatex = {
@@ -189,7 +198,7 @@ function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
             "configuration or manually provide a value for",
             "options(tikzLualatex)")
       }
-      packages <- getOption('tikzXelatexPackages')
+      if (missing(packages)) {packages <- getOption('tikzLualatexPackages')}
     },
 
     {#ELSE
@@ -226,7 +235,7 @@ function(charCode, cex = 1, face = 1, engine = getOption('tikzDefaultEngine')){
 	# Create an object that contains the character and it's
 	# properties.
 	TeXMetrics <- list( type='char', scale=cex, face=face, value=charCode,
-		documentDeclaration = getOption("tikzDocumentDeclaration"),
+		documentDeclaration = documentDeclaration,
 		packages = packages, engine = engine)
 
 	# Check to see if we have metrics stored in
