@@ -78,14 +78,62 @@
   \makefootrule{tikzDevice}{\textwidth}{\normalrulethickness}{\footruleskip}
 
 \pagestyle{tikzDevice}
-\aliaspagestyle{chapter}{tikzDevice}
 
 % Styles for Document Divisions
 % =============================
 
-% TODO:
-% Style `\part` divisions.
 
+% Part Divisions
+% --------------
+% Inspired by the cover page of the tikzDevice manual.
+
+% Kill the commands memoir normally uses to set the part name and
+% number---everything will be taken care of by the command that sets the title.
+\renewcommand{\printpartname}{}
+\renewcommand{\printpartnum}{}
+
+% Define a command that can be used to add custom graphics to each part page.
+\newcommand{\partimage}[1]{\gdef\@partimage{#1}}
+\partimage{\null}
+
+% This is where all the magic happens.
+\renewcommand{\printparttitle}[1]{
+  \begin{tikzpicture}[remember picture, overlay]
+    % Title and Info
+    % --------------
+    {\fontsize{60}{36}
+    \node[below right = 0.5em of current page.north west,
+      anchor = north east,
+      rotate = 90,
+      outer sep = 0pt,
+      inner sep = 0pt,
+      font = {\bfseries}
+    ]
+      (title)
+      {\partname\ \thepart};
+    }
+
+    \draw[line width = 5pt] ([xshift = 7.5pt]title.base west) -- ([xshift = 7.5pt]title.base east);
+
+    \node[right = 12.5pt of title.base east,
+      anchor = north west,
+      align = left,
+      font = {\Huge\bfseries}
+    ]
+      (subtitle)
+      {#1};
+
+    \@partimage
+
+  \end{tikzpicture}%
+  \partimage{\null} % Make sure a part image is not recycled
+}
+
+\aliaspagestyle{part}{empty}
+
+
+% Chapter Divisions
+% -----------------
 % Inspired by Alain Matthes' tkz-doc class which uses `\titleformat[frame]`
 % from the `titlesec` package. A similar result is produced here using TikZ
 % nodes. Helpful tips for handling numberd/non-numbered chapters taken from the
@@ -143,7 +191,12 @@
 }
 
 \chapterstyle{tkzframed}
+% Don't mess with the header/footer when starting a new chapter.
+\aliaspagestyle{chapter}{tikzDevice}
 
+
+% Section Divisions
+% -----------------
 % The style of sectional divisions is also cribbed from tkz-doc. Here we define
 % a hook function that gets called before setting section titles. The hook
 % function causes the section number to be placed within a `\fbox` and tosses
