@@ -939,32 +939,17 @@ require(tikzDevice)
 require(maps)
 
 tikz('westCoast.tex', bareBones=TRUE)
+
 map('state', regions=c('california', 'oregon', 'washington'),
     lwd=4, col='grey40')
 
-eurekaLon <- grconvertX(-124.161, to='device')
-eurekaLat <- grconvertY(40.786, to='device')
-
-longviewLon <- grconvertX(-122.962, to='device')
-longviewLat <- grconvertY(46.148, to='device')
-
-coosLon <- grconvertX(-124.237, to='device')
-coosLat <- grconvertY(43.378, to='device')
-
-sfLon <- grconvertX(-122.419, to='device')
-sfLat <- grconvertY(37.775, to='device')
-
-tikzAnnotate(paste('\\coordinate (humBay) at (',
-  eurekaLon, ',', eurekaLat, ');', sep='') )
-
-tikzAnnotate(paste('\\coordinate (longView) at (',
-  longviewLon, ',', longviewLat, ');', sep='') )
-
-tikzAnnotate(paste('\\coordinate (coosBay) at (',
-  coosLon, ',', coosLat, ');', sep='') )
-
-tikzAnnotate(paste('\\coordinate (sfBay) at (',
-  sfLon, ',', sfLat, ');', sep='') )
+# Insert some named coordinates into the picture that will
+# be available once the picture is included into the
+# TeX document.
+tikzCoord(-124.161, 40.786, 'humBay')
+tikzCoord(-122.962, 46.148, 'longView')
+tikzCoord(-124.237, 43.378, 'coosBay')
+tikzCoord(-122.419, 37.775, 'sfBay')
 
 dev.off()
 @
