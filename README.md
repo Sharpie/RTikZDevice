@@ -139,6 +139,10 @@ Latest Changes
   - Calls to the Filehash package have been protected from user interruptions.
     This should prevent rogue lockfiles and corrupted metrics dictionaries.
 
+  - The `documentDeclaration` and `packages` arguments to the `tikz` function
+    are now used in metric calculations. Previously, only global options were
+    consulted.
+
 #### Behind the Scenes
 
   - The tikzDevice now requires R 2.12.0 or later.
