@@ -42,7 +42,7 @@
 %    http://alexgorbatchev.com/SyntaxHighlighter
 %
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{tikzCodeBlock}[2012/01/20 v0.2  Multipage listings set inside TikZ nodes]
+\ProvidesPackage{tikzCodeBlock}[2012/02/09 v0.3  Multipage listings set inside TikZ nodes]
 
 \RequirePackage{tikz}
 \usetikzlibrary{positioning}
@@ -289,6 +289,9 @@
 		fill = white,
 		inner sep = 1ex,
 		outer sep = 0pt,
+    % Explicitly unset the text width for the title node so that it always fits
+    % its self to the width of the title.
+    text width = ,
 		right = 0pt of code node body.north west,
 		anchor = base west
 	},
@@ -302,6 +305,9 @@
 		fill = white,
 		inner sep = 1ex,
 		outer sep = 0pt,
+    % Explicitly unset the text width for the footer node so that it always fits
+    % its self to the width of the title.
+    text width = ,
 		above = 0pt of code node body.south,
 		anchor = base
 	}
@@ -335,6 +341,31 @@
   \MakeFramed{\FrameRestore}%
 }%
 {\endMakeFramed}
+
+
+% tikzCodeNode
+% ============
+% This is like the tikzCodeBlock environment except that it does use any
+% functionality from the framed package to produce multiple chunks that break
+% accross pages. Useful for creating listings that do not break and that can be
+% embedded inside another tikzPicture.
+%
+% If this environment is embedded inside another TikZ node, the text width
+% __MUST BE SET__ for that node. This is due to the use of `\vskip\topsep`.
+\lstnewenvironment{tikzCodeNode}[1][]{%
+  % Process environment options.
+  \tikzCode@setupKeys
+  % Shift the key directory to our namespace.
+  \pgfkeys{ /tikzCode/.cd, #1 }%
+  \ifx \tikzCode@listingStyle \undefined
+    \lstset{resetmargins = true}%
+  \else
+    \lstset{style = \tikzCode@listingStyle, resetmargins = true}%
+  \fi
+  % Collect listings output into a box for insertion into a TikZ picture
+  \setbox\@tempboxa=\vbox\bgroup\color@setgroup
+}%
+{\color@endgroup\egroup\vskip\topsep\noindent\tikzCode@place@singleframe{\box\@tempboxa}}
 
 
 % tikzCodeInput
