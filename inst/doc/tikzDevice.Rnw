@@ -1568,6 +1568,69 @@ kpsewhich tikz.sty
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Listing commands cannot be saved in macros, so we execute them here and stash
+% the output in a box.
+\newsavebox{\programflow}
+\begin{lrbox}{\programflow}
+\begin{tikzpicture}
+
+  \node[text width = 4.3in] (r code) {
+    \begin{tikzCodeNode}[title={R User Types}, listing style=sweavechunk]
+tikz('Rplot.tex')
+plot(1)
+dev.off()
+    \end{tikzCodeNode}
+  };
+
+  \node[below = \baselineskip of r code, text width = 4.3in] (c code) {
+    \begin{tikzCodeNode}[title={TikZ Device Translates}, listing style = csource]
+static void TikZ_Circle( double x, double y, double r,
+    const pGEcontext plotParams, pDevDesc deviceInfo){
+
+...
+
+  printOutput(tikzInfo,"\n\\path[");
+  TikZ_WriteDrawOptions(plotParams, deviceInfo, ops);
+
+  /* End options, print coordinates. */
+  printOutput(tikzInfo, "] (%6.2f,%6.2f) circle (%6.2f);\n",
+    x,y,r);
+}
+    \end{tikzCodeNode}
+  };
+
+  \node[below = \baselineskip of c code, text width = 4.3in] (latex code) {
+    \begin{tikzCodeNode}[title={\LaTeX\ Output is Produced}, listing style = latexexample]
+% Created by tikzDevice
+% !TEX encoding = UTF-8 Unicode
+\begin{tikzpicture}[x=1pt,y=1pt]
+
+...
+
+\path[draw=drawColor,line width= 0.4pt,
+  line join=round,line cap=round]
+  (264.94,258.95) circle (  2.25);
+
+...
+
+\end{tikzpicture}
+    \end{tikzCodeNode}
+  };
+
+\end{tikzpicture}
+\end{lrbox}
+
+
+\partimage{
+ \node[above left = 1in of current page.south east,
+   anchor = south east,
+   scale = 1.25
+ ]
+   % Here we use the box containing the output.
+   {\usebox{\programflow}};
+}
+
 \part{Package Internals}
   \label{part:implementation}
 
