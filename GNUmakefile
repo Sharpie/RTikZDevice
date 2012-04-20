@@ -65,7 +65,7 @@ help:
 
 # Set a default CRAN mirror because otherwise R refuses to install anything.
 deps:
-	"$(RBIN)/R" --slave -e "options(repos = c(CRAN = "http://cran.cnr.Berkeley.edu"));install.packages(c('filehash','roxygen2','testthat','ggplot2','maps'))"
+	"$(RBIN)/R" --slave -e "options(repos = c(CRAN = 'http://cran.cnr.Berkeley.edu'));install.packages(c('filehash','roxygen2','testthat','ggplot2','maps'))"
 
 
 docs:
