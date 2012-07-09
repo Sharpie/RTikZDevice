@@ -13,16 +13,16 @@ getDateStampForTikz <- function(){
 }
 
 
-getTikzDeviceVersion <- function(){
+getTikzDeviceVersion <- function(lib.loc = NULL){
 
   # Returns the version of the currently installed tikzDevice for use in
   # Print_TikZ_Header.
-  version_file <- system.file('GIT_VERSION', package = 'tikzDevice')
+  version_file <- system.file('GIT_VERSION', package = 'tikzDevice', lib.loc = lib.loc)
   if (file.exists(version_file)) {
     version_num <- readLines(version_file)[1]
   } else {
     version_num <- paste('~',
-      read.dcf(system.file('DESCRIPTION', package = 'tikzDevice'),
+      read.dcf(system.file('DESCRIPTION', package = 'tikzDevice', lib.loc = lib.loc),
         fields = 'Version')
     )
   }
