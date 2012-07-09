@@ -90,7 +90,8 @@ news:
 vignette:
 	cd inst/doc;\
 		"$(RBIN)/R" CMD Sweave $(PKGNAME).Rnw;\
-		texi2dvi --pdf $(PKGNAME).tex
+		texi2dvi --pdf $(PKGNAME).tex;\
+		"$(RBIN)/R" --vanilla --slave -e "tools:::compactPDF(getwd(), gs_quality='printer')"
 
 
 build: docs
