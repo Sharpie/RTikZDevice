@@ -104,7 +104,7 @@ install: build
 
 check: build
 	cd ..;\
-		"$(RBIN)/R" CMD check --no-tests $(PKGNAME)_$(PKGVERS).tar.gz
+		"$(RBIN)/R" CMD check --as-cran --no-tests $(PKGNAME)_$(PKGVERS).tar.gz
 
 test: install
 	cd tests;\
