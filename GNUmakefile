@@ -121,7 +121,7 @@ valgrind: install
 release:
 	@git checkout r-forge
 	@git clean -fdx
-	@git merge master -s recursive -Xtheirs
+	@git merge --no-edit master -s recursive -Xtheirs
 	@cd ..;\
 		"$(RBIN)/R" --vanilla --slave -e "library(roxygen2); roxygenize('$(PKGSRC)','$(PKGSRC)', copy.package=FALSE, overwrite=TRUE)"
 	@echo "\nCreating Vignette..."
