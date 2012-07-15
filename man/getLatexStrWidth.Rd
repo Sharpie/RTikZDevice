@@ -1,11 +1,17 @@
 \name{getLatexStrWidth}
+\alias{getLatexCharMetrics}
 \alias{getLatexStrWidth}
-\title{Obtain the Width of an Arbitrary LaTeX String
-This function calculates the width of a string as it would appear after
-being compiled by LaTeX.}
+\title{Obtain Font Metrics from LaTeX}
 \usage{
   getLatexStrWidth(texString, cex = 1, face = 1,
-    engine = getOption("tikzDefaultEngine"))
+    engine = getOption("tikzDefaultEngine"),
+    documentDeclaration = getOption("tikzDocumentDeclaration"),
+    packages)
+
+  getLatexCharMetrics(charCode, cex = 1, face = 1,
+    engine = getOption("tikzDefaultEngine"),
+    documentDeclaration = getOption("tikzDocumentDeclaration"),
+    packages)
 }
 \arguments{
   \item{texString}{An arbitrary string for which the width
@@ -21,42 +27,58 @@ being compiled by LaTeX.}
   use. Possible values are 'pdftex', 'xetex' and 'luatex'.
   See the Unicode section of \link{tikzDevice} for
   details.}
+
+  \item{documentDeclaration}{See the sections ``Options
+  That Affect Package Behavior'' and ``Font Size
+  Calculations'' of \link{tikzDevice-package} for more
+  details.}
+
+  \item{packages}{See the section ``Options That Affect
+  Package Behavior'' of \link{tikzDevice-package}.}
+
+  \item{charCode}{an integer that corresponds to a symbol
+  in the ASCII character table under the Type 1 font
+  encoding. All numeric values are coerced using
+  \code{as.integer}. Non-numeric values will not be
+  accepted.}
 }
 \value{
-  \item{width}{The width of \code{texString} in point
-  size.}
+  \item{getLatexStrWidth}{The width of \code{texString} in
+  points.} \item{getLatexCharMetrics}{A numeric vector
+  holding ascent, descent and width. Values should all be
+  nonnegative.}
 }
 \description{
-  This function is used internally by the \code{tikz}
-  device for proper string placement in graphics.  This
-  function first checks to see if the width exists in a
-  global or temporary string width dictionary (as define in
+  These functions calculate the width of a character or
+  string as it would appear after being compiled by LaTeX.
+}
+\details{
+  These functions are used internally by the \code{tikz}
+  device for proper string placement in graphics.  Both
+  functions check to see if metrics exist in a global or
+  temporary dictionary (as defined in
   \code{options('tikzMetricsDictionary')}) and if so will
-  pull the width from there. If the dictionary does not
-  exist then a temporary one for the current R session is
-  created and the string width is calculated via a
-  \code{system} call to latex. The calling of latex to
-  calculate a string width is quit expensive and so we
-  strongly recommend setting
+  pull the metrics from there. If the dictionary does not
+  exist, then a temporary one is created for the current R
+  session. Metrics are calculated via \code{system} calls
+  to LaTeX compilers. Querying compilers to calculate
+  metrics is expensive and so we strongly recommend setting
   \code{options('tikzMetricsDictionary') <-
   /path/to/dictionary} to create a global dictionary.
 }
-\note{
-  \pkg{\link{tikzDevice}} tries very hard when it is loaded
-  to find a working \command{latex} or \command{pdflatex}
-  command.  If it is successful the command is set in
-  \code{options('tikzLatex')}, otherwise this function will
-  fail.
-}
 \examples{
 getLatexStrWidth('{\\\\\\\\tiny Hello \\\\\\\\LaTeX!}')
+# Calculate ascent, descent and width for "A"
+  getLatexCharMetrics(65)
 }
 \author{
   Charlie Sharpsteen \email{source@sharpsteen.net} and
   Cameron Bracken \email{cameron.bracken@gmail.com}
 }
-\seealso{
-  \code{\link{tikz}}, \code{\link{getLatexCharMetrics}}
+\references{
+  PGF Manual
 }
 \keyword{character}
+\keyword{metrics}
+\keyword{string}
 

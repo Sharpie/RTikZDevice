@@ -9,6 +9,29 @@
 \alias{tikzNode}
 \alias{tikzNodeGrob}
 \title{Add Custom TikZ Code to an Active Device}
+\usage{
+  tikzAnnotate(annotation)
+
+  tikzNode(x = NULL, y = NULL, opts = NULL, name = NULL,
+    content = NULL, units = "user")
+
+  tikzCoord(x, y, name, units = "user")
+
+  tikzAnnotateGrob(annotation)
+
+  tikzNodeGrob(x = NULL, y = NULL, opts = NULL,
+    name = NULL, content = NULL, units = "native")
+
+  tikzCoordGrob(x, y, name, units = "native")
+
+  grid.tikzAnnotate(annotation, draw = TRUE)
+
+  grid.tikzNode(x = NULL, y = NULL, opts = NULL,
+    name = NULL, content = NULL, units = "native",
+    draw = TRUE)
+
+  grid.tikzCoord(x, y, name, units = "native", draw = TRUE)
+}
 \arguments{
   \item{annotation}{A character vector, one element per
   line to be added to the open tikz device.}
@@ -48,7 +71,7 @@
   Nothing returned.
 }
 \description{
-  This function allows custom (LaTeX) commands to be added
+  These functions allow custom (LaTeX) commands to be added
   to the output of an active tikzDevice.
 }
 \details{

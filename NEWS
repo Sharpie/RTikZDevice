@@ -231,8 +231,9 @@ Changes in version 0.5.0:
            fontsize from gpar(). This fixes issues with lattice-based
            graphics such as ggplot2.
 
-         • Metrics are now calculated properly when commands like
-           \renewcommand\rmdefault are used to adjust the active font.
+         • Metrics are now calculated properly when commands
+           likeRawBlock "latex" "\renewcommand"\rmdefault are used to
+           adjust the active font.
 
          • Sanitization of % signs in labels.
 

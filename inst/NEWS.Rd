@@ -121,7 +121,7 @@ The following people contributed to this release of the tikzDevice:
 \itemize{
 \item{Removed bad colon in the DESCRIPTION file.}
 \item{Proper fontsize calculations now include ps from par() and fontsize from gpar(). This fixes issues with lattice-based graphics such as ggplot2.}
-\item{Metrics are now calculated properly when commands like \\renewcommand\\rmdefault are used to adjust the active font.}
+\item{Metrics are now calculated properly when commands likeRawBlock "latex" "\\renewcommand"\\rmdefault are used to adjust the active font.}
 \item{Sanitization of \% signs in labels.}
 \item{The package no longer overwrites user customizations set in places like .Rprofile with default values when loaded.}
 \item{Attempting to use new graphics functions such as rasterImage() now produces error messages instead of fatal crashes in R 2.11.0 and above.}

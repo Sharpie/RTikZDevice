@@ -62,8 +62,10 @@ help:
 #------------------------------------------------------------------------------
 # Development Tasks
 #------------------------------------------------------------------------------
+
+# Set a default CRAN mirror because otherwise R refuses to install anything.
 deps:
-	"$(RBIN)/R" --slave -e "install.packages(c('filehash','roxygen2','testthat','ggplot2','maps'))"
+	"$(RBIN)/R" --slave -e "options(repos = c(CRAN = 'http://cran.cnr.Berkeley.edu'));install.packages(c('filehash','roxygen2','testthat','ggplot2','maps'))"
 
 
 docs:
@@ -88,7 +90,8 @@ news:
 vignette:
 	cd inst/doc;\
 		"$(RBIN)/R" CMD Sweave $(PKGNAME).Rnw;\
-		texi2dvi --pdf $(PKGNAME).tex
+		texi2dvi --pdf $(PKGNAME).tex;\
+		"$(RBIN)/R" --vanilla --slave -e "tools:::compactPDF(getwd(), gs_quality='printer')"
 
 
 build: docs
@@ -102,7 +105,7 @@ install: build
 
 check: build
 	cd ..;\
-		"$(RBIN)/R" CMD check --no-tests $(PKGNAME)_$(PKGVERS).tar.gz
+		"$(RBIN)/R" CMD check --as-cran --no-tests $(PKGNAME)_$(PKGVERS).tar.gz
 
 test: install
 	cd tests;\
@@ -118,7 +121,7 @@ valgrind: install
 release:
 	@git checkout r-forge
 	@git clean -fdx
-	@git merge master -s recursive -Xtheirs
+	@git merge --no-edit master -s recursive -Xtheirs
 	@cd ..;\
 		"$(RBIN)/R" --vanilla --slave -e "library(roxygen2); roxygenize('$(PKGSRC)','$(PKGSRC)', copy.package=FALSE, overwrite=TRUE)"
 	@echo "\nCreating Vignette..."
