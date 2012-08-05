@@ -15,7 +15,7 @@ getDocumentPointsize <- function( docString ){
   # startps component of the pDevDesc structure. 
 
   # Search the document declaration for the pointsize.
-  psLocation <- regexpr( '\\d+[pt]', docString, ignore.case = T, perl = T )
+  psLocation <- regexpr( '\\<\\d+pt', docString, ignore.case = T, perl = T )
 
   # If there were no matches, regexpr() returns -1 and this
   # function returns NA.
