@@ -1070,7 +1070,7 @@ static void TikZ_Text( double x, double y, const char *str,
   }
 
   printOutput(tikzInfo,
-    ",inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {",
+    ",inner sep=0pt, outer sep=0pt, scale=%6.2f] at (%6.2f,%6.2f) {$",
     fontScale, x, y);
 
   char *cleanString = NULL;
@@ -1078,10 +1078,10 @@ static void TikZ_Text( double x, double y, const char *str,
     //If using the sanitize option call back to R for the sanitized string
     cleanString = Sanitize( tikzString );
   	if(tikzInfo->debug == TRUE)
-    	printOutput(tikzInfo,"\n%% Sanatized %s to %s\n",tikzString,cleanString);
-    printOutput(tikzInfo, "%s};\n", cleanString);
+    	printOutput(tikzInfo,"\n%% Sanitized %s to %s\n",tikzString,cleanString);
+    printOutput(tikzInfo, "%s$};\n", cleanString);
   }else{
-    printOutput(tikzInfo, "%s};\n", tikzString);
+    printOutput(tikzInfo, "%s$};\n", tikzString);
   }
 
   /* 
