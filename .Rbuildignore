@@ -10,3 +10,4 @@ tests/test_work
 tests/test_output
 ^.*\.Rproj$
 ^\.Rproj\.user$
+GNUmakefile
