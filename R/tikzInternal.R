@@ -43,7 +43,7 @@ function(
   # Using type='Xlib' also causes a segfault for me on OS X 10.6.4
   if ( Sys.info()['sysname'] == 'Darwin' && capabilities('aqua') ){
 
-    quartz( file = raster_file, type = 'png',
+    grDevices::quartz( file = raster_file, type = 'png',
       width = finalDims$width, height = finalDims$height, antialias = FALSE,
       dpi = getOption('tikzRasterResolution') )
 
