@@ -70,9 +70,7 @@ function(libname, pkgname) {
     }
   }
 
-  if ( foundLatex ) {
-    packageStartupMessage(paste('  LaTeX found in', format(latexPath)))
-  } else {
+  if (!foundLatex ) {
     stop("\n\nAn appropriate LaTeX compiler could not be found.\n",
       "Access to LaTeX is required in order for the TikZ device\n",
       "to produce output.\n\n",
@@ -89,14 +87,6 @@ function(libname, pkgname) {
 
       "\n\n\tEnsure the folder containing your compiler is included in PATH.\n"
     )
-  }
-
-  if ( foundXelatex ) {
-    packageStartupMessage(paste('  XeLaTeX found in', format(xelatexPath)))
-  }
-
-  if ( foundLualatex ) {
-    packageStartupMessage(paste('  LuaLaTeX found in', format(lualatexPath)))
   }
 
 }
