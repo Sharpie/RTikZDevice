@@ -12,25 +12,9 @@ getDateStampForTikz <- function(){
 
 }
 
-
-getTikzDeviceVersion <- function(lib.loc = NULL){
-
-  # Returns the version of the currently installed tikzDevice for use in
-  # Print_TikZ_Header.
-  version_file <- system.file('GIT_VERSION', package = 'tikzDevice', lib.loc = lib.loc)
-  if (file.exists(version_file)) {
-    version_num <- readLines(version_file)[1]
-  } else {
-    version_num <- paste('~',
-      read.dcf(system.file('DESCRIPTION', package = 'tikzDevice', lib.loc = lib.loc),
-        fields = 'Version')
-    )
-  }
-
-  return( version_num )
-
+getTikzDeviceVersion <- function() {
+  as.character(packageVersion('tikzDevice'))
 }
-
 
 tikz_writeRaster <-
 function(
@@ -59,7 +43,7 @@ function(
   # Using type='Xlib' also causes a segfault for me on OS X 10.6.4
   if ( Sys.info()['sysname'] == 'Darwin' && capabilities('aqua') ){
 
-    quartz( file = raster_file, type = 'png',
+    grDevices::quartz( file = raster_file, type = 'png',
       width = finalDims$width, height = finalDims$height, antialias = FALSE,
       dpi = getOption('tikzRasterResolution') )
 

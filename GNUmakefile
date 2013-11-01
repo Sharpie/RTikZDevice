@@ -128,9 +128,7 @@ release:
 	@make vignette >> build.log 2>&1
 	@echo "Creating NEWS...\n"
 	@make news >> build.log 2>&1
-	@./updateVersion.sh
-	@git commit --amend -m "Build `cat inst/GIT_VERSION`"
-	@echo "\nMaster branch merged. Documentation rebuilt. Version number updated."
+	@echo "\nMaster branch merged. Documentation rebuilt."
 	@echo 'Perform final touchups and commit with `git commit --amend`.'
 	@echo 'Remember to run `git svn dcommit` before `git push` as synching with'
 	@echo 'R-Forge SVN will alter the SHA.'

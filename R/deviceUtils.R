@@ -15,7 +15,7 @@ getDocumentPointsize <- function( docString ){
   # startps component of the pDevDesc structure. 
 
   # Search the document declaration for the pointsize.
-  psLocation <- regexpr( '\\d+[pt]', docString, ignore.case = T, perl = T )
+  psLocation <- regexpr( '\\<\\d+pt\\>', docString, ignore.case = T, perl = T )
 
   # If there were no matches, regexpr() returns -1 and this
   # function returns NA.
@@ -27,7 +27,7 @@ getDocumentPointsize <- function( docString ){
 
     # Extract and return the pointsize.
     pointsize <- substr( docString, psLocation,
-      psLocation + attr( psLocation, 'match.length') - 2 )
+      psLocation + attr( psLocation, 'match.length') - 3 )
 
     return( as.numeric( pointsize ) )
 
@@ -358,7 +358,7 @@ function(verbose = TRUE)
     cat(latexCompiler)
     cat('\n\t')
     p <- pipe(paste(latexCompiler, '--version'))
-    cat(utils:::head(readLines(p), 2), sep = '\n\t')
+    cat(utils::head(readLines(p), 2), sep = '\n\t')
     close(p)
     cat('\n')
 
@@ -369,7 +369,7 @@ function(verbose = TRUE)
       cat(xelatexCompiler)
       cat('\n\t')
       p <- pipe(paste(xelatexCompiler, '--version'))
-      cat(utils:::head(readLines(p), 2), sep = '\n\t')
+      cat(utils::head(readLines(p), 2), sep = '\n\t')
       close(p)
       cat('\n')
     }
@@ -381,7 +381,7 @@ function(verbose = TRUE)
       cat(lualatexCompiler)
       cat('\n\t')
       p <- pipe(paste(lualatexCompiler, '--version'))
-      cat(utils:::head(readLines(p), 2), sep = '\n\t')
+      cat(utils::head(readLines(p), 2), sep = '\n\t')
       close(p)
       cat('\n')
     }
